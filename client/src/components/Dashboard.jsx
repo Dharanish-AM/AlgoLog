@@ -16,11 +16,11 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [sortField, setSortField] = useState("name");
   const [sortDirection, setSortDirection] = useState("asc");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState("all");
 
   useEffect(() => {
     fetchData();
@@ -55,43 +55,24 @@ const Dashboard = () => {
       );
     }
 
-    if (selectedPlatform !== "all") {
-      switch (selectedPlatform) {
-        case "leetcode":
-          result = result.filter(
-            (student) =>
-              student.leetcode.easy +
-                student.leetcode.medium +
-                student.leetcode.hard >
-              0
-          );
-          break;
-        case "hackerrank":
-          result = result.filter(
-            (student) => student.hackerrank.badges.length > 0
-          );
-          break;
-        case "codechef":
-          result = result.filter((student) => student.codechef.solved > 0);
-          break;
-        case "codeforces":
-          result = result.filter((student) => student.codeforces.contests > 0);
-          break;
-      }
-    }
-
     result.sort((a, b) => {
       let valueA, valueB;
 
       if (sortField === "leetcode.total") {
-        valueA = a.leetcode.easy + a.leetcode.medium + a.leetcode.hard;
-        valueB = b.leetcode.easy + b.leetcode.medium + b.leetcode.hard;
+        valueA =
+          a.leetcode?.solved?.Easy +
+          a.leetcode?.solved?.Medium +
+          a.leetcode?.solved?.Hard;
+        valueB =
+          b.leetcode?.solved?.Easy +
+          b.leetcode?.solved?.Medium +
+          b.leetcode?.solved?.Hard;
       } else if (sortField === "codechef.rating") {
-        valueA = a.codechef.rating;
-        valueB = b.codechef.rating;
+        valueA = a.codechef?.rating || 0;
+        valueB = b.codechef?.rating || 0;
       } else if (sortField === "codeforces.rating") {
-        valueA = a.codeforces.rating;
-        valueB = b.codeforces.rating;
+        valueA = a.codeforces?.rating || 0;
+        valueB = b.codeforces?.rating || 0;
       } else {
         valueA = a[sortField];
         valueB = b[sortField];
@@ -106,22 +87,18 @@ const Dashboard = () => {
 
     setFilteredStudents(result);
 
-    if (selectedStudent && !result.find((s) => s.id === selectedStudent.id)) {
+    if (selectedStudent && !result.find((s) => s._id === selectedStudent._id)) {
       setSelectedStudent(null);
     }
-  }, [
-    students,
-    searchTerm,
-    selectedPlatform,
-    sortField,
-    sortDirection,
-    selectedStudent,
-  ]);
+  }, [students, searchTerm, sortField, sortDirection, selectedStudent]);
 
   const handleAddStudent = async (newStudent) => {
     console.log(newStudent);
     try {
-      const response = await axios.post(`${import.meta.env.VITE_API_URL}/students`, newStudent);
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/students`,
+        newStudent
+      );
       if (response?.status === 200) {
         fetchData();
         setIsAddModalOpen(false);
@@ -200,10 +177,12 @@ const Dashboard = () => {
     event.target.value = "";
   };
 
-  if(loading) {
-    return <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex justify-center items-center h-screen">
-      <GridLoader color="#C084FC" size={20} />
-    </div>
+  if (loading) {
+    return (
+      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex justify-center items-center h-screen">
+        <GridLoader color="#C084FC" size={20} />
+      </div>
+    );
   }
 
   return (
@@ -251,10 +230,10 @@ const Dashboard = () => {
 
         <div className="mb-6">
           <SearchBar
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
             selectedPlatform={selectedPlatform}
             setSelectedPlatform={setSelectedPlatform}
+            setSearchTerm={setSearchTerm}
+            searchTerm={searchTerm}
           />
         </div>
 

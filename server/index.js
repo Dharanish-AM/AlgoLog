@@ -162,17 +162,18 @@ async function getHackerRankStats(username) {
     const $ = cheerio.load(data);
     const badges = [];
 
-    $(".badge-title").each((i, el) => {
-      const badge = $(el).text().trim();
-      if (badge) {
-        badges.push(badge);
+    $(".hacker-badge").each((i, el) => {
+      const badgeName = $(el).find(".badge-title").text().trim();
+      const stars = $(el).find(".badge-star").length;
+      if (badgeName) {
+        badges.push({ name: badgeName, stars });
       }
     });
 
     return {
       platform: "HackerRank",
       username,
-      badges: badges.slice(0, 5), // Return top 5 badges
+      badges: badges.slice(0, 5), 
     };
   } catch (error) {
     console.error("Error fetching HackerRank stats:", error);
@@ -185,10 +186,16 @@ async function getCodeChefStats(username) {
   try {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
-    const rating = $("section.rating-header div.rating-number")
-      .first()
+
+    const rating = $("div.rating-number")
+      .contents()
+      .filter(function () {
+        return this.type === "text";
+      })
       .text()
       .trim();
+
+
     const solvedText = $("h3")
       .filter((i, el) => $(el).text().includes("Total Problems Solved"))
       .text()
@@ -207,16 +214,25 @@ async function getCodeChefStats(username) {
 }
 
 async function getCodeforcesStats(username) {
-  const url = `https://codeforces.com/api/user.info?handles=${username}`;
   try {
-    const { data } = await axios.get(url);
-    const user = data.result[0];
+    const userInfoUrl = `https://codeforces.com/api/user.info?handles=${username}`;
+    const contestsUrl = `https://codeforces.com/api/user.rating?handle=${username}`;
+
+    const [userInfoRes, contestsRes] = await Promise.all([
+      axios.get(userInfoUrl),
+      axios.get(contestsUrl),
+    ]);
+
+    const user = userInfoRes.data.result[0];
+    const contests = contestsRes.data.result.length;
+
     return {
       platform: "Codeforces",
       username,
       rating: user.rating || "Unrated",
       rank: user.rank || "Unranked",
       maxRating: user.maxRating || "N/A",
+      contests,
     };
   } catch {
     return { platform: "Codeforces", username, error: "Failed to fetch data" };

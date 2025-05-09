@@ -1,8 +1,13 @@
-import React from 'react';
-import { Search, X } from 'lucide-react';
-import { PLATFORMS } from '../types';
+import React from "react";
+import { Search, X } from "lucide-react";
+import { PLATFORMS } from "../types";
 
-const SearchBar = ({ searchTerm, setSearchTerm, selectedPlatform, setSelectedPlatform }) => {
+const SearchBar = ({
+  searchTerm,
+  setSearchTerm,
+  selectedPlatform,
+  setSelectedPlatform,
+}) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
       <div className="relative flex-grow">
@@ -18,11 +23,14 @@ const SearchBar = ({ searchTerm, setSearchTerm, selectedPlatform, setSelectedPla
         />
         {searchTerm && (
           <button
-            onClick={() => setSearchTerm('')}
+            onClick={() => setSearchTerm("")}
             className="absolute inset-y-0 right-0 pr-3 flex items-center"
             aria-label="Clear search"
           >
-            <X size={18} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200" />
+            <X
+              size={18}
+              className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+            />
           </button>
         )}
       </div>
