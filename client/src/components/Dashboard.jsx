@@ -30,7 +30,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/students`
+        `${import.meta.env.VITE_API_URL}/api/students`
       );
       if (response.status === 200) {
         setStudents(response.data.students);
@@ -96,7 +96,7 @@ const Dashboard = () => {
     console.log(newStudent);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_API_URL}/students`,
+        `${import.meta.env.VITE_API_URL}/api/students`,
         newStudent
       );
       if (response?.status === 200) {
