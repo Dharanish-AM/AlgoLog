@@ -6,6 +6,8 @@ const mongoose = require("mongoose");
 
 const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
+const dotenv = require("dotenv");
+dotenv.config();
 
 const app = express();
 app.use(
@@ -16,7 +18,7 @@ app.use(
 app.use(express.json());
 
 mongoose
-  .connect("mongodb://localhost:27017/algolog")
+  .connect(`${process.env.DB_URI}`)
   .then(() => {
     console.log("Connected to MongoDB");
   })
@@ -33,12 +35,24 @@ app.get("/api/students", async (req, res) => {
     const students = await Student.find({});
 
     if (!students || students.length === 0) {
-      return res.status(200).json({students:[]})
+      return res.status(200).json({ students: [] });
     }
 
     const results = await Promise.all(
       students.map(async (student) => {
-        const { _id, name, email, rollNo, year, department, section, leetcode, hackerrank, codechef, codeforces } = student;
+        const {
+          _id,
+          name,
+          email,
+          rollNo,
+          year,
+          department,
+          section,
+          leetcode,
+          hackerrank,
+          codechef,
+          codeforces,
+        } = student;
 
         const [leet, hack, chef, cf] = await Promise.all([
           getLeetCodeStats(leetcode),
@@ -60,7 +74,7 @@ app.get("/api/students", async (req, res) => {
             hackerrank: hack,
             codechef: chef,
             codeforces: cf,
-          }
+          },
         };
       })
     );
@@ -173,7 +187,7 @@ async function getHackerRankStats(username) {
     return {
       platform: "HackerRank",
       username,
-      badges: badges.slice(0, 5), 
+      badges: badges.slice(0, 5),
     };
   } catch (error) {
     console.error("Error fetching HackerRank stats:", error);
@@ -194,7 +208,6 @@ async function getCodeChefStats(username) {
       })
       .text()
       .trim();
-
 
     const solvedText = $("h3")
       .filter((i, el) => $(el).text().includes("Total Problems Solved"))
