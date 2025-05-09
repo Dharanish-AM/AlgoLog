@@ -4,10 +4,11 @@ import StudentTable from "./StudentTable.jsx";
 import StudentCard from "./StudentCard.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 import AddStudentModal from "./AddStudentModal.jsx";
-import { Code, Download, Search, Upload, UserPlus } from "lucide-react";
-import { getMockData } from "../utils/mockData.js";
+import { Code, Download, Loader, Search, Upload, UserPlus } from "lucide-react";
+import axios from "axios";
 import Papa from "papaparse";
 import toast, { Toaster } from "react-hot-toast";
+import { GridLoader } from "react-spinners";
 
 const Dashboard = () => {
   const [students, setStudents] = useState([]);
@@ -22,25 +23,30 @@ const Dashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const data = getMockData();
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        setStudents(data);
-        setFilteredStudents(data);
-        setLoading(false);
-      } catch (err) {
-        setError("Failed to fetch student data. Please try again later.");
-        setLoading(false);
-      }
-    };
-
     fetchData();
   }, []);
 
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/students`
+      );
+      if (response.status === 200) {
+        setStudents(response.data.students);
+        setFilteredStudents(response.data.students);
+        setLoading(false);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error fetching student data:", err);
+      setError("Failed to fetch student data. Please try again later.");
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let result = [...students];
+    let result = students ? [...students] : [];
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
@@ -112,20 +118,22 @@ const Dashboard = () => {
     selectedStudent,
   ]);
 
-  const handleAddStudent = (newStudent) => {
-    const student = {
-      ...newStudent,
-      id: crypto.randomUUID(),
-      leetcode: {
-        ...newStudent.leetcode,
-        total:
-          newStudent.leetcode.easy +
-          newStudent.leetcode.medium +
-          newStudent.leetcode.hard,
-      },
-    };
-    setStudents((prev) => [...prev, student]);
-    toast.success("Student added successfully!");
+  const handleAddStudent = async (newStudent) => {
+    console.log(newStudent);
+    try {
+      const response = await axios.post(`${import.meta.env.VITE_API_URL}/students`, newStudent);
+      if (response?.status === 200) {
+        fetchData();
+        setIsAddModalOpen(false);
+        toast.success("Student added successfully!");
+      }
+      setError(null);
+    } catch (err) {
+      console.error("Error adding student:", err);
+      setError("Failed to add student. Please try again.");
+      toast.error("Failed to add student.");
+      return;
+    }
   };
 
   const handleExportCSV = () => {
@@ -192,6 +200,12 @@ const Dashboard = () => {
     event.target.value = "";
   };
 
+  if(loading) {
+    return <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex justify-center items-center h-screen">
+      <GridLoader color="#C084FC" size={20} />
+    </div>
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       <div className="mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -245,17 +259,23 @@ const Dashboard = () => {
         </div>
 
         <div className="space-y-6">
-          <StudentTable
-            students={filteredStudents}
-            loading={loading}
-            error={error}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            setSortField={setSortField}
-            setSortDirection={setSortDirection}
-            selectedStudent={selectedStudent}
-            setSelectedStudent={setSelectedStudent}
-          />
+          {filteredStudents && filteredStudents.length > 0 ? (
+            <StudentTable
+              students={filteredStudents}
+              loading={loading}
+              error={error}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              setSortField={setSortField}
+              setSortDirection={setSortDirection}
+              selectedStudent={selectedStudent}
+              setSelectedStudent={setSelectedStudent}
+            />
+          ) : (
+            <div className="text-center text-m italic text-gray-500">
+              No students found
+            </div>
+          )}
         </div>
 
         <AddStudentModal
@@ -266,7 +286,10 @@ const Dashboard = () => {
 
         {selectedStudent && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-              <StudentCard onClose={() => setSelectedStudent(null)} student={selectedStudent} />
+            <StudentCard
+              onClose={() => setSelectedStudent(null)}
+              student={selectedStudent}
+            />
           </div>
         )}
 

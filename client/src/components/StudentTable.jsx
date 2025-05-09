@@ -21,6 +21,8 @@ const StudentTable = ({
     }
   };
 
+  console.log(students)
+
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;
     
@@ -49,7 +51,7 @@ const StudentTable = ({
     );
   }
 
-  if (students.length === 0) {
+  if (students?.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
         <p>No students found matching your criteria.</p>
@@ -108,7 +110,7 @@ const StudentTable = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {students.map((student) => (
+            {students?.map((student) => (
               <tr 
                 key={student.id} 
                 className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
@@ -131,43 +133,43 @@ const StudentTable = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-100">
-                    {student.leetcode.easy + student.leetcode.medium + student.leetcode.hard} solved
+                    {student.stats.leetcode.solved.All} solved
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {student.leetcode.easy} E | {student.leetcode.medium} M | {student.leetcode.hard} H
+                    {student.stats.leetcode.solved.Easy} E | {student.stats.leetcode.solved.Medium} M | {student.stats.leetcode.solved.Hard} H
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex flex-wrap gap-1">
-                    {student.hackerrank.badges.slice(0, 3).map((badge, index) => (
+                    {student.stats.hackerrank.badges.slice(0, 3).map((badge, index) => (
                       <span 
                         key={index} 
                         className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300"
                       >
-                        {badge.name}
+                        {badge}
                       </span>
                     ))}
-                    {student.hackerrank.badges.length > 3 && (
+                    {student.stats.hackerrank.badges.length > 3 && (
                       <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300">
-                        +{student.hackerrank.badges.length - 3}
+                        +{student.stats.hackerrank.badges.length - 3}
                       </span>
                     )}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-gray-100">Rating: {student.codechef.rating}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{student.codechef.solved} solved</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-100">Rating: {student.stats.codechef.rating}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{student.stats.codechef.fullySolved} solved</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900 dark:text-gray-100">Rating: {student.codeforces.rating}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">{student.codeforces.rank}</div>
+                  <div className="text-sm text-gray-900 dark:text-gray-100">Rating: {student.stats.codeforces.rating}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">{student.stats.codeforces.rank}</div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                   <button
-                    onClick={() => setSelectedStudent(selectedStudent?.id === student.id ? null : student)}
+                    onClick={() => setSelectedStudent(selectedStudent?._id === student._id ? null : student)}
                     className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 flex items-center"
                   >
-                    {selectedStudent?.id === student.id ? 'Hide' : 'View'}
+                    {selectedStudent?._id === student._id ? 'Hide' : 'View'}
                     <ChevronRight size={16} className="ml-1" />
                   </button>
                 </td>
