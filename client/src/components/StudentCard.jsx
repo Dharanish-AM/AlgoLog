@@ -1,0 +1,182 @@
+import React from 'react';
+import { Award, Code, Trophy, Star, X } from 'lucide-react';
+
+const StudentCard = ({ student,onClose }) => {
+  const { name, avatar, leetcode, hackerrank, codechef, codeforces } = student;
+  const handleEdit = () => {
+    console.log("Edit student:", student);
+  };
+
+  const handleDelete = () => {
+    console.log("Delete student:", student);
+  };
+
+  const leetcodeTotal = leetcode.easy + leetcode.medium + leetcode.hard;
+  const leetcodePercentage = Math.min(100, Math.round((leetcodeTotal / 2000) * 100));
+
+  return (
+    <div className="overflow-auto scrollbar-hide bg-gradient-radial h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+      <div className="bg-gradient-to-r from-purple-800 to-secondary-600 p-6 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm"></div>
+        <div className="relative flex items-center gap-6">
+          <div className="w-20 h-20 rounded-2xl bg-white/20 flex items-center justify-center overflow-hidden backdrop-blur-sm border-2 border-white/30 shadow-xl transform hover:scale-105 transition-transform">
+            {avatar ? (
+              <img src={avatar} alt={name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-3xl font-bold text-white">{name.charAt(0)}</span>
+            )}
+          </div>
+          <div>
+            <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
+            <p className="text-blue-100 font-medium">Competitive Programming Profile</p>
+          </div>
+          <X onClick={()=>{
+            onClose();
+          }} color='#fff' size={24} className='absolute top-2 right-2 cursor-pointer' />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
+        <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Code size={24} className="text-primary-500" />
+            <h4 className="text-xl font-semibold text-gray-800 dark:text-white">LeetCode</h4>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600 dark:text-gray-300">Problems Solved:</span>
+              <span className="font-semibold text-primary-600 dark:text-primary-400">{leetcodeTotal}</span>
+            </div>
+            <div className="w-full h-3 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full transition-all duration-500"
+                style={{ width: `${leetcodePercentage}%` }}
+              ></div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="bg-green-50 dark:bg-green-900/30 p-3 rounded-lg text-center transform hover:scale-105 transition-transform">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Easy</div>
+                <div className="font-bold text-green-600 dark:text-green-400">{leetcode.easy}</div>
+              </div>
+              <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg text-center transform hover:scale-105 transition-transform">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Medium</div>
+                <div className="font-bold text-yellow-600 dark:text-yellow-400">{leetcode.medium}</div>
+              </div>
+              <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg text-center transform hover:scale-105 transition-transform">
+                <div className="text-xs text-gray-600 dark:text-gray-300 mb-1">Hard</div>
+                <div className="font-bold text-red-600 dark:text-red-400">{leetcode.hard}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Trophy size={24} className="text-secondary-500" />
+            <h4 className="text-xl font-semibold text-gray-800 dark:text-white">HackerRank</h4>
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between text-sm mb-4">
+              <span className="text-gray-600 dark:text-gray-300">Top Badges:</span>
+              <span className="font-semibold text-secondary-600 dark:text-secondary-400">{hackerrank.badges.length}</span>
+            </div>
+            <div className="space-y-2">
+              {hackerrank.badges.slice(0, 5).map((badge, index) => (
+                <div 
+                  key={index} 
+                  className="flex items-center justify-between bg-white dark:bg-gray-700/50 p-3 rounded-lg transform hover:scale-102 transition-transform"
+                >
+                  <div className="flex items-center gap-3">
+                    <Award size={20} className="text-secondary-500" />
+                    <span className="text-sm font-medium text-gray-700 dark:text-gray-200">{badge.name}</span>
+                  </div>
+                  <span className="text-xs font-medium px-3 py-1 rounded-full bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-400">
+                    {badge.level}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Star size={24} className="text-orange-500" />
+            <h4 className="text-xl font-semibold text-gray-800 dark:text-white">CodeChef</h4>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Rating</span>
+              <span className="font-semibold text-orange-600 dark:text-orange-400">{codechef.rating}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Problems Solved</span>
+              <span className="font-semibold text-orange-600 dark:text-orange-400">{codechef.solved}</span>
+            </div>
+            {codechef.rank && (
+              <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                <span className="text-sm text-gray-600 dark:text-gray-300">Rank</span>
+                <span className="font-semibold text-orange-600 dark:text-orange-400">{codechef.rank}</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <div className="flex items-center gap-3">
+            <Code size={24} className="text-blue-500" />
+            <h4 className="text-xl font-semibold text-gray-800 dark:text-white">Codeforces</h4>
+          </div>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Rating</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">{codeforces.rating}</span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Rank</span>
+              <span className={`font-semibold ${getRankColor(codeforces.rank)}`}>
+                {codeforces.rank}
+              </span>
+            </div>
+            <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+              <span className="text-sm text-gray-600 dark:text-gray-300">Contests</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">{codeforces.contests}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="text-sm flex justify-end gap-4 px-8 pb-6">
+        <button
+          onClick={handleEdit}
+          className="px-4 py-2 bg-yellow-800 text-white rounded-md hover:bg-yellow-600 focus:outline-none"
+        >
+          Edit Student
+        </button>
+        <button
+          onClick={handleDelete}
+          className="px-4 py-2 bg-red-800 text-white rounded-md hover:bg-red-700 focus:outline-none"
+        >
+          Delete Student
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const getRankColor = (rank) => {
+  const rankLower = rank.toLowerCase();
+  
+  if (rankLower.includes('newbie')) return 'text-gray-500';
+  if (rankLower.includes('pupil')) return 'text-green-500';
+  if (rankLower.includes('specialist')) return 'text-cyan-500';
+  if (rankLower.includes('expert')) return 'text-blue-500';
+  if (rankLower.includes('candidate master')) return 'text-purple-500';
+  if (rankLower.includes('master')) return 'text-orange-500';
+  if (rankLower.includes('grandmaster')) return 'text-red-500';
+  if (rankLower.includes('international')) return 'text-red-600';
+  if (rankLower.includes('legendary')) return 'text-red-700';
+  
+  return 'text-gray-700 dark:text-gray-300';
+};
+
+export default StudentCard;
