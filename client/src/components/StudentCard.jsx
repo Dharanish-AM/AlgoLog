@@ -119,7 +119,7 @@ const StudentCard = ({ student, onClose }) => {
                 Top Badges:
               </span>
               <span className="font-semibold text-secondary-600 dark:text-secondary-400">
-                {hackerrank.badges.length}
+                {hackerrank.badges?.length}
               </span>
             </div>
             <div className="space-y-2">
