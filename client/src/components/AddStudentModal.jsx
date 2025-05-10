@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
-const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
+const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -18,8 +18,8 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
     onClose();
+    onSubmit(formData);
   };
 
   if (!isOpen) return null;

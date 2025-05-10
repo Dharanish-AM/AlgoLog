@@ -61,7 +61,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
           student={selectedStudent}
         />
       ) : (
-        <div className="overflow-auto scrollbar-hide bg-gradient-radial h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+        <div className="overflow-auto scrollbar-hide bg-gradient-radial min-w-[45vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
           <div className="bg-gradient-to-r from-purple-800 to-secondary-600 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm"></div>
             <div className="relative flex items-center gap-6">

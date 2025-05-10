@@ -8,7 +8,7 @@ import { Code, Download, Loader, Search, Upload, UserPlus } from "lucide-react";
 import axios from "axios";
 import Papa from "papaparse";
 import toast, { Toaster } from "react-hot-toast";
-import { GridLoader } from "react-spinners";
+import { GridLoader, MoonLoader } from "react-spinners";
 
 const Dashboard = () => {
   const [students, setStudents] = useState([]);
@@ -200,6 +200,11 @@ const Dashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
+      {addLoading && (
+        <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center z-60">
+          <MoonLoader color="#C084FC" size={40} />
+        </div>
+      )}
       <div className="mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center">
