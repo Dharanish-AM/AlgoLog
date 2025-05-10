@@ -51,7 +51,7 @@ const Dashboard = () => {
     if (searchTerm) {
       const term = searchTerm?.toLowerCase();
       result = result.filter((student) =>
-        student.name?.toLowerCase().includes(term)
+        student.name?.toLowerCase()?.includes(term)
       );
     }
 

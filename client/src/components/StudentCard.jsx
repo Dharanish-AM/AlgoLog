@@ -242,15 +242,15 @@ const StudentCard = ({ student, onClose }) => {
 const getRankColor = (rank) => {
   const rankLower = rank?.toLowerCase();
 
-  if (rankLower.includes("newbie")) return "text-gray-500";
-  if (rankLower.includes("pupil")) return "text-green-500";
-  if (rankLower.includes("specialist")) return "text-cyan-500";
-  if (rankLower.includes("expert")) return "text-blue-500";
-  if (rankLower.includes("candidate master")) return "text-purple-500";
-  if (rankLower.includes("master")) return "text-orange-500";
-  if (rankLower.includes("grandmaster")) return "text-red-500";
-  if (rankLower.includes("international")) return "text-red-600";
-  if (rankLower.includes("legendary")) return "text-red-700";
+  if (rankLower?.includes("newbie")) return "text-gray-500";
+  if (rankLower?.includes("pupil")) return "text-green-500";
+  if (rankLower?.includes("specialist")) return "text-cyan-500";
+  if (rankLower?.includes("expert")) return "text-blue-500";
+  if (rankLower?.includes("candidate master")) return "text-purple-500";
+  if (rankLower?.includes("master")) return "text-orange-500";
+  if (rankLower?.includes("grandmaster")) return "text-red-500";
+  if (rankLower?.includes("international")) return "text-red-600";
+  if (rankLower?.includes("legendary")) return "text-red-700";
 
   return "text-gray-700 dark:text-gray-300";
 };
