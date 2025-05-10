@@ -21,7 +21,7 @@ const StudentTable = ({
     }
   };
 
-  console.log(students)
+  console.log(students);
 
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;
@@ -178,18 +178,18 @@ const StudentTable = ({
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-100">
-                    Rating: {student.stats.codechef?.rating ?? "N/A"}
+                    Rating: {student?.stats?.codechef?.rating || "N/A"}
                   </div>
                   <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {student.stats.codechef?.fullySolved ?? 0} solved
+                    {student.stats?.codechef?.fullySolved ?? "N/A"} solved
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900 dark:text-gray-100">
-                    Rating: {student.stats.codeforces?.rating ?? "N/A"}
+                    Rating: {student.stats?.codeforces?.rating ?? "N/A"}
                   </div>
                   <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
-                    {student.stats.codeforces?.rank ?? "N/A"}
+                    {student.stats?.codeforces?.rank ?? "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
