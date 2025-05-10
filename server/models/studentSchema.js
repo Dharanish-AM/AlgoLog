@@ -11,7 +11,66 @@ const studentSchema = new mongoose.Schema({
   hackerrank: { type: String, required: true },
   codechef: { type: String, required: true },
   codeforces: { type: String, required: true },
+  updatedAt: { type: Date },
+  skillrack: {
+    type: String,
+    required: true,
+  },
+  stats: {
+    leetcode: {
+      platform: String,
+      solved: {
+        All: Number,
+        Easy: Number,
+        Medium: Number,
+        Hard: Number,
+      },
+      rating: {
+        type: String,
+      },
+    },
+    hackerrank: {
+      platform: String,
+      badges: [
+        {
+          name: String,
+          stars: Number,
+        },
+      ],
+    },
+    codechef: {
+      platform: String,
+      rating: String,
+      fullySolved: Number,
+    },
+    codeforces: {
+      platform: String,
+      rating: mongoose.Schema.Types.Mixed,
+      rank: String,
+      maxRating: mongoose.Schema.Types.Mixed,
+      contests: Number,
+    },
+    skillrack: {
+      platform: String,
+      rank: Number,
+      programsSolved: Number,
+      languages: {
+        JAVA: Number,
+        C: Number,
+        SQL: Number,
+        PYTHON3: Number,
+        CPP: Number,
+      },
+      certificates: [
+        {
+          title: String,
+          date: String,
+          link: String,
+        },
+      ],
+    },
+  },
 });
 
 const Student = mongoose.model("Student", studentSchema);
-module.exports = Student; 
+module.exports = Student;

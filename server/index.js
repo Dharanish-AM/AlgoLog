@@ -39,13 +39,15 @@ async function getStatsForStudent(student) {
     hackerrank,
     codechef,
     codeforces,
+    skillrack,
   } = student;
 
-  const [leet, hack, chef, cf] = await Promise.allSettled([
+  const [leet, hack, chef, cf, skill] = await Promise.allSettled([
     getLeetCodeStats(leetcode),
     getHackerRankStats(hackerrank),
     getCodeChefStats(codechef),
     getCodeforcesStats(codeforces),
+    getSkillrackStats(skillrack),
   ]);
 
   return {
@@ -61,6 +63,7 @@ async function getStatsForStudent(student) {
       hackerrank: hack.value || { error: "Failed" },
       codechef: chef.value || { error: "Failed" },
       codeforces: cf.value || { error: "Failed" },
+      skillrack: skill.value || { error: "Failed" },
     },
   };
 }
@@ -72,23 +75,64 @@ app.get("/", (req, res) => {
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find({});
-
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
-
-    const results = [];
-    for (const student of students) {
-      const stats = await getStatsForStudent(student);
-      results.push(stats);
-    }
+    const results = await Promise.all(
+      students.map(async (student) => {
+        if (student.stats?.leetcode?.solved?.All) {
+          const { stats, ...studentWithoutStats } = student.toObject();
+          return {
+            ...studentWithoutStats,
+            stats: student.stats,
+          };
+        } else {
+          const updatedStudent = await getStatsForStudent(student);
+          const { stats, ...updatedStudentWithoutStats } = updatedStudent;
+          return {
+            ...updatedStudentWithoutStats,
+            stats: updatedStudent.stats,
+          };
+        }
+      })
+    );
 
     res.status(200).json({
       students: results,
+      updatedAt: students.updatedAt,
     });
   } catch (error) {
     console.error("Error fetching students and stats:", error);
     res.status(500).json({ error: "Failed to fetch students and stats" });
+  }
+});
+
+app.get("/api/students/refetch", async (req, res) => {
+  try {
+    const students = await Student.find({});
+    if (!students || students.length === 0) {
+      return res.status(200).json({ students: [] });
+    }
+
+    const updateOperations = await Promise.all(
+      students.map(async (student) => {
+        const updatedStats = await getStatsForStudent(student);
+        return {
+          updateOne: {
+            filter: { _id: student._id },
+            update: { stats: updatedStats.stats, updatedAt: new Date() },
+          },
+        };
+      })
+    );
+
+    const bulkWriteResult = await Student.bulkWrite(updateOperations);
+
+    const updatedStudents = await Student.find({});
+    res.status(200).json({ students: updatedStudents });
+  } catch (error) {
+    console.error("Error refetching student stats:", error);
+    res.status(500).json({ error: "Failed to refetch stats for all students" });
   }
 });
 
@@ -105,9 +149,8 @@ app.post("/api/students", async (req, res) => {
       hackerrank,
       codechef,
       codeforces,
+      skillrack,
     } = req.body;
-
-    console.log(req.body);
 
     if (!name || !email || !rollNo) {
       return res
@@ -115,7 +158,7 @@ app.post("/api/students", async (req, res) => {
         .json({ error: "Name, email, and roll number are required" });
     }
 
-    const newStudent = new Student({
+    const studentInfo = {
       name,
       email,
       rollNo,
@@ -126,6 +169,14 @@ app.post("/api/students", async (req, res) => {
       hackerrank,
       codechef,
       codeforces,
+      skillrack,
+    };
+
+    const statsResult = await getStatsForStudent(studentInfo);
+
+    const newStudent = new Student({
+      ...studentInfo,
+      stats: statsResult.stats,
     });
 
     const savedStudent = await newStudent.save();
@@ -150,29 +201,53 @@ app.put("/api/students/:id", async (req, res) => {
       hackerrank,
       codechef,
       codeforces,
+      skillRack,
     } = req.body;
 
+    const existingStudent = await Student.findById(id);
+    if (!existingStudent) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+
+    const platformChanged =
+      existingStudent.leetcode !== leetcode ||
+      existingStudent.hackerrank !== hackerrank ||
+      existingStudent.codechef !== codechef ||
+      existingStudent.codeforces !== codeforces ||
+      existingStudent.skillRack !== skillRack;
+
+    const updatedData = {
+      name,
+      email,
+      rollNo,
+      year,
+      department,
+      section,
+      leetcode,
+      hackerrank,
+      codechef,
+      codeforces,
+      skillRack,
+    };
+
+    let stats = existingStudent.stats;
+
+    if (platformChanged) {
+      const updatedStats = await getStatsForStudent({
+        ...updatedData,
+      });
+      stats = updatedStats.stats;
+    }
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       {
-        name,
-        email,
-        rollNo,
-        year,
-        department,
-        section,
-        leetcode,
-        hackerrank,
-        codechef,
-        codeforces,
+        ...updatedData,
+        stats,
       },
       { new: true }
     );
 
-    if (!updatedStudent) {
-      return res.status(404).json({ error: "Student not found" });
-    }
     res.status(200).json(updatedStudent);
   } catch (error) {
     console.error("Error updating student:", error);
@@ -205,6 +280,7 @@ async function getLeetCodeStats(username) {
         Medium: stats.find((i) => i.difficulty === "Medium").count,
         Hard: stats.find((i) => i.difficulty === "Hard").count,
       },
+      rating: res.data.data.matchedUser.userContestRanking?.rating || "N/A",
     };
   } catch {
     return { platform: "LeetCode", username, error: "Failed to fetch data" };
@@ -300,6 +376,71 @@ async function getCodeforcesStats(username) {
     return { platform: "Codeforces", username, error: "Failed to fetch data" };
   }
 }
+async function getSkillrackStats(resumeUrl) {
+  if (!resumeUrl || !resumeUrl.startsWith("http")) {
+    return {
+      platform: "Skillrack",
+      error: "Skipped: Invalid or missing URL",
+    };
+  }
+  try {
+    const { data } = await axios.get(resumeUrl);
+    const $ = cheerio.load(data);
+
+    let rank = 0;
+    let programsSolved = 0;
+
+    $("div.statistic").each((i, el) => {
+      const label = $(el).find("div.label").text().trim();
+      const value = $(el).find("div.value").text().trim();
+      if (label.includes("RANK")) rank = parseInt(value);
+      if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
+    });
+
+    const languages = {};
+    $("div.statistic").each((i, el) => {
+      const label = $(el).find("div.label").text().trim().toUpperCase();
+      const value = $(el).find("div.value").text().trim();
+      if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
+        languages[label] = parseInt(value);
+      }
+    });
+
+    const certificates = [];
+    $("div.ui.brown.card").each((i, el) => {
+      const content = $(el).find("div.content");
+
+      const title = content.find("b").text().trim();
+      const dateMatch = content
+        .text()
+        .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
+      const date = dateMatch ? dateMatch[0] : "";
+      const link = content.find("a").attr("href");
+
+      if (title && link) {
+        certificates.push({ title, date, link });
+      }
+    });
+
+    return {
+      platform: "Skillrack",
+      rank,
+      programsSolved,
+      languages,
+      certificates,
+    };
+  } catch (error) {
+    console.error("Error fetching Skillrack stats:", error.message);
+    return {
+      platform: "Skillrack",
+      error: "Failed to fetch data",
+    };
+  }
+}
+
+// const skillrackUrl =
+//   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
+// getSkillrackStats(skillrackUrl).then(console.log);
 
 const PORT = process.env.PORT || 8000;
 

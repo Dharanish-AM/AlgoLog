@@ -13,19 +13,20 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
     hackerrank: "",
     codechef: "",
     codeforces: "",
+    skillrack: "",
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     onSubmit(formData);
-    // onClose();
+    onClose();
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="scrollbar-hide bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-xl max-h-[90vh] overflow-y-auto">
+      <div className="scrollbar-hide bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-[50vw] max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Add New Student
@@ -68,6 +69,12 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
               type: "text",
               required: true,
             },
+            {
+              label: "SkillRack Profile URL",
+              key: "skillrack",
+              type: "url",
+              required: true,
+            },
           ].map(({ label, key, type = "text", required }, index) => (
             <React.Fragment key={key}>
               <div>
@@ -87,6 +94,8 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                       ? "Enter codechef username (e.g., johndoe_cc)"
                       : key === "codeforces"
                       ? "Enter codeforces username (e.g., johndoe_cf)"
+                      : key === "skillrack"
+                      ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181....)"
                       : `Enter ${label.toLowerCase()}`
                   }
                   onChange={(e) =>
@@ -108,7 +117,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                     }
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="" disabled>Select academic year</option>
+                    <option value="" disabled>
+                      Select academic year
+                    </option>
                     <option value="2027-2031">2027-2031</option>
                     <option value="2026-2030">2026-2030</option>
                     <option value="2025-2029">2025-2029</option>
@@ -117,7 +128,6 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                     <option value="2022-2026">2022-2026</option>
                     <option value="2021-2025">2021-2025</option>
                     <option value="2020-2024">2020-2024</option>
-
                   </select>
                 </div>
               )}
@@ -134,7 +144,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                     }
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
-                    <option value="" disabled>Select department</option>
+                    <option value="" disabled>
+                      Select department
+                    </option>
                     <option value="CSE">CSE</option>
                     <option value="IT">IT</option>
                     <option value="ECE">ECE</option>

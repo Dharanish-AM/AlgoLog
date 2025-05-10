@@ -4,10 +4,12 @@ import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
 
 const StudentCard = ({ student, onClose, reFetchStudents }) => {
-  const { name, avatar, leetcode, hackerrank, codechef, codeforces } =
+  const { name, leetcode, hackerrank, codechef, codeforces, skillrack } =
     student.stats;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(student);
+
+  console.log(skillrack);
 
   const handleEdit = () => {
     setIsEditOpen(true);
@@ -39,7 +41,9 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
   };
 
   const leetcodeTotal =
-    leetcode.solved.Easy + leetcode.solved.Medium + leetcode.solved.Hard;
+    (leetcode?.solved?.Easy || 0) +
+    (leetcode?.solved?.Medium || 0) +
+    (leetcode?.solved?.Hard || 0);
   const leetcodePercentage = Math.min(
     100,
     Math.round((leetcodeTotal / 3525) * 100)
@@ -93,8 +97,8 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
               />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 p-8">
-            <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+          <div className="flex flex-col gap-8 p-8">
+            <div className="space-y-6 border border-gray-700 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Code size={24} className="text-primary-500" />
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -122,7 +126,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                       Easy
                     </div>
                     <div className="font-bold text-green-600 dark:text-green-400">
-                      {leetcode.solved.Easy}
+                      {leetcode?.solved?.Easy ?? "N/A"}
                     </div>
                   </div>
                   <div className="bg-yellow-50 dark:bg-yellow-900/30 p-3 rounded-lg text-center transform hover:scale-105 transition-transform">
@@ -130,7 +134,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                       Medium
                     </div>
                     <div className="font-bold text-yellow-600 dark:text-yellow-400">
-                      {leetcode.solved.Medium}
+                      {leetcode?.solved?.Medium ?? "N/A"}
                     </div>
                   </div>
                   <div className="bg-red-50 dark:bg-red-900/30 p-3 rounded-lg text-center transform hover:scale-105 transition-transform">
@@ -138,13 +142,96 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                       Hard
                     </div>
                     <div className="font-bold text-red-600 dark:text-red-400">
-                      {leetcode.solved.Hard}
+                      {leetcode?.solved?.Hard ?? "N/A"}
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <Code size={24} className="text-purple-500" />
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  SkillRack
+                </h4>
+              </div>
+              <div className="space-y-4">
+                <div className="space-y-3">
+                  <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                    Languages
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {skillrack?.languages ? (
+                      Object.entries(skillrack.languages).map(
+                        ([language, count]) => (
+                          <div
+                            key={language}
+                            className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-center"
+                          >
+                            <div className="font-semibold text-gray-800 dark:text-white">
+                              {language}
+                            </div>
+                            <div className="text-sm text-gray-600 dark:text-gray-300">
+                              {count} solved
+                            </div>
+                          </div>
+                        )
+                      )
+                    ) : (
+                      <div className="text-sm text-gray-500">N/A</div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Rank
+                  </span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">
+                    {skillrack?.rank ?? "N/A"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Total Programs Solved
+                  </span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">
+                    {skillrack?.programsSolved ?? "N/A"}
+                  </span>
+                </div>
+
+                {skillrack?.certificates?.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-600 dark:text-gray-300">
+                      Certificates
+                    </div>
+                    {skillrack.certificates.slice(0, 3).map((certificate) => (
+                      <div
+                        key={certificate._id}
+                        className="flex items-center justify-between p-3 rounded-lg bg-white dark:bg-gray-700/50"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Award size={20} className="text-purple-500" />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            {certificate.title}
+                          </span>
+                        </div>
+                        <a
+                          href={certificate.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-purple-600 dark:text-purple-400 text-sm ml-2"
+                        >
+                          View Certificate
+                        </a>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Trophy size={24} className="text-secondary-500" />
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -157,32 +244,41 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                     Top Badges:
                   </span>
                   <span className="font-semibold text-secondary-600 dark:text-secondary-400">
-                    {hackerrank.badges?.length}
+                    {hackerrank?.badges?.length ?? "N/A"}
                   </span>
                 </div>
                 <div className="space-y-2">
-                  {hackerrank.badges?.slice(0, 5).map((badge, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-white dark:bg-gray-700/50 p-3 rounded-lg transform hover:scale-102 transition-transform"
-                    >
-                      <div className="flex items-center gap-3">
-                        <Award size={20} className="text-secondary-500" />
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
-                          {badge.name}
-                        </span>
+                  {hackerrank?.badges?.length > 0 ? (
+                    hackerrank.badges.slice(0, 5).map((badge, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-white dark:bg-gray-700/50 p-3 rounded-lg transform hover:scale-102 transition-transform"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Award size={20} className="text-secondary-500" />
+                          <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                            {badge.name}
+                          </span>
+                        </div>
+                        <div className="flex gap-[2px]">
+                          {Array.from({ length: badge.stars }).map((_, i) => (
+                            <Star
+                              key={i}
+                              size={14}
+                              className="text-yellow-400"
+                            />
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex gap-[2px]">
-                        {Array.from({ length: badge.stars }).map((_, i) => (
-                          <Star key={i} size={14} className="text-yellow-400" />
-                        ))}
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <div className="text-sm text-gray-500">N/A</div>
+                  )}
                 </div>
               </div>
             </div>
-            <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Star size={24} className="text-orange-500" />
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -195,7 +291,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                     Rating
                   </span>
                   <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {codechef.rating}
+                    {codechef?.rating & "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -203,22 +299,20 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                     Problems Solved
                   </span>
                   <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {codechef.fullySolved || "N/A"}
+                    {codechef?.fullySolved ?? "N/A"}
                   </span>
                 </div>
-                {codechef.rank && (
-                  <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
-                    <span className="text-sm text-gray-600 dark:text-gray-300">
-                      Rank
-                    </span>
-                    <span className="font-semibold text-orange-600 dark:text-orange-400">
-                      {codechef.rank}
-                    </span>
-                  </div>
-                )}
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Rank
+                  </span>
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
+                    {codechef?.rank ?? "N/A"}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className="space-y-6 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Code size={24} className="text-blue-500" />
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
@@ -231,7 +325,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                     Rating
                   </span>
                   <span className="font-semibold text-blue-600 dark:text-blue-400">
-                    {codeforces.rating}
+                    {codeforces?.rating ?? "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -240,10 +334,10 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                   </span>
                   <span
                     className={`font-semibold capitalize ${getRankColor(
-                      codeforces.rank
+                      codeforces?.rank ?? ""
                     )}`}
                   >
-                    {codeforces.rank}
+                    {codeforces?.rank ?? "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -251,7 +345,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                     Contests
                   </span>
                   <span className="font-semibold text-blue-600 dark:text-blue-400">
-                    {codeforces.contests}
+                    {codeforces?.contests ?? "N/A"}
                   </span>
                 </div>
               </div>

@@ -21,7 +21,7 @@ const StudentTable = ({
     }
   };
 
-  console.log(students);
+  console.log(students)
 
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;
@@ -105,6 +105,12 @@ const StudentTable = ({
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 capitalize tracking-wider"
               >
+                <span className="flex items-center">SkillRack</span>
+              </th>
+              <th
+                scope="col"
+                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 capitalize tracking-wider"
+              >
                 Details
               </th>
             </tr>
@@ -112,9 +118,9 @@ const StudentTable = ({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {students?.map((student) => (
               <tr
-                key={student.id}
+                key={student._id}
                 className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
-                  selectedStudent?.id === student.id
+                  selectedStudent?._id === student._id
                     ? "bg-blue-50 dark:bg-blue-900/20"
                     : ""
                 }`}
@@ -184,6 +190,14 @@ const StudentTable = ({
                   </div>
                   <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
                     {student.stats.codeforces?.rank ?? "N/A"}
+                  </div>
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <div className="text-sm text-gray-900 dark:text-gray-100">
+                    {student.stats.skillrack?.programsSolved ?? "N/A"} solved
+                  </div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    Rank: {student.stats.skillrack?.rank ?? "N/A"}
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

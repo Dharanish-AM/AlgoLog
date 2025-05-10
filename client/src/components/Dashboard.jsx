@@ -22,6 +22,7 @@ const Dashboard = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [totalCount, setTotalCount] = useState(0);
+  const [addLoading, setAddLoading] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -40,6 +41,37 @@ const Dashboard = () => {
         setTotalCount(response.data.totalCount || updatedStudents.length);
 
         // Refresh selected student if applicable
+        if (selectedStudent) {
+          const updatedSelected = updatedStudents.find(
+            (s) => s._id === selectedStudent._id
+          );
+          if (updatedSelected) {
+            setSelectedStudent(updatedSelected);
+          }
+        }
+
+        setLoading(false);
+        setError(null);
+      }
+    } catch (err) {
+      console.error("Error fetching student data:", err);
+      setError("Failed to fetch student data. Please try again later.");
+      setLoading(false);
+    }
+  };
+
+  const refreshData = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/students/refetch`
+      );
+      if (response.status === 200) {
+        const updatedStudents = response.data.students;
+        setStudents(updatedStudents);
+        setFilteredStudents(updatedStudents);
+        setTotalCount(response.data.totalCount || updatedStudents.length);
+
         if (selectedStudent) {
           const updatedSelected = updatedStudents.find(
             (s) => s._id === selectedStudent._id
@@ -108,6 +140,7 @@ const Dashboard = () => {
 
   const handleAddStudent = async (newStudent) => {
     console.log(newStudent);
+    setAddLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/students`,
@@ -123,7 +156,8 @@ const Dashboard = () => {
       console.error("Error adding student:", err);
       setError("Failed to add student. Please try again.");
       toast.error("Failed to add student.");
-      return;
+    } finally {
+      setAddLoading(false);
     }
   };
 
@@ -175,6 +209,42 @@ const Dashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-4">
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Last Updated:{" "}
+              {students && students[0]?.updatedAt
+                ? new Date(students[0].updatedAt).toLocaleString()
+                : "N/A"}
+            </div>
+
+            <button
+              onClick={refreshData}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-5 h-5 text-gray-800 dark:text-gray-100"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M4.5 12a7.5 7.5 0 0113.148-5.289m0 0H14.25m3.398 0v3.398M19.5 12a7.5 7.5 0 01-13.148 5.289m0 0H9.75m-3.398 0v-3.398"
+                />
+              </svg>
+              <span className="text-sm text-gray-900 dark:text-gray-100">
+                Refresh
+              </span>
+            </button>
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-gray-100 rounded-md hover:bg-blue-700"
+            >
+              <UserPlus size={18} />
+              <span className="text-sm">Add Student</span>
+            </button>
             <button
               onClick={handleExportCSV}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
@@ -186,13 +256,6 @@ const Dashboard = () => {
               <span className="text-sm text-gray-900 dark:text-gray-100 text-gray-800">
                 Export CSV
               </span>
-            </button>
-            <button
-              onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-gray-100 rounded-md hover:bg-blue-700"
-            >
-              <UserPlus size={18} />
-              <span className="text-sm">Add Student</span>
             </button>
             <ThemeToggle />
           </div>
@@ -237,6 +300,7 @@ const Dashboard = () => {
           isOpen={isAddModalOpen}
           onClose={() => setIsAddModalOpen(false)}
           onSubmit={handleAddStudent}
+          loading={addLoading}
         />
 
         {selectedStudent && (
