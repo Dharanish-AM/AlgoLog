@@ -240,7 +240,7 @@ const StudentCard = ({ student, onClose }) => {
 };
 
 const getRankColor = (rank) => {
-  const rankLower = rank.toLowerCase();
+  const rankLower = rank?.toLowerCase();
 
   if (rankLower.includes("newbie")) return "text-gray-500";
   if (rankLower.includes("pupil")) return "text-green-500";

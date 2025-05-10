@@ -43,7 +43,6 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
             { label: "Name", key: "name", type: "text", required: true },
             { label: "Email", key: "email", type: "email", required: true },
             { label: "Roll Number", key: "rollNo", required: true },
-            { label: "Year", key: "year", required: true },
             { label: "Section", key: "section", required: true },
             {
               label: "LeetCode Profile ID",
@@ -79,14 +78,50 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                   type={type}
                   value={formData[key]}
                   required={required}
-                  placeholder={`Enter ${label.toLowerCase()}`}
+                  placeholder={
+                    key === "leetcode"
+                      ? "Enter leetcode username (e.g., johndoe123)"
+                      : key === "hackerrank"
+                      ? "Enter hackerrank username (e.g., johndoe_hr)"
+                      : key === "codechef"
+                      ? "Enter codechef username (e.g., johndoe_cc)"
+                      : key === "codeforces"
+                      ? "Enter codeforces username (e.g., johndoe_cf)"
+                      : `Enter ${label.toLowerCase()}`
+                  }
                   onChange={(e) =>
                     setFormData({ ...formData, [key]: e.target.value })
                   }
                   className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>
-              {key === "year" && (
+              {key === "section" && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Year
+                  </label>
+                  <select
+                    value={formData.year}
+                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, year: e.target.value })
+                    }
+                    className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="" disabled>Select academic year</option>
+                    <option value="2027-2031">2027-2031</option>
+                    <option value="2026-2030">2026-2030</option>
+                    <option value="2025-2029">2025-2029</option>
+                    <option value="2024-2028">2024-2028</option>
+                    <option value="2023-2027">2023-2027</option>
+                    <option value="2022-2026">2022-2026</option>
+                    <option value="2021-2025">2021-2025</option>
+                    <option value="2020-2024">2020-2024</option>
+
+                  </select>
+                </div>
+              )}
+              {key === "section" && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                     Department

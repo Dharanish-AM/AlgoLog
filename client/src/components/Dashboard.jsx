@@ -49,9 +49,9 @@ const Dashboard = () => {
     let result = students ? [...students] : [];
 
     if (searchTerm) {
-      const term = searchTerm.toLowerCase();
+      const term = searchTerm?.toLowerCase();
       result = result.filter((student) =>
-        student.name.toLowerCase().includes(term)
+        student.name?.toLowerCase().includes(term)
       );
     }
 
@@ -99,7 +99,7 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/students`,
         newStudent
       );
-      if (response?.status === 200) {
+      if (response?.status === 200 || response?.status === 201) {
         fetchData();
         setIsAddModalOpen(false);
         toast.success("Student added successfully!");
