@@ -201,13 +201,15 @@ async function getCodeChefStats(username) {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-    const rating = $("div.rating-number")
+   const rating = $("div.rating-number")
       .contents()
       .filter(function () {
         return this.type === "text";
       })
       .text()
-      .trim();
+      .trim()
+      .replace("?", "");
+      
 
     const solvedText = $("h3")
       .filter((i, el) => $(el).text().includes("Total Problems Solved"))
