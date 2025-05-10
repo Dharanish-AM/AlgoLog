@@ -21,6 +21,7 @@ const Dashboard = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("all");
+  const [totalCount, setTotalCount] = useState(0);
 
   useEffect(() => {
     fetchData();
@@ -33,8 +34,21 @@ const Dashboard = () => {
         `${import.meta.env.VITE_API_URL}/api/students`
       );
       if (response.status === 200) {
-        setStudents(response.data.students);
-        setFilteredStudents(response.data.students);
+        const updatedStudents = response.data.students;
+        setStudents(updatedStudents);
+        setFilteredStudents(updatedStudents);
+        setTotalCount(response.data.totalCount || updatedStudents.length);
+
+        // Refresh selected student if applicable
+        if (selectedStudent) {
+          const updatedSelected = updatedStudents.find(
+            (s) => s._id === selectedStudent._id
+          );
+          if (updatedSelected) {
+            setSelectedStudent(updatedSelected);
+          }
+        }
+
         setLoading(false);
         setError(null);
       }
@@ -100,7 +114,7 @@ const Dashboard = () => {
         newStudent
       );
       if (response?.status === 200 || response?.status === 201) {
-        fetchData();
+        await fetchData();
         setIsAddModalOpen(false);
         toast.success("Student added successfully!");
       }
@@ -117,15 +131,20 @@ const Dashboard = () => {
     const csv = Papa.unparse(
       students.map((student) => ({
         name: student.name,
-        avatar: student.avatar,
-        leetcode_easy: student.leetcode.easy,
-        leetcode_medium: student.leetcode.medium,
-        leetcode_hard: student.leetcode.hard,
-        codechef_rating: student.codechef.rating,
-        codechef_solved: student.codechef.solved,
-        codeforces_rating: student.codeforces.rating,
-        codeforces_rank: student.codeforces.rank,
-        codeforces_contests: student.codeforces.contests,
+        email: student.email,
+        rollNo: student.rollNo,
+        department: student.department,
+        year: student.year,
+        section: student.section,
+        leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
+        leetcode_medium: student.stats.leetcode?.solved?.Medium || 0,
+        leetcode_hard: student.stats.leetcode?.solved?.Hard || 0,
+        hackerrank_badges: student.stats.hackerrank?.badges?.length || 0,
+        codechef_rating: student.stats.codechef?.rating || 0,
+        codechef_solved: student.stats.codechef?.fullySolved || 0,
+        codeforces_rating: student.stats.codeforces?.rating || 0,
+        codeforces_rank: student.stats.codeforces?.rank || "N/A",
+        codeforces_contests: student.stats.codeforces?.contests || 0,
       }))
     );
 
@@ -135,46 +154,6 @@ const Dashboard = () => {
     link.download = "students.csv";
     link.click();
     toast.success("CSV exported successfully!");
-  };
-
-  const handleImportCSV = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    Papa.parse(file, {
-      complete: (results) => {
-        const newStudents = results.data.slice(1).map((row) => ({
-          id: crypto.randomUUID(),
-          name: row[0],
-          avatar: row[1],
-          leetcode: {
-            easy: parseInt(row[2]) || 0,
-            medium: parseInt(row[3]) || 0,
-            hard: parseInt(row[4]) || 0,
-            total: parseInt(row[2]) + parseInt(row[3]) + parseInt(row[4]) || 0,
-          },
-          hackerrank: {
-            badges: [],
-          },
-          codechef: {
-            rating: parseInt(row[5]) || 0,
-            solved: parseInt(row[6]) || 0,
-          },
-          codeforces: {
-            rating: parseInt(row[7]) || 0,
-            rank: row[8] || "Newbie",
-            contests: parseInt(row[9]) || 0,
-          },
-        }));
-        setStudents((prev) => [...prev, ...newStudents]);
-        toast.success("CSV imported successfully!");
-      },
-      header: true,
-      error: () => {
-        toast.error("Error importing CSV file");
-      },
-    });
-    event.target.value = "";
   };
 
   if (loading) {
@@ -196,30 +175,21 @@ const Dashboard = () => {
             </h1>
           </div>
           <div className="flex items-center gap-4">
-            <input
-              type="file"
-              accept=".csv"
-              onChange={handleImportCSV}
-              className="hidden"
-              id="csv-upload"
-            />
-            <label
-              htmlFor="csv-upload"
-              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer"
-            >
-              <Upload size={18} />
-              <span className="text-sm">Import CSV</span>
-            </label>
             <button
               onClick={handleExportCSV}
               className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
             >
-              <Download size={18} />
-              <span className="text-sm">Export CSV</span>
+              <Download
+                className="dark:text-gray-100 text-gray-800"
+                size={18}
+              />
+              <span className="text-sm text-gray-900 dark:text-gray-100 text-gray-800">
+                Export CSV
+              </span>
             </button>
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-gray-100 rounded-md hover:bg-blue-700"
             >
               <UserPlus size={18} />
               <span className="text-sm">Add Student</span>
@@ -228,7 +198,13 @@ const Dashboard = () => {
           </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex items-center gap-2 justify-center border dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 bg-white dark:bg-gray-800 rounded-md shadow-sm px-10 py-4 rounded-xl shadow-md">
+            <span className="dark:text-gray-100 flex-shrink-0 text-sm">
+              Total Students:{" "}
+            </span>
+            <span className="text-sm dark:text-gray-100">{totalCount}</span>
+          </div>
           <SearchBar
             selectedPlatform={selectedPlatform}
             setSelectedPlatform={setSelectedPlatform}
@@ -268,11 +244,23 @@ const Dashboard = () => {
             <StudentCard
               onClose={() => setSelectedStudent(null)}
               student={selectedStudent}
+              reFetchStudents={fetchData}
             />
           </div>
         )}
 
         <Toaster position="bottom-right" />
+        <footer className="fixed bottom-4 right-4 text-xs text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded shadow-md backdrop-blur-sm">
+          Made with 💻 by{" "}
+          <a
+            href="https://github.com/Dharanish-AM"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 dark:text-purple-400 hover:underline"
+          >
+            @dharanisham
+          </a>
+        </footer>
       </div>
     </div>
   );

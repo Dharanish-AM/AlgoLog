@@ -26,6 +26,45 @@ mongoose
     console.error("Error connecting to MongoDB:", err);
   });
 
+async function getStatsForStudent(student) {
+  const {
+    _id,
+    name,
+    email,
+    rollNo,
+    year,
+    department,
+    section,
+    leetcode,
+    hackerrank,
+    codechef,
+    codeforces,
+  } = student;
+
+  const [leet, hack, chef, cf] = await Promise.allSettled([
+    getLeetCodeStats(leetcode),
+    getHackerRankStats(hackerrank),
+    getCodeChefStats(codechef),
+    getCodeforcesStats(codeforces),
+  ]);
+
+  return {
+    _id,
+    name,
+    email,
+    rollNo,
+    year,
+    department,
+    section,
+    stats: {
+      leetcode: leet.value || { error: "Failed" },
+      hackerrank: hack.value || { error: "Failed" },
+      codechef: chef.value || { error: "Failed" },
+      codeforces: cf.value || { error: "Failed" },
+    },
+  };
+}
+
 app.get("/", (req, res) => {
   res.send("CodeTrackr API is running...");
 });
@@ -38,46 +77,11 @@ app.get("/api/students", async (req, res) => {
       return res.status(200).json({ students: [] });
     }
 
-    const results = await Promise.all(
-      students.map(async (student) => {
-        const {
-          _id,
-          name,
-          email,
-          rollNo,
-          year,
-          department,
-          section,
-          leetcode,
-          hackerrank,
-          codechef,
-          codeforces,
-        } = student;
-
-        const [leet, hack, chef, cf] = await Promise.all([
-          getLeetCodeStats(leetcode),
-          getHackerRankStats(hackerrank),
-          getCodeChefStats(codechef),
-          getCodeforcesStats(codeforces),
-        ]);
-
-        return {
-          _id,
-          name,
-          email,
-          rollNo,
-          year,
-          department,
-          section,
-          stats: {
-            leetcode: leet,
-            hackerrank: hack,
-            codechef: chef,
-            codeforces: cf,
-          },
-        };
-      })
-    );
+    const results = [];
+    for (const student of students) {
+      const stats = await getStatsForStudent(student);
+      results.push(stats);
+    }
 
     res.status(200).json({
       students: results,
@@ -129,6 +133,50 @@ app.post("/api/students", async (req, res) => {
   } catch (error) {
     console.error("Error adding student:", error);
     res.status(500).json({ error: "Failed to add student" });
+  }
+});
+
+app.put("/api/students/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      email,
+      rollNo,
+      year,
+      department,
+      section,
+      leetcode,
+      hackerrank,
+      codechef,
+      codeforces,
+    } = req.body;
+
+
+    const updatedStudent = await Student.findByIdAndUpdate(
+      id,
+      {
+        name,
+        email,
+        rollNo,
+        year,
+        department,
+        section,
+        leetcode,
+        hackerrank,
+        codechef,
+        codeforces,
+      },
+      { new: true }
+    );
+
+    if (!updatedStudent) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    res.status(200).json(updatedStudent);
+  } catch (error) {
+    console.error("Error updating student:", error);
+    res.status(500).json({ error: "Failed to update student" });
   }
 });
 
@@ -201,7 +249,7 @@ async function getCodeChefStats(username) {
     const { data } = await axios.get(url);
     const $ = cheerio.load(data);
 
-   const rating = $("div.rating-number")
+    const rating = $("div.rating-number")
       .contents()
       .filter(function () {
         return this.type === "text";
@@ -209,7 +257,6 @@ async function getCodeChefStats(username) {
       .text()
       .trim()
       .replace("?", "");
-      
 
     const solvedText = $("h3")
       .filter((i, el) => $(el).text().includes("Total Problems Solved"))
