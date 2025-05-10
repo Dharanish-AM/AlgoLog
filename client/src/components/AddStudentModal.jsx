@@ -44,7 +44,6 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
             { label: "Email", key: "email", type: "email", required: true },
             { label: "Roll Number", key: "rollNo", required: true },
             { label: "Year", key: "year", required: true },
-            { label: "Department", key: "department", required: true },
             { label: "Section", key: "section", required: true },
             {
               label: "LeetCode Profile ID",
@@ -70,22 +69,49 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
               type: "text",
               required: true,
             },
-          ].map(({ label, key, type = "text", required }) => (
-            <div key={key}>
-              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                {label}
-              </label>
-              <input
-                type={type}
-                value={formData[key]}
-                required={required}
-                placeholder={`Enter ${label.toLowerCase()}`}
-                onChange={(e) =>
-                  setFormData({ ...formData, [key]: e.target.value })
-                }
-                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
-            </div>
+          ].map(({ label, key, type = "text", required }, index) => (
+            <React.Fragment key={key}>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                  {label}
+                </label>
+                <input
+                  type={type}
+                  value={formData[key]}
+                  required={required}
+                  placeholder={`Enter ${label.toLowerCase()}`}
+                  onChange={(e) =>
+                    setFormData({ ...formData, [key]: e.target.value })
+                  }
+                  className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                />
+              </div>
+              {key === "year" && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Department
+                  </label>
+                  <select
+                    value={formData.department}
+                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, department: e.target.value })
+                    }
+                    className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="" disabled>Select department</option>
+                    <option value="CSE">CSE</option>
+                    <option value="IT">IT</option>
+                    <option value="ECE">ECE</option>
+                    <option value="EEE">EEE</option>
+                    <option value="MECH">MECH</option>
+                    <option value="CIVIL">CIVIL</option>
+                    <option value="AI&DS">AI&DS</option>
+                    <option value="AIML">AIML</option>
+                  </select>
+                </div>
+              )}
+            </React.Fragment>
           ))}
 
           <div className="flex justify-end gap-4 mt-6">
