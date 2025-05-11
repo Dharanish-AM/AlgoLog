@@ -78,20 +78,31 @@ app.get("/api/students", async (req, res) => {
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
+
     const results = await Promise.all(
       students.map(async (student) => {
-        if (student.stats?.leetcode?.solved?.All) {
+        const stats = student.stats;
+
+        const isStatsComplete =
+          stats &&
+          stats.leetcode?.solved?.All != null &&
+          stats.hackerrank?.badges &&
+          stats.codechef?.fullySolved != null &&
+          stats.codeforces?.contests != null &&
+          stats.skillrack?.programsSolved != null;
+
+        if (isStatsComplete) {
           const { stats, ...studentWithoutStats } = student.toObject();
           return {
             ...studentWithoutStats,
-            stats: student.stats,
+            stats,
           };
         } else {
           const updatedStudent = await getStatsForStudent(student);
           const { stats, ...updatedStudentWithoutStats } = updatedStudent;
           return {
             ...updatedStudentWithoutStats,
-            stats: updatedStudent.stats,
+            stats,
           };
         }
       })
@@ -99,7 +110,7 @@ app.get("/api/students", async (req, res) => {
 
     res.status(200).json({
       students: results,
-      updatedAt: students.updatedAt,
+      updatedAt: new Date(),
     });
   } catch (error) {
     console.error("Error fetching students and stats:", error);
