@@ -43,11 +43,11 @@ async function getStatsForStudent(student) {
   } = student;
 
   const [leet, hack, chef, cf, skill] = await Promise.allSettled([
-    getLeetCodeStats(leetcode),
-    getHackerRankStats(hackerrank),
-    getCodeChefStats(codechef),
-    getCodeforcesStats(codeforces),
-    getSkillrackStats(skillrack),
+    leetcode ? getLeetCodeStats(leetcode) : Promise.resolve(""),
+    hackerrank ? getHackerRankStats(hackerrank) : Promise.resolve(""),
+    codechef ? getCodeChefStats(codechef) : Promise.resolve(""),
+    codeforces ? getCodeforcesStats(codeforces) : Promise.resolve(""),
+    skillrack ? getSkillrackStats(skillrack) : Promise.resolve(""),
   ]);
 
   return {
@@ -59,58 +59,81 @@ async function getStatsForStudent(student) {
     department,
     section,
     stats: {
-      leetcode: leet.value || { error: "Failed" },
-      hackerrank: hack.value || { error: "Failed" },
-      codechef: chef.value || { error: "Failed" },
-      codeforces: cf.value || { error: "Failed" },
-      skillrack: skill.value || { error: "Failed" },
+      leetcode:
+        leet.status === "fulfilled" && leet.value
+          ? leet.value
+          : { platform: "LeetCode", error: "No data" },
+      hackerrank:
+        hack.status === "fulfilled" && hack.value
+          ? hack.value
+          : { platform: "HackerRank", error: "No data" },
+      codechef:
+        chef.status === "fulfilled" && chef.value
+          ? chef.value
+          : { platform: "CodeChef", error: "No data" },
+      codeforces:
+        cf.status === "fulfilled" && cf.value
+          ? cf.value
+          : { platform: "Codeforces", error: "No data" },
+      skillrack:
+        skill.status === "fulfilled" &&
+        skill.value &&
+        typeof skill.value === "object"
+          ? skill.value
+          : { platform: "Skillrack", certificates: [], error: "No data" },
     },
   };
 }
 
 app.get("/", (req, res) => {
-  res.send("CodeTrackr API is running...");
+  res.send("API is running...");
 });
 
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find({});
+
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
-    const results = await Promise.all(
-      students.map(async (student) => {
-        const stats = student.stats;
+    const results = [];
+    const toUpdate = [];
 
-        const isStatsComplete =
-          stats &&
-          stats.leetcode?.solved?.All != null &&
-          stats.hackerrank?.badges &&
-          stats.codechef?.fullySolved != null &&
-          stats.codeforces?.contests != null &&
-          stats.skillrack?.programsSolved != null;
+    for (const student of students) {
+      const stats = student.stats;
+      const isStatsComplete =
+        stats &&
+        stats.leetcode?.solved?.All != null &&
+        stats.hackerrank?.badges &&
+        stats.codechef?.fullySolved != null &&
+        stats.codeforces?.contests != null &&
+        stats.skillrack?.programsSolved != null;
 
-        if (isStatsComplete) {
-          const { stats, ...studentWithoutStats } = student.toObject();
-          return {
-            ...studentWithoutStats,
-            stats,
-          };
-        } else {
-          const updatedStudent = await getStatsForStudent(student);
-          const { stats, ...updatedStudentWithoutStats } = updatedStudent;
-          return {
-            ...updatedStudentWithoutStats,
-            stats,
-          };
-        }
-      })
-    );
+      if (isStatsComplete) {
+        const { stats, ...studentWithoutStats } = student.toObject();
+        results.push({ ...studentWithoutStats, stats });
+      } else {
+        results.push({ ...student.toObject(), needsUpdate: true });
+        toUpdate.push(student);
+      }
+    }
 
     res.status(200).json({
       students: results,
       updatedAt: new Date(),
+    });
+
+    Promise.all(
+      toUpdate.map(async (student) => {
+        const updated = await getStatsForStudent(student);
+        await Student.findByIdAndUpdate(student._id, {
+          stats: updated.stats,
+          updatedAt: new Date(),
+        });
+      })
+    ).catch((err) => {
+      console.error("Background stats update failed:", err);
     });
   } catch (error) {
     console.error("Error fetching students and stats:", error);
