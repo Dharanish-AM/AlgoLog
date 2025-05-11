@@ -7,6 +7,7 @@ const SearchBar = ({
   setSearchTerm,
   selectedPlatform,
   setSelectedPlatform,
+  onShowTopPerformer,
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
@@ -34,6 +35,7 @@ const SearchBar = ({
           </button>
         )}
       </div>
+
       <div className="flex-shrink-0">
         <select
           value={selectedPlatform}
@@ -47,6 +49,12 @@ const SearchBar = ({
           <option value={PLATFORMS.CODEFORCES}>Codeforces</option>
         </select>
       </div>
+      <button
+        onClick={onShowTopPerformer}
+        className="px-4 py-2 rounded-xl bg-purple-500 text-white hover:bg-purple-600 transition-all text-sm font-medium"
+      >
+        Top Performers
+      </button>
     </div>
   );
 };

@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [totalCount, setTotalCount] = useState(0);
   const [addLoading, setAddLoading] = useState(false);
+  const [showTopPerformer, setShowTopPerformer] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -95,48 +96,77 @@ const Dashboard = () => {
     let result = students ? [...students] : [];
 
     if (searchTerm) {
-      const term = searchTerm?.toLowerCase();
+      const term = searchTerm.toLowerCase();
       result = result.filter((student) =>
         student.name?.toLowerCase()?.includes(term)
       );
     }
 
-    result.sort((a, b) => {
-      let valueA, valueB;
+    if (selectedPlatform !== "all") {
+      const getScore = (student) => {
+        const stats = student.stats?.[selectedPlatform.toLowerCase()];
+        if (!stats) return -1;
 
-      if (sortField === "leetcode.total") {
-        valueA =
-          a.leetcode?.solved?.Easy +
-          a.leetcode?.solved?.Medium +
-          a.leetcode?.solved?.Hard;
-        valueB =
-          b.leetcode?.solved?.Easy +
-          b.leetcode?.solved?.Medium +
-          b.leetcode?.solved?.Hard;
-      } else if (sortField === "codechef.rating") {
-        valueA = a.codechef?.rating || 0;
-        valueB = b.codechef?.rating || 0;
-      } else if (sortField === "codeforces.rating") {
-        valueA = a.codeforces?.rating || 0;
-        valueB = b.codeforces?.rating || 0;
-      } else {
-        valueA = a[sortField];
-        valueB = b[sortField];
-      }
+        switch (selectedPlatform.toLowerCase()) {
+          case "leetcode":
+            return stats.solved?.All || 0;
+          case "hackerrank":
+            return stats.badges?.length || 0;
+          case "codechef":
+            return stats.fullySolved || 0;
+          case "codeforces":
+            return stats.contests || 0;
+          default:
+            return 0;
+        }
+      };
 
-      if (sortDirection === "asc") {
-        return valueA > valueB ? 1 : -1;
-      } else {
-        return valueA < valueB ? 1 : -1;
-      }
-    });
+      result.sort((a, b) => getScore(b) - getScore(a));
+    } else {
+      result.sort((a, b) => {
+        let valueA, valueB;
+
+        if (sortField === "leetcode.total") {
+          valueA =
+            a.leetcode?.solved?.Easy +
+            a.leetcode?.solved?.Medium +
+            a.leetcode?.solved?.Hard;
+          valueB =
+            b.leetcode?.solved?.Easy +
+            b.leetcode?.solved?.Medium +
+            b.leetcode?.solved?.Hard;
+        } else if (sortField === "codechef.rating") {
+          valueA = a.codechef?.rating || 0;
+          valueB = b.codechef?.rating || 0;
+        } else if (sortField === "codeforces.rating") {
+          valueA = a.codeforces?.rating || 0;
+          valueB = b.codeforces?.rating || 0;
+        } else {
+          valueA = a[sortField];
+          valueB = b[sortField];
+        }
+
+        if (sortDirection === "asc") {
+          return valueA > valueB ? 1 : -1;
+        } else {
+          return valueA < valueB ? 1 : -1;
+        }
+      });
+    }
 
     setFilteredStudents(result);
 
     if (selectedStudent && !result.find((s) => s._id === selectedStudent._id)) {
       setSelectedStudent(null);
     }
-  }, [students, searchTerm, sortField, sortDirection, selectedStudent]);
+  }, [
+    students,
+    searchTerm,
+    sortField,
+    sortDirection,
+    selectedStudent,
+    selectedPlatform,
+  ]);
 
   const handleAddStudent = async (newStudent) => {
     console.log(newStudent);
@@ -189,6 +219,127 @@ const Dashboard = () => {
     link.click();
     toast.success("CSV exported successfully!");
   };
+
+  useEffect(() => {
+    if (showTopPerformer) {
+      const getOverallScore = (student) => {
+        const platforms = [
+          "leetcode",
+          "hackerrank",
+          "codechef",
+          "codeforces",
+          "skillrack",
+        ];
+        let totalScore = 0;
+
+        platforms.forEach((platform) => {
+          const stats = student.stats?.[platform];
+          if (!stats) return;
+
+          switch (platform) {
+            case "leetcode":
+              totalScore += stats.solved?.All || 0;
+              break;
+            case "hackerrank":
+              totalScore += stats.badges?.length || 0;
+              break;
+            case "codechef":
+              totalScore += stats.fullySolved || 0;
+              break;
+            case "codeforces":
+              totalScore += stats.contests || 0;
+              break;
+            case "skillrack":
+              totalScore += stats.programsSolved || 0;
+              break;
+            default:
+              break;
+          }
+        });
+
+        return totalScore;
+      };
+
+      const sortedByOverallPerformance = [...students]
+        .filter((student) => getOverallScore(student) > 0)
+        .sort((a, b) => getOverallScore(b) - getOverallScore(a));
+
+      setFilteredStudents(sortedByOverallPerformance.slice(0, 3));
+    } else {
+      let result = students ? [...students] : [];
+
+      if (searchTerm) {
+        const term = searchTerm.toLowerCase();
+        result = result.filter((student) =>
+          student.name?.toLowerCase()?.includes(term)
+        );
+      }
+
+      if (selectedPlatform !== "all") {
+        const getScore = (student) => {
+          const stats = student.stats?.[selectedPlatform.toLowerCase()];
+          if (!stats) return -1;
+
+          switch (selectedPlatform.toLowerCase()) {
+            case "leetcode":
+              return stats.solved?.All || 0;
+            case "hackerrank":
+              return stats.badges?.length || 0;
+            case "codechef":
+              return stats.fullySolved || 0;
+            case "codeforces":
+              return stats.contests || 0;
+            default:
+              return 0;
+          }
+        };
+
+        result.sort((a, b) => getScore(b) - getScore(a));
+      } else {
+        result.sort((a, b) => {
+          let valueA, valueB;
+
+          if (sortField === "leetcode.total") {
+            valueA =
+              a.leetcode?.solved?.Easy +
+              a.leetcode?.solved?.Medium +
+              a.leetcode?.solved?.Hard;
+            valueB =
+              b.leetcode?.solved?.Easy +
+              b.leetcode?.solved?.Medium +
+              b.leetcode?.solved?.Hard;
+          } else if (sortField === "codechef.rating") {
+            valueA = a.codechef?.rating || 0;
+            valueB = b.codechef?.rating || 0;
+          } else if (sortField === "codeforces.rating") {
+            valueA = a.codeforces?.rating || 0;
+            valueB = b.codeforces?.rating || 0;
+          } else {
+            valueA = a[sortField];
+            valueB = b[sortField];
+          }
+
+          return sortDirection === "asc"
+            ? valueA > valueB
+              ? 1
+              : -1
+            : valueA < valueB
+            ? 1
+            : -1;
+        });
+      }
+
+      setFilteredStudents(result);
+    }
+  }, [
+    students,
+    searchTerm,
+    sortField,
+    sortDirection,
+    selectedStudent,
+    selectedPlatform,
+    showTopPerformer,
+  ]);
 
   if (loading) {
     return (
@@ -287,6 +438,9 @@ const Dashboard = () => {
             setSelectedPlatform={setSelectedPlatform}
             setSearchTerm={setSearchTerm}
             searchTerm={searchTerm}
+            onShowTopPerformer={() => {
+              setShowTopPerformer((prev) => !prev);
+            }}
           />
         </div>
 
@@ -302,6 +456,7 @@ const Dashboard = () => {
               setSortDirection={setSortDirection}
               selectedStudent={selectedStudent}
               setSelectedStudent={setSelectedStudent}
+              isShowTopPerformer={showTopPerformer}
             />
           ) : (
             <div className="text-center text-m italic text-gray-500">
