@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-
 const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
@@ -11,11 +9,7 @@ const studentSchema = new mongoose.Schema({
   hackerrank: { type: String, required: true },
   codechef: { type: String, required: true },
   codeforces: { type: String, required: true },
-  updatedAt: { type: Date, default: Date.now },
-  skillrack: {
-    type: String,
-    required: true,
-  },
+  skillrack: { type: String, required: true },
   stats: {
     leetcode: {
       platform: String,
@@ -25,9 +19,7 @@ const studentSchema = new mongoose.Schema({
         Medium: Number,
         Hard: Number,
       },
-      rating: {
-        type: String,
-      },
+      rating: String,
     },
     hackerrank: {
       platform: String,
@@ -70,7 +62,4 @@ const studentSchema = new mongoose.Schema({
       ],
     },
   },
-});
-
-const Student = mongoose.model("Student", studentSchema);
-module.exports = Student;
+}, { timestamps: true }); 
