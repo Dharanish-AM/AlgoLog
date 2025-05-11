@@ -11,7 +11,7 @@ const studentSchema = new mongoose.Schema({
   hackerrank: { type: String, required: true },
   codechef: { type: String, required: true },
   codeforces: { type: String, required: true },
-  updatedAt: { type: Date },
+  updatedAt: { type: Date, default: Date.now },
   skillrack: {
     type: String,
     required: true,
