@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
 const studentSchema = new mongoose.Schema({
   name: { type: String, required: true },
@@ -12,6 +12,7 @@ const studentSchema = new mongoose.Schema({
   codechef: { type: String, required: true },
   codeforces: { type: String, required: true },
   skillrack: { type: String, required: true },
+  updatedAt: { type: Date, default: Date.now },
   stats: {
     leetcode: {
       platform: String,
@@ -64,7 +65,7 @@ const studentSchema = new mongoose.Schema({
       ],
     },
   },
-}, { timestamps: true }); 
+});
 
-const Student = mongoose.model('Student', studentSchema);
+const Student = mongoose.model("Student", studentSchema);
 module.exports = Student;

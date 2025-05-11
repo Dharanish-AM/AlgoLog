@@ -4,6 +4,7 @@ const cheerio = require("cheerio");
 const cors = require("cors");
 const mongoose = require("mongoose");
 const https = require("https");
+const puppeteer = require("puppeteer");
 
 const agent = new https.Agent({ family: 4 });
 
@@ -178,7 +179,10 @@ app.get("/api/students/refetch", async (req, res) => {
             return {
               updateOne: {
                 filter: { _id: student._id },
-                update: { stats: updatedStats.stats },
+                update: {
+                  stats: updatedStats.stats,
+                  updatedAt: new Date(),
+                },
               },
             };
           } else {
@@ -517,6 +521,40 @@ async function getSkillrackStats(resumeUrl) {
     };
   }
 }
+
+async function getTryHackMeStats(username) {
+  const url = `https://tryhackme.com/p/${username}`;
+  const browser = await puppeteer.launch({ headless: "new" });
+  const page = await browser.newPage();
+
+  await page.goto(url, { waitUntil: "networkidle2" });
+
+  const stats = await page.evaluate(() => {
+    const getText = (label) => {
+      const statBox = Array.from(document.querySelectorAll("div")).find(
+        (div) => div.textContent.trim() === label
+      )?.parentElement;
+      return statBox?.querySelector("span")?.textContent?.trim();
+    };
+
+    const topPercentageEl = document.querySelector("div.sc-fSnEDd");
+    const topPercentage = topPercentageEl?.textContent?.trim();
+
+    return {
+      platform: "TryHackMe",
+      username: window.location.pathname.split("/").pop(),
+      rank: parseInt(getText("Rank")),
+      topPercentage: topPercentage?.includes("top") ? topPercentage : null,
+      badges: parseInt(getText("Badges")),
+      completedRooms: parseInt(getText("Completed rooms")),
+    };
+  });
+
+  await browser.close();
+  return stats;
+}
+
+// getTryHackMeStats("RedRogue").then(console.log);
 
 // const skillrackUrl =
 //   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
