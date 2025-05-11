@@ -65,6 +65,7 @@ const studentSchema = new mongoose.Schema({
       ],
     },
   },
+  timestamp: true,
 });
 
 const Student = mongoose.model("Student", studentSchema);
