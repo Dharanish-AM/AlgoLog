@@ -42,12 +42,29 @@ async function getStatsForStudent(student) {
     skillrack,
   } = student;
 
+  const leetPromise = leetcode
+    ? getLeetCodeStats(leetcode)
+    : Promise.resolve(null);
+  const hackPromise = hackerrank
+    ? getHackerRankStats(hackerrank)
+    : Promise.resolve(null);
+  const chefPromise = codechef
+    ? getCodeChefStats(codechef)
+    : Promise.resolve(null);
+  const cfPromise = codeforces
+    ? getCodeforcesStats(codeforces)
+    : Promise.resolve(null);
+  const skillPromise =
+    skillrack && skillrack.startsWith("http")
+      ? getSkillrackStats(skillrack)
+      : Promise.resolve(null);
+
   const [leet, hack, chef, cf, skill] = await Promise.allSettled([
-    leetcode ? getLeetCodeStats(leetcode) : Promise.resolve(""),
-    hackerrank ? getHackerRankStats(hackerrank) : Promise.resolve(""),
-    codechef ? getCodeChefStats(codechef) : Promise.resolve(""),
-    codeforces ? getCodeforcesStats(codeforces) : Promise.resolve(""),
-    skillrack ? getSkillrackStats(skillrack) : Promise.resolve(""),
+    leetPromise,
+    hackPromise,
+    chefPromise,
+    cfPromise,
+    skillPromise,
   ]);
 
   return {
@@ -62,25 +79,45 @@ async function getStatsForStudent(student) {
       leetcode:
         leet.status === "fulfilled" && leet.value
           ? leet.value
-          : { platform: "LeetCode", error: "No data" },
+          : {
+              platform: "LeetCode",
+              error: leetcode ? "Failed to fetch" : "Username missing",
+            },
       hackerrank:
         hack.status === "fulfilled" && hack.value
           ? hack.value
-          : { platform: "HackerRank", error: "No data" },
+          : {
+              platform: "HackerRank",
+              error: hackerrank ? "Failed to fetch" : "Username missing",
+            },
       codechef:
         chef.status === "fulfilled" && chef.value
           ? chef.value
-          : { platform: "CodeChef", error: "No data" },
+          : {
+              platform: "CodeChef",
+              error: codechef ? "Failed to fetch" : "Username missing",
+            },
       codeforces:
         cf.status === "fulfilled" && cf.value
           ? cf.value
-          : { platform: "Codeforces", error: "No data" },
+          : {
+              platform: "Codeforces",
+              error: codeforces ? "Failed to fetch" : "Username missing",
+            },
       skillrack:
         skill.status === "fulfilled" &&
         skill.value &&
         typeof skill.value === "object"
           ? skill.value
-          : { platform: "Skillrack", certificates: [], error: "No data" },
+          : {
+              platform: "Skillrack",
+              certificates: [],
+              error: skillrack
+                ? skillrack.startsWith("http")
+                  ? "Failed to fetch"
+                  : "Invalid URL"
+                : "URL missing",
+            },
     },
   };
 }
@@ -92,48 +129,18 @@ app.get("/", (req, res) => {
 app.get("/api/students", async (req, res) => {
   try {
     const students = await Student.find({});
-
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
-    const results = [];
-    const toUpdate = [];
-
-    for (const student of students) {
-      const stats = student.stats;
-      const isStatsComplete =
-        stats &&
-        stats.leetcode?.solved?.All != null &&
-        stats.hackerrank?.badges &&
-        stats.codechef?.fullySolved != null &&
-        stats.codeforces?.contests != null &&
-        stats.skillrack?.programsSolved != null;
-
-      if (isStatsComplete) {
-        const { stats, ...studentWithoutStats } = student.toObject();
-        results.push({ ...studentWithoutStats, stats });
-      } else {
-        results.push({ ...student.toObject(), needsUpdate: true });
-        toUpdate.push(student);
-      }
-    }
+    const results = students.map((student) => {
+      const { stats, ...studentWithoutStats } = student.toObject();
+      return { ...studentWithoutStats, stats };
+    });
 
     res.status(200).json({
       students: results,
       updatedAt: new Date(),
-    });
-
-    Promise.all(
-      toUpdate.map(async (student) => {
-        const updated = await getStatsForStudent(student);
-        await Student.findByIdAndUpdate(student._id, {
-          stats: updated.stats,
-          updatedAt: new Date(),
-        });
-      })
-    ).catch((err) => {
-      console.error("Background stats update failed:", err);
     });
   } catch (error) {
     console.error("Error fetching students and stats:", error);
@@ -148,19 +155,50 @@ app.get("/api/students/refetch", async (req, res) => {
       return res.status(200).json({ students: [] });
     }
 
-    const updateOperations = await Promise.all(
-      students.map(async (student) => {
-        const updatedStats = await getStatsForStudent(student);
-        return {
-          updateOne: {
-            filter: { _id: student._id },
-            update: { stats: updatedStats.stats, updatedAt: new Date() },
-          },
-        };
-      })
+    const updateOperations = students.map((student) => {
+      return getStatsForStudent(student)
+        .then((updatedStats) => {
+          const { stats } = updatedStats;
+
+          const isValidStats =
+            (!student.leetcode || stats.leetcode?.solved?.All != null) &&
+            (!student.hackerrank ||
+              (Array.isArray(stats.hackerrank?.badges) &&
+                stats.hackerrank.badges.length > 0)) &&
+            (!student.codechef || stats.codechef?.fullySolved != null) &&
+            (!student.codeforces || stats.codeforces?.contests != null) &&
+            (!student.skillrack ||
+              (typeof stats.skillrack === "object" &&
+                stats.skillrack.programsSolved != null));
+
+          if (isValidStats) {
+            return {
+              updateOne: {
+                filter: { _id: student._id },
+                update: { stats: updatedStats.stats, updatedAt: new Date() },
+              },
+            };
+          } else {
+            console.warn(
+              `Skipping update for ${student.name} due to invalid stats`
+            );
+            return null;
+          }
+        })
+        .catch((err) => {
+          console.error(`Error fetching stats for ${student.name}:`, err);
+          return null;
+        });
+    });
+
+    const validUpdateOperations = (await Promise.all(updateOperations)).filter(
+      Boolean
     );
 
-    const bulkWriteResult = await Student.bulkWrite(updateOperations);
+    if (validUpdateOperations.length > 0) {
+      const bulkWriteResult = await Student.bulkWrite(validUpdateOperations);
+      console.log("Bulk write result:", bulkWriteResult);
+    }
 
     const updatedStudents = await Student.find({});
     res.status(200).json({ students: updatedStudents });
