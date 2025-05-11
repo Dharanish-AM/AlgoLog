@@ -217,7 +217,16 @@ const Dashboard = () => {
             <div className="text-sm text-gray-500 dark:text-gray-400">
               Last Updated:{" "}
               {students && students[0]?.updatedAt
-                ? new Date(students[0].updatedAt).toLocaleString()
+                ? new Date(students[0].updatedAt).toLocaleString("en-US", {
+                    weekday: "short", // e.g. 'Tue'
+                    year: "numeric",
+                    month: "short", // e.g. 'May'
+                    day: "numeric", // e.g. '11'
+                    hour: "numeric", // e.g. '1'
+                    minute: "numeric", // e.g. '30'
+                    second: "numeric", // e.g. '45'
+                    hour12: true, // 12-hour time format
+                  })
                 : "N/A"}
             </div>
 

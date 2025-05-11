@@ -3,7 +3,7 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const https = require('https');
+const https = require("https");
 
 const agent = new https.Agent({ family: 4 });
 
@@ -178,7 +178,7 @@ app.get("/api/students/refetch", async (req, res) => {
             return {
               updateOne: {
                 filter: { _id: student._id },
-                update: { stats: updatedStats.stats, updatedAt: new Date() },
+                update: { stats: updatedStats.stats },
               },
             };
           } else {
@@ -365,13 +365,17 @@ async function getLeetCodeStats(username) {
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
   try {
-    const { data } = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: `https://www.hackerrank.com/${username}`,
+    const { data } = await axios.get(
+      url,
+      {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept-Language": "en-US,en;q=0.9",
+          Referer: `https://www.hackerrank.com/${username}`,
+        },
       },
-    },{ httpsAgent: agent });
+      { httpsAgent: agent }
+    );
 
     const $ = cheerio.load(data);
     const badges = [];
@@ -391,7 +395,7 @@ async function getHackerRankStats(username) {
     };
   } catch (error) {
     console.warn(`HackerRank fetch failed for ${username}:`, error.message);
-    return null; 
+    return null;
   }
 }
 
