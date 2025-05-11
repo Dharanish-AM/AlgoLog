@@ -3,6 +3,9 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const cors = require("cors");
 const mongoose = require("mongoose");
+const https = require('https');
+
+const agent = new https.Agent({ family: 4 });
 
 const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
@@ -368,7 +371,8 @@ async function getHackerRankStats(username) {
         "Accept-Language": "en-US,en;q=0.9",
         Referer: `https://www.hackerrank.com/${username}`,
       },
-    });
+    },{ httpsAgent: agent });
+
     const $ = cheerio.load(data);
     const badges = [];
 
@@ -386,8 +390,8 @@ async function getHackerRankStats(username) {
       badges: badges.slice(0, 5),
     };
   } catch (error) {
-    console.error("Error fetching HackerRank stats:", error);
-    return { platform: "HackerRank", username, error: "Failed to fetch data" };
+    console.warn(`HackerRank fetch failed for ${username}:`, error.message);
+    return null; 
   }
 }
 
