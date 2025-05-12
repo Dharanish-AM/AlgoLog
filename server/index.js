@@ -282,7 +282,7 @@ app.put("/api/students/:id", async (req, res) => {
       hackerrank,
       codechef,
       codeforces,
-      skillRack,
+      skillrack,
     } = req.body;
 
     const existingStudent = await Student.findById(id);
@@ -295,7 +295,7 @@ app.put("/api/students/:id", async (req, res) => {
       existingStudent.hackerrank !== hackerrank ||
       existingStudent.codechef !== codechef ||
       existingStudent.codeforces !== codeforces ||
-      existingStudent.skillRack !== skillRack;
+      existingStudent.skillrack !== skillRack;
 
     const updatedData = {
       name,
@@ -308,7 +308,7 @@ app.put("/api/students/:id", async (req, res) => {
       hackerrank,
       codechef,
       codeforces,
-      skillRack,
+      skillrack,
     };
 
     let stats = existingStudent.stats;
