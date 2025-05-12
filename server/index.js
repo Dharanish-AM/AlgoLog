@@ -295,7 +295,7 @@ app.put("/api/students/:id", async (req, res) => {
       existingStudent.hackerrank !== hackerrank ||
       existingStudent.codechef !== codechef ||
       existingStudent.codeforces !== codeforces ||
-      existingStudent.skillrack !== skillRack;
+      existingStudent.skillrack !== skillrack;
 
     const updatedData = {
       name,
