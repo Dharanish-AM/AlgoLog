@@ -285,6 +285,8 @@ app.put("/api/students/:id", async (req, res) => {
       skillrack,
     } = req.body;
 
+    console.log(`Updating student with ID: ${id}`);
+
     const existingStudent = await Student.findById(id);
     if (!existingStudent) {
       return res.status(404).json({ error: "Student not found" });
@@ -304,16 +306,15 @@ app.put("/api/students/:id", async (req, res) => {
       skillrack,
     };
 
-    let stats = existingStudent.stats;
-
     const updatedStats = await getStatsForStudent({
       _id: existingStudent._id,
       ...updatedData,
     });
 
-    if (updatedStats && updatedStats.stats) {
-      stats = updatedStats.stats;
-    }
+    const stats =
+      updatedStats && updatedStats.stats
+        ? updatedStats.stats
+        : existingStudent.stats;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
@@ -458,6 +459,7 @@ async function getCodeforcesStats(username) {
     return { platform: "Codeforces", username, error: "Failed to fetch data" };
   }
 }
+
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
     return {
@@ -465,57 +467,61 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
+
   try {
-    const { data } = await axios.get(resumeUrl);
-    const $ = cheerio.load(data);
+    const browser = await puppeteer.launch({ headless: "new" });
+    const page = await browser.newPage();
 
-    let rank = 0;
-    let programsSolved = 0;
+    await page.goto(resumeUrl, { waitUntil: "networkidle2" });
 
-    $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim();
-      const value = $(el).find("div.value").text().trim();
-      if (label.includes("RANK")) rank = parseInt(value);
-      if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
+    const stats = await page.evaluate(() => {
+      const getText = (selector) =>
+        document.querySelector(selector)?.innerText?.trim() || "";
+
+      const parseStat = (label) => {
+        const el = Array.from(document.querySelectorAll(".statistic")).find((d) =>
+          d.querySelector(".label")?.innerText.includes(label)
+        );
+        return el?.querySelector(".value")?.innerText.trim() || "0";
+      };
+
+      const rank = parseInt(parseStat("RANK"));
+      const programsSolved = parseInt(parseStat("PROGRAMS SOLVED"));
+
+      const languages = {};
+      ["JAVA", "C", "SQL", "PYTHON3", "CPP"].forEach((lang) => {
+        const langValue = parseStat(lang);
+        if (langValue) languages[lang] = parseInt(langValue);
+      });
+
+      const certificates = Array.from(
+        document.querySelectorAll("div.ui.brown.card")
+      ).map((card) => {
+        const content = card.querySelector(".content");
+        const title = content.querySelector("b")?.innerText.trim();
+        const dateMatch = content.innerText.match(/\d{2}-\d{2}-\d{4}/);
+        const link = content.querySelector("a")?.href;
+        return title && link
+          ? { title, date: dateMatch?.[0] || "", link }
+          : null;
+      }).filter(Boolean);
+
+      return {
+        platform: "Skillrack",
+        rank,
+        programsSolved,
+        languages,
+        certificates,
+      };
     });
 
-    const languages = {};
-    $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim().toUpperCase();
-      const value = $(el).find("div.value").text().trim();
-      if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
-        languages[label] = parseInt(value);
-      }
-    });
-
-    const certificates = [];
-    $("div.ui.brown.card").each((i, el) => {
-      const content = $(el).find("div.content");
-
-      const title = content.find("b").text().trim();
-      const dateMatch = content
-        .text()
-        .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
-      const date = dateMatch ? dateMatch[0] : "";
-      const link = content.find("a").attr("href");
-
-      if (title && link) {
-        certificates.push({ title, date, link });
-      }
-    });
-
-    return {
-      platform: "Skillrack",
-      rank,
-      programsSolved,
-      languages,
-      certificates,
-    };
+    await browser.close();
+    return stats;
   } catch (error) {
-    console.error("Error fetching Skillrack stats:", error.message);
+    console.error("Error fetching Skillrack stats with Puppeteer:", error.message);
     return {
       platform: "Skillrack",
-      error: "Failed to fetch data",
+      error: "Failed to fetch data with Puppeteer",
     };
   }
 }
