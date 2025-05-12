@@ -155,8 +155,9 @@ app.get("/api/students", async (req, res) => {
 app.get("/api/students/refetch", async (req, res) => {
   try {
     const { date } = req.query;
+    console.log(date)
     const students = await Student.find({});
-    if (!students || students.length === 0) {
+    if (!students || students.length === 0) { 
       return res.status(200).json({ students: [] });
     }
 
