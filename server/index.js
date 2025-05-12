@@ -467,61 +467,64 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
-
   try {
-    const browser = await puppeteer.launch({ headless: "new" });
-    const page = await browser.newPage();
+    const { data } = await axios.get(resumeUrl, {
+      headers: {
+        "User-Agent":
+          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "Accept-Language": "en-US,en;q=0.9",
+        Referer: "https://www.skillrack.com",
+      },
+    });
+    const $ = cheerio.load(data);
 
-    await page.goto(resumeUrl, { waitUntil: "networkidle2" });
+    let rank = 0;
+    let programsSolved = 0;
 
-    const stats = await page.evaluate(() => {
-      const getText = (selector) =>
-        document.querySelector(selector)?.innerText?.trim() || "";
-
-      const parseStat = (label) => {
-        const el = Array.from(document.querySelectorAll(".statistic")).find((d) =>
-          d.querySelector(".label")?.innerText.includes(label)
-        );
-        return el?.querySelector(".value")?.innerText.trim() || "0";
-      };
-
-      const rank = parseInt(parseStat("RANK"));
-      const programsSolved = parseInt(parseStat("PROGRAMS SOLVED"));
-
-      const languages = {};
-      ["JAVA", "C", "SQL", "PYTHON3", "CPP"].forEach((lang) => {
-        const langValue = parseStat(lang);
-        if (langValue) languages[lang] = parseInt(langValue);
-      });
-
-      const certificates = Array.from(
-        document.querySelectorAll("div.ui.brown.card")
-      ).map((card) => {
-        const content = card.querySelector(".content");
-        const title = content.querySelector("b")?.innerText.trim();
-        const dateMatch = content.innerText.match(/\d{2}-\d{2}-\d{4}/);
-        const link = content.querySelector("a")?.href;
-        return title && link
-          ? { title, date: dateMatch?.[0] || "", link }
-          : null;
-      }).filter(Boolean);
-
-      return {
-        platform: "Skillrack",
-        rank,
-        programsSolved,
-        languages,
-        certificates,
-      };
+    $("div.statistic").each((i, el) => {
+      const label = $(el).find("div.label").text().trim();
+      const value = $(el).find("div.value").text().trim();
+      if (label.includes("RANK")) rank = parseInt(value);
+      if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
     });
 
-    await browser.close();
-    return stats;
-  } catch (error) {
-    console.error("Error fetching Skillrack stats with Puppeteer:", error.message);
+    const languages = {};
+    $("div.statistic").each((i, el) => {
+      const label = $(el).find("div.label").text().trim().toUpperCase();
+      const value = $(el).find("div.value").text().trim();
+      if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
+        languages[label] = parseInt(value);
+      }
+    });
+
+    const certificates = [];
+    $("div.ui.brown.card").each((i, el) => {
+      const content = $(el).find("div.content");
+
+      const title = content.find("b").text().trim();
+      const dateMatch = content
+        .text()
+        .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
+      const date = dateMatch ? dateMatch[0] : "";
+      const link = content.find("a").attr("href");
+
+      if (title && link) {
+        certificates.push({ title, date, link });
+      }
+    });
+
     return {
       platform: "Skillrack",
-      error: "Failed to fetch data with Puppeteer",
+      rank,
+      programsSolved,
+      languages,
+      certificates,
+    };
+  } catch (error) {
+    console.error("Error fetching Skillrack stats:", error.message);
+    return {
+      platform: "Skillrack",
+      error: "Failed to fetch data",
     };
   }
 }
