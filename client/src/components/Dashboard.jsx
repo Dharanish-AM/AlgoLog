@@ -33,7 +33,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students?date=${new Date().toString()}`
+        `${import.meta.env.VITE_API_URL}/api/students`
       );
       if (response.status === 200) {
         const updatedStudents = response.data.students;
@@ -64,7 +64,7 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students/refetch`
+        `${import.meta.env.VITE_API_URL}/api/students/refetch?date=${new Date().toString()}`
       );
       if (response.status === 200) {
         const updatedStudents = response.data.students;
