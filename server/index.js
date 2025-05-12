@@ -311,10 +311,7 @@ app.put("/api/students/:id", async (req, res) => {
       ...updatedData,
     });
 
-    const stats =
-      updatedStats && updatedStats.stats
-        ? updatedStats.stats
-        : existingStudent.stats;
+    const stats = updatedStats && updatedStats.stats ? updatedStats.stats : existingStudent.stats;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
@@ -459,7 +456,6 @@ async function getCodeforcesStats(username) {
     return { platform: "Codeforces", username, error: "Failed to fetch data" };
   }
 }
-
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
     return {
@@ -468,27 +464,20 @@ async function getSkillrackStats(resumeUrl) {
     };
   }
   try {
-    const { data } = await axios.get(resumeUrl, {
-      headers: {
-        "User-Agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: "https://www.skillrack.com",
-      },
-    });
+    const { data } = await axios.get(resumeUrl); 
     const $ = cheerio.load(data);
 
     let rank = 0;
     let programsSolved = 0;
 
     $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim();
+      const label = $(el).find("div.label").text().trim(); 
       const value = $(el).find("div.value").text().trim();
       if (label.includes("RANK")) rank = parseInt(value);
       if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
     });
 
-    const languages = {};
+    const languages = {}; 
     $("div.statistic").each((i, el) => {
       const label = $(el).find("div.label").text().trim().toUpperCase();
       const value = $(el).find("div.value").text().trim();

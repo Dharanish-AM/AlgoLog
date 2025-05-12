@@ -166,10 +166,14 @@ const StudentTable = ({
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      Rating: {student.stats?.codechef?.rating ?? "N/A"}
+                      {console.log(student.stats.codechef)}
+                      Rating:{" "}
+                      {student.stats.codechef.rating
+                        ? student.stats.codechef.rating
+                        : "N/A"}
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {student.stats?.codechef?.fullySolved ?? "N/A"} solved
+                      {student.stats.codechef.fullySolved ?? "N/A"} solved
                     </div>
                   </td>
 
