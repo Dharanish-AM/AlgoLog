@@ -24,6 +24,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
   };
 
   const handleEditStudent = async (updatedData) => {
+    
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/students/${student._id}`,

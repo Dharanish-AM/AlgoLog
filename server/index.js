@@ -11,7 +11,7 @@ const agent = new https.Agent({ family: 4 });
 const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
-const cron = require('node-cron');
+const cron = require("node-cron");
 dotenv.config();
 
 const app = express();
@@ -155,9 +155,9 @@ app.get("/api/students", async (req, res) => {
 app.get("/api/students/refetch", async (req, res) => {
   try {
     const { date } = req.query;
-    console.log(date)
+    console.log(date);
     const students = await Student.find({});
-    if (!students || students.length === 0) { 
+    if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
@@ -183,7 +183,7 @@ app.get("/api/students/refetch", async (req, res) => {
                 filter: { _id: student._id },
                 update: {
                   stats: updatedStats.stats,
-                  updatedAt: date 
+                  updatedAt: date,
                 },
               },
             };
@@ -290,13 +290,6 @@ app.put("/api/students/:id", async (req, res) => {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    const platformChanged =
-      existingStudent.leetcode !== leetcode ||
-      existingStudent.hackerrank !== hackerrank ||
-      existingStudent.codechef !== codechef ||
-      existingStudent.codeforces !== codeforces ||
-      existingStudent.skillrack !== skillrack;
-
     const updatedData = {
       name,
       email,
@@ -313,10 +306,12 @@ app.put("/api/students/:id", async (req, res) => {
 
     let stats = existingStudent.stats;
 
-    if (platformChanged) {
-      const updatedStats = await getStatsForStudent({
-        ...updatedData,
-      });
+    const updatedStats = await getStatsForStudent({
+      _id: existingStudent._id,
+      ...updatedData,
+    });
+
+    if (updatedStats && updatedStats.stats) {
       stats = updatedStats.stats;
     }
 
@@ -325,6 +320,7 @@ app.put("/api/students/:id", async (req, res) => {
       {
         ...updatedData,
         stats,
+        updatedAt: new Date(),
       },
       { new: true }
     );

@@ -40,6 +40,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     onSave(formData);
+    onClose()
   };
 
   if (!isOpen) return null;
