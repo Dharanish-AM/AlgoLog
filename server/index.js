@@ -11,6 +11,7 @@ const agent = new https.Agent({ family: 4 });
 const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
+const cron = require('node-cron');
 dotenv.config();
 
 const app = express();
@@ -154,7 +155,6 @@ app.get("/api/students", async (req, res) => {
 app.get("/api/students/refetch", async (req, res) => {
   try {
     const { date } = req.query;
-    const parsedDate = new Date(date);
     const students = await Student.find({});
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
@@ -182,7 +182,7 @@ app.get("/api/students/refetch", async (req, res) => {
                 filter: { _id: student._id },
                 update: {
                   stats: updatedStats.stats,
-                  updatedAt: parsedDate
+                  updatedAt: date 
                 },
               },
             };
@@ -554,6 +554,15 @@ async function getTryHackMeStats(username) {
   await browser.close();
   return stats;
 }
+
+cron.schedule("0 0 * * *", async () => {
+  console.log("Running cron job to fetch stats...");
+  const students = await Student.find();
+  for (const student of students) {
+    const stats = await getStatsForStudent(student);
+    await Student.findByIdAndUpdate(student._id, { stats });
+  }
+});
 
 // getTryHackMeStats("RedRogue").then(console.log);
 
