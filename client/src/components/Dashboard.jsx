@@ -33,15 +33,14 @@ const Dashboard = () => {
     try {
       setLoading(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students`
+        `${import.meta.env.VITE_API_URL}/api/students?date=${new Date().toString()}`
       );
       if (response.status === 200) {
         const updatedStudents = response.data.students;
-        setStudents(updatedStudents);
+        setStudents(updatedStudents); 
         setFilteredStudents(updatedStudents);
         setTotalCount(response.data.totalCount || updatedStudents.length);
 
-        // Refresh selected student if applicable
         if (selectedStudent) {
           const updatedSelected = updatedStudents.find(
             (s) => s._id === selectedStudent._id

@@ -132,6 +132,8 @@ app.get("/", (req, res) => {
 
 app.get("/api/students", async (req, res) => {
   try {
+    const { date } = req.query;
+    const parsedDate = new Date(date);
     const students = await Student.find({});
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
@@ -144,7 +146,7 @@ app.get("/api/students", async (req, res) => {
 
     res.status(200).json({
       students: results,
-      updatedAt: new Date(),
+      updatedAt: parsedDate,
     });
   } catch (error) {
     console.error("Error fetching students and stats:", error);
