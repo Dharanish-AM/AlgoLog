@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Award, Code, Trophy, Star, X } from "lucide-react";
+import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
 
@@ -109,6 +109,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   LeetCode
                 </h4>
+                <a
+                  href={`https://leetcode.com/${student.leetcode || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-primary-500 hover:text-primary-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between text-sm">
@@ -159,6 +167,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   SkillRack
                 </h4>
+                <a
+                  href={`${student.skillrack || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-purple-500 hover:text-purple-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-4">
                 <div className="space-y-3">
@@ -242,6 +258,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   HackerRank
                 </h4>
+                <a
+                  href={`https://www.hackerrank.com/${student.hackerrank || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-secondary-500 hover:text-secondary-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm mb-4">
@@ -289,6 +313,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   CodeChef
                 </h4>
+                <a
+                  href={`https://www.codechef.com/users/${student.codechef || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-orange-500 hover:text-orange-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -323,6 +355,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   Codeforces
                 </h4>
+                <a
+                  href={`https://codeforces.com/profile/${student.codeforces || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-blue-500 hover:text-blue-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -369,6 +409,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   GitHub
                 </h4>
+                <a
+                  href={`https://github.com/${student.github || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-secondary-500 hover:text-secondary-700"
+                >
+                  <Link size={18} />
+                </a>
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm mb-4">

@@ -46,10 +46,15 @@ async function getStatsForStudent(student) {
     codechef,
     codeforces,
     skillrack,
-    github, 
+    github,
   } = student;
 
-  const formatError = (platform, identifier, extraFields = {}, isUrl = false) => ({
+  const formatError = (
+    platform,
+    identifier,
+    extraFields = {},
+    isUrl = false
+  ) => ({
     platform,
     updatedAt: new Date().toISOString(),
     ...extraFields,
@@ -60,18 +65,27 @@ async function getStatsForStudent(student) {
           : "Invalid URL"
         : "Failed to fetch"
       : isUrl
-        ? "URL missing"
-        : "Username missing",
+      ? "URL missing"
+      : "Username missing",
   });
 
-  const leetPromise = leetcode ? getLeetCodeStats(leetcode) : Promise.resolve(null);
-  const hackPromise = hackerrank ? getHackerRankStats(hackerrank) : Promise.resolve(null);
-  const chefPromise = codechef ? getCodeChefStats(codechef) : Promise.resolve(null);
-  const cfPromise = codeforces ? getCodeforcesStats(codeforces) : Promise.resolve(null);
-  const skillPromise = skillrack && skillrack.startsWith("http")
-    ? getSkillrackStats(skillrack)
+  const leetPromise = leetcode
+    ? getLeetCodeStats(leetcode)
     : Promise.resolve(null);
-  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null); 
+  const hackPromise = hackerrank
+    ? getHackerRankStats(hackerrank)
+    : Promise.resolve(null);
+  const chefPromise = codechef
+    ? getCodeChefStats(codechef)
+    : Promise.resolve(null);
+  const cfPromise = codeforces
+    ? getCodeforcesStats(codeforces)
+    : Promise.resolve(null);
+  const skillPromise =
+    skillrack && skillrack.startsWith("http")
+      ? getSkillrackStats(skillrack)
+      : Promise.resolve(null);
+  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
 
   const [leet, hack, chef, cf, skill, githubResult] = await Promise.allSettled([
     leetPromise,
@@ -91,24 +105,32 @@ async function getStatsForStudent(student) {
     department,
     section,
     stats: {
-      leetcode: leet.status === "fulfilled" && leet.value
-        ? leet.value
-        : formatError("LeetCode", leetcode),
-      hackerrank: hack.status === "fulfilled" && hack.value
-        ? hack.value
-        : formatError("HackerRank", hackerrank),
-      codechef: chef.status === "fulfilled" && chef.value
-        ? chef.value
-        : formatError("CodeChef", codechef),
-      codeforces: cf.status === "fulfilled" && cf.value
-        ? cf.value
-        : formatError("Codeforces", codeforces),
-      skillrack: skill.status === "fulfilled" && skill.value && typeof skill.value === "object"
-        ? skill.value
-        : formatError("Skillrack", skillrack, { certificates: [] }, true),
-      github: githubResult.status === "fulfilled" && githubResult.value
-        ? githubResult.value
-        : formatError("GitHub", github),
+      leetcode:
+        leet.status === "fulfilled" && leet.value
+          ? leet.value
+          : formatError("LeetCode", leetcode),
+      hackerrank:
+        hack.status === "fulfilled" && hack.value
+          ? hack.value
+          : formatError("HackerRank", hackerrank),
+      codechef:
+        chef.status === "fulfilled" && chef.value
+          ? chef.value
+          : formatError("CodeChef", codechef),
+      codeforces:
+        cf.status === "fulfilled" && cf.value
+          ? cf.value
+          : formatError("Codeforces", codeforces),
+      skillrack:
+        skill.status === "fulfilled" &&
+        skill.value &&
+        typeof skill.value === "object"
+          ? skill.value
+          : formatError("Skillrack", skillrack, { certificates: [] }, true),
+      github:
+        githubResult.status === "fulfilled" && githubResult.value
+          ? githubResult.value
+          : formatError("GitHub", github),
     },
   };
 }
@@ -217,7 +239,7 @@ app.post("/api/students", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
-      github, 
+      github,
     } = req.body;
 
     if (!name || !email || !rollNo) {
@@ -238,7 +260,7 @@ app.post("/api/students", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
-      github, 
+      github,
     };
 
     const statsResult = await getStatsForStudent(studentInfo);
@@ -271,7 +293,7 @@ app.put("/api/students/:id", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
-      github, 
+      github,
     } = req.body;
 
     console.log(`Updating student with ID: ${id}`);
@@ -301,7 +323,10 @@ app.put("/api/students/:id", async (req, res) => {
       ...updatedData,
     });
 
-    const stats = updatedStats && updatedStats.stats ? updatedStats.stats : existingStudent.stats;
+    const stats =
+      updatedStats && updatedStats.stats
+        ? updatedStats.stats
+        : existingStudent.stats;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
@@ -319,6 +344,11 @@ app.put("/api/students/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update student" });
   }
 });
+
+// Utility helper: sleep for ms milliseconds
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 async function getLeetCodeStats(username) {
   const query = `
@@ -423,6 +453,8 @@ async function getCodeChefStats(username) {
 
 async function getCodeforcesStats(username) {
   try {
+    await sleep(1000);
+
     const userInfoUrl = `https://codeforces.com/api/user.info?handles=${username}`;
     const contestsUrl = `https://codeforces.com/api/user.rating?handle=${username}`;
     const submissionsUrl = `https://codeforces.com/api/user.status?handle=${username}`;
@@ -468,20 +500,20 @@ async function getSkillrackStats(resumeUrl) {
     };
   }
   try {
-    const { data } = await axios.get(resumeUrl); 
+    const { data } = await axios.get(resumeUrl);
     const $ = cheerio.load(data);
 
     let rank = 0;
     let programsSolved = 0;
 
     $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim(); 
+      const label = $(el).find("div.label").text().trim();
       const value = $(el).find("div.value").text().trim();
       if (label.includes("RANK")) rank = parseInt(value);
       if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
     });
 
-    const languages = {}; 
+    const languages = {};
     $("div.statistic").each((i, el) => {
       const label = $(el).find("div.label").text().trim().toUpperCase();
       const value = $(el).find("div.value").text().trim();
@@ -560,108 +592,65 @@ async function getGithubStats(username) {
   try {
     const headers = {
       Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      Accept: "application/vnd.github+json",
+      "Content-Type": "application/json",
       "User-Agent": "AlgoLog-App",
     };
 
-    const reposRes = await axios.get(
-      `https://api.github.com/users/${username}/repos?per_page=100`,
-      { headers }
-    );
-    const repos = reposRes.data.filter(repo => !repo.fork);
-    const totalRepos = repos.length;
-
-    let totalCommits = 0;
-    const commitDatesArr = [];
-    const languageStats = {};
-
-    for (const repo of repos) {
-      const repoName = repo.name;
-      let page = 1;
-      let hasNextPage = true;
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-      while (hasNextPage) {
-        try {
-          const commitRes = await axios.get(
-            `https://api.github.com/repos/${username}/${repoName}/commits?page=${page}&per_page=100`,
-            { headers }
-          );
-          const commits = commitRes.data;
-          totalCommits += commits.length;
-          commits.forEach(commit => {
-            const commitDate = commit.commit?.author?.date || commit.committer?.date;
-            if (commitDate) {
-              const formattedDate = commitDate.split("T")[0];
-              if (new Date(formattedDate) >= cutoff) {
-                commitDatesArr.push(formattedDate);
+    const query = `
+  query {
+    user(login: "${username}") {
+      repositories(first: 100, ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) {
+        totalCount
+        nodes {
+          name
+          languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+            edges {
+              size
+              node { 
+                name
               }
             }
-          });
-          const linkHeader = commitRes.headers.link;
-          hasNextPage = linkHeader && linkHeader.includes('rel="next"');
-          page++;
-        } catch (error) {
-          if (error.response?.status === 409) {
-            console.warn(`Skipping repo ${repoName} due to no commits (409)`);
-            break;
-          } else {
-            console.error(`Error fetching commits for ${repoName}:`, error.message);
-            break;
           }
         }
       }
-    }
-    const langFetches = repos.map(repo =>
-      axios
-        .get(`https://api.github.com/repos/${username}/${repo.name}/languages`, { headers })
-        .then(res => ({ repo: repo.name, langs: res.data }))
-        .catch(() => null)
-    );
-    const langsResults = await Promise.allSettled(langFetches);
-    langsResults.forEach(result => {
-      if (result.status === "fulfilled" && result.value) {
-        const { langs } = result.value;
-        for (const lang of Object.keys(langs)) {
-          languageStats[lang] = (languageStats[lang] || 0) + langs[lang];
+      contributionsCollection {
+        contributionCalendar {
+          totalContributions
         }
       }
+    }
+  }
+`;
+
+    const res = await axios.post(
+      "https://api.github.com/graphql",
+      { query },
+      { headers }
+    );
+
+    const user = res.data.data.user;
+
+    const totalRepos = user.repositories.totalCount;
+    const totalCommits =
+      user.contributionsCollection.contributionCalendar.totalContributions;
+
+    const languageBytes = {};
+
+    user.repositories.nodes.forEach((repo) => {
+      repo.languages.edges.forEach(({ node, size }) => {
+        languageBytes[node.name] = (languageBytes[node.name] || 0) + size;
+      });
     });
 
-    const commitDates = Array.from(new Set(commitDatesArr))
-      .map(date => new Date(date))
-      .sort((a, b) => a - b)
-      .map(date => date.toISOString().slice(0, 10));
-
-    let longestStreak = 0;
-    let currentStreak = 0;
-    let previousDate = null;
-
-    for (const dateStr of commitDates) {
-      const currentDate = new Date(dateStr + "T00:00:00Z");
-      if (previousDate) {
-        const diffDays = (currentDate - previousDate) / (1000 * 3600 * 24);
-        if (diffDays === 1) {
-          currentStreak++;
-        } else if (diffDays > 1) {
-          currentStreak = 1;
-        }
-      } else {
-        currentStreak = 1;
-      }
-      longestStreak = Math.max(longestStreak, currentStreak);
-      previousDate = currentDate;
-    }
-
-    const topLanguages = Object.entries(languageStats)
+    const topLanguages = Object.entries(languageBytes)
       .sort((a, b) => b[1] - a[1])
-      .map(([language]) => ({ name: language }));
+      .map(([name]) => ({ name }));
 
     return {
       username,
       totalCommits,
       totalRepos,
-      longestStreak,
+      longestStreak: 0,
       topLanguages,
     };
   } catch (error) {
@@ -670,9 +659,9 @@ async function getGithubStats(username) {
   }
 }
 
-getGithubStats("Dharanish-AM").then(console.log);
+getGithubStats("iam-elango").then(console.log);
 
-cron.schedule("0 0 * * *", async () => { 
+cron.schedule("0 0 * * *", async () => {
   console.log("Running cron job to fetch stats...");
   const students = await Student.find();
   for (const student of students) {
@@ -680,7 +669,6 @@ cron.schedule("0 0 * * *", async () => {
     await Student.findByIdAndUpdate(student._id, { stats });
   }
 });
-
 
 // const skillrackUrl =
 //   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";

@@ -95,9 +95,24 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
               value={formData[field]}
               onChange={handleChange}
               required
+              placeholder={
+                field === "leetcode"
+                  ? "Enter leetcode username (e.g., johndoe123)"
+                  : field === "hackerrank"
+                  ? "Enter hackerrank username (e.g., johndoe_hr)"
+                  : field === "codechef"
+                  ? "Enter codechef username (e.g., johndoe_cc)"
+                  : field === "codeforces"
+                  ? "Enter codeforces username (e.g., johndoe_cf)"
+                  : field === "skillrack"
+                  ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181...)"
+                  : field === "github"
+                  ? "Enter GitHub username (e.g., johndoe)"
+                  : `Enter ${field}`
+              }
               className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
             />
-          </div>
+          </div> 
         ))}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
