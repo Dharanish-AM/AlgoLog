@@ -13,14 +13,7 @@ const StudentTable = ({
   setSelectedStudent,
   isShowTopPerformer,
 }) => {
-  const handleSort = (field) => {
-    if (sortField === field) {
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-    } else {
-      setSortField(field);
-      setSortDirection("asc");
-    }
-  };
+
 
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;

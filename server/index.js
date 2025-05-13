@@ -543,6 +543,8 @@ async function getTryHackMeStats(username) {
   return stats;
 }
 
+// getTryHackMeStats("RedRogue").then(console.log);
+
 cron.schedule("0 0 * * *", async () => {
   console.log("Running cron job to fetch stats...");
   const students = await Student.find();
