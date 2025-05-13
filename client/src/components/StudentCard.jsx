@@ -3,7 +3,7 @@ import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
 
-const StudentCard = ({ student, onClose, reFetchStudents }) => {
+const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
   const {
     name,
     leetcode,
@@ -29,12 +29,15 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
   };
 
   const handleEditStudent = async (updatedData) => {
+    setEditLoading(true);
+    onClose();
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/students/${student._id}`,
         updatedData
       );
       if (response?.status === 200 || response?.status === 201) {
+        setEditLoading(false);
         setIsEditOpen(false);
         reFetchStudents();
         toast.success("Student added successfully!");
@@ -42,6 +45,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
     } catch (error) {
       console.error("Error updating student:", error);
       toast.error("Failed to update student");
+      setEditLoading(false);
     }
   };
 
@@ -259,7 +263,9 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                   HackerRank
                 </h4>
                 <a
-                  href={`https://www.hackerrank.com/${student.hackerrank || ""}`}
+                  href={`https://www.hackerrank.com/${
+                    student.hackerrank || ""
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ml-1 text-secondary-500 hover:text-secondary-700"
@@ -314,7 +320,9 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                   CodeChef
                 </h4>
                 <a
-                  href={`https://www.codechef.com/users/${student.codechef || ""}`}
+                  href={`https://www.codechef.com/users/${
+                    student.codechef || ""
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ml-1 text-orange-500 hover:text-orange-700"
@@ -356,7 +364,9 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                   Codeforces
                 </h4>
                 <a
-                  href={`https://codeforces.com/profile/${student.codeforces || ""}`}
+                  href={`https://codeforces.com/profile/${
+                    student.codeforces || ""
+                  }`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ml-1 text-blue-500 hover:text-blue-700"

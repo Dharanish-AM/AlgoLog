@@ -5,22 +5,14 @@ const StudentTable = ({
   students,
   loading,
   error,
-  sortField,
-  sortDirection,
   selectedStudent,
   setSelectedStudent,
   isShowTopPerformer,
+  setSortField,
+  setSortDirection,
+  sortDirection,
+  sortField,
 }) => {
-  const renderSortIcon = (field) => {
-    if (sortField !== field) return null;
-
-    return sortDirection === "asc" ? (
-      <ArrowUp size={16} className="ml-1" />
-    ) : (
-      <ArrowDown size={16} className="ml-1" />
-    );
-  };
-
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
@@ -54,29 +46,39 @@ const StudentTable = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
-      <div className="overflow-x-auto">
+      <div>
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
               {[
-                "Student",
-                "LeetCode",
-                "HackerRank",
-                "CodeChef",
-                "CodeForces",
-                "SkillRack",
-                "GitHub Commits",
-                "Details",
-              ].map((header, idx) => (
+                { label: "Student", key: "name" },
+                { label: "LeetCode", key: "leetcode" },
+                { label: "HackerRank", key: "hackerrank" },
+                { label: "CodeChef", key: "codechef" },
+                { label: "CodeForces", key: "codeforces" },
+                { label: "SkillRack", key: "skillrack" },
+                { label: "GitHub", key: "github" },
+                { label: "Details", key: "name" },
+              ].map(({ label, key }, idx) => (
                 <th
                   key={idx}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 capitalize tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 capitalize tracking-wider cursor-pointer"
+                  onClick={() => {
+                    if (isShowTopPerformer) return;
+                    setSortField(key);
+                    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+                  }}
                 >
                   <span className="flex items-center">
-                    {header}
-                    {header === "HackerRank" &&
-                      renderSortIcon("hackerrank.total")}
+                    {label}
+                    {key &&
+                      sortField === key &&
+                      (sortDirection === "asc" ? (
+                        <ArrowUp size={16} className="ml-1" />
+                      ) : (
+                        <ArrowDown size={16} className="ml-1" />
+                      ))}
                   </span>
                 </th>
               ))}
@@ -156,19 +158,20 @@ const StudentTable = ({
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-gray-100">
+                      {student.stats.codechef.fullySolved ?? "N/A"} solved
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
                       Rating:{" "}
                       {student.stats.codechef.rating
                         ? student.stats.codechef.rating
                         : "N/A"}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {student.stats.codechef.fullySolved ?? "N/A"} solved
-                    </div>
                   </td>
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      Rating: {student.stats?.codeforces?.problemsSolved ?? "N/A"}
+                      Rating:{" "}
+                      {student.stats?.codeforces?.problemsSolved ?? "N/A"}
                     </div>
                     <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
                       {student.stats?.codeforces?.rating ?? "N/A"}

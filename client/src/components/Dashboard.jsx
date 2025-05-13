@@ -9,6 +9,7 @@ import axios from "axios";
 import Papa from "papaparse";
 import toast, { Toaster } from "react-hot-toast";
 import { GridLoader, MoonLoader } from "react-spinners";
+import logo from "../../../client/algolog.png";
 
 const Dashboard = () => {
   const [students, setStudents] = useState([]);
@@ -16,14 +17,14 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState("name");
-  const [sortDirection, setSortDirection] = useState("asc");
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState("all");
   const [totalCount, setTotalCount] = useState(0);
   const [addLoading, setAddLoading] = useState(false);
   const [showTopPerformer, setShowTopPerformer] = useState(false);
+  const [sortField, setSortField] = useState("name");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   useEffect(() => {
     fetchData();
@@ -98,13 +99,14 @@ const Dashboard = () => {
 
     if (searchTerm) {
       const term = searchTerm.toLowerCase();
-      result = result.filter((student) =>
-        student.name?.toLowerCase()?.includes(term)
+      result = result.filter(
+        (student) =>
+          student.name?.toLowerCase()?.includes(term) ||
+          student.rollNo?.toLowerCase()?.includes(term)
       );
     }
 
     if (selectedPlatform !== "all") {
-      // Scoring logic per platform as requested
       const getScore = (student) => {
         const stats = student.stats?.[selectedPlatform.toLowerCase()];
         if (!stats) return -1;
@@ -128,32 +130,31 @@ const Dashboard = () => {
       result.sort((a, b) => getScore(b) - getScore(a));
     } else {
       result.sort((a, b) => {
+        const aStudent = a.stats;
+        const bStudent = b.stats;
         let valueA, valueB;
 
-        if (sortField === "leetcode.total") {
-          valueA =
-            a.leetcode?.solved?.Easy +
-            a.leetcode?.solved?.Medium +
-            a.leetcode?.solved?.Hard;
-          valueB =
-            b.leetcode?.solved?.Easy +
-            b.leetcode?.solved?.Medium +
-            b.leetcode?.solved?.Hard;
-        } else if (sortField === "codechef.rating") {
-          valueA = a.codechef?.fullySolved || 0;
-          valueB = b.codechef?.fullySolved || 0;
-        } else if (sortField === "codeforces.rating") {
-          valueA = a.codeforces?.problemsSolved || 0;
-          valueB = b.codeforces?.problemsSolved || 0;
-        } else {
-          valueA = a[sortField];
-          valueB = b[sortField];
+        if (sortField === "leetcode") {
+          valueA = aStudent.leetcode?.solved?.All || 0;
+          valueB = bStudent.leetcode?.solved?.All || 0;
+        } else if (sortField === "codechef") {
+          valueA = aStudent.codechef?.fullySolved || 0;
+          valueB = bStudent.codechef?.fullySolved || 0;
+        } else if (sortField === "codeforces") {
+          valueA = aStudent.codeforces?.problemsSolved || 0;
+          valueB = bStudent.codeforces?.problemsSolved || 0;
+        } else if (sortField === "hackerrank") {
+          valueA = aStudent.hackerrank?.badges?.length || 0;
+          valueB = bStudent.hackerrank?.badges?.length || 0;
+        } else if (sortField === "skillrack") {
+          valueA = aStudent.skillrack?.programsSolved || 0;
+          valueB = bStudent.skillrack?.programsSolved || 0;
         }
 
         if (sortDirection === "asc") {
-          return valueA > valueB ? 1 : -1;
+          return valueA > valueB ? 1 : valueA < valueB ? -1 : 0;
         } else {
-          return valueA < valueB ? 1 : -1;
+          return valueA < valueB ? 1 : valueA > valueB ? -1 : 0;
         }
       });
     }
@@ -189,7 +190,7 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Error adding student:", err);
       setError("Failed to add student. Please try again.");
-      toast.error("Failed to add student.",error);
+      toast.error("Failed to add student.", error);
     } finally {
       setAddLoading(false);
     }
@@ -225,7 +226,6 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    // Utility to compute total score across platforms
     const getTotalScore = (student) => {
       const platforms = [
         "leetcode",
@@ -329,12 +329,9 @@ const Dashboard = () => {
     }
     if (
       selectedStudent &&
-      !(
-        (showTopPerformer
-          ? filteredStudents
-          : students
-        ) || []
-      ).find((s) => s._id === selectedStudent._id)
+      !((showTopPerformer ? filteredStudents : students) || []).find(
+        (s) => s._id === selectedStudent._id
+      )
     ) {
       setSelectedStudent(null);
     }
@@ -366,7 +363,11 @@ const Dashboard = () => {
       <div className="mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div className="flex items-center">
-            <Code size={32} className="text-blue-600 dark:text-purple-400" />
+            <img
+              src={logo}
+              alt="AlgoLog Logo"
+              className="w-10 h-10 aspect-square"
+            />
             <h1 className="ml-3 text-2xl font-bold text-purple-600 dark:text-purple-400">
               AlgoLog
             </h1>
@@ -435,7 +436,7 @@ const Dashboard = () => {
 
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2 justify-center border dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 bg-white dark:bg-gray-800 rounded-md shadow-sm px-10 py-4 rounded-xl shadow-md">
-            <span className="dark:text-gray-100 flex-shrink-0 text-sm">
+            <span className="dark:text-gray-100 item-center flex-shrink-0 justify-center text-sm">
               Total Students:{" "}
             </span>
             <span className="text-sm dark:text-gray-100">{totalCount}</span>
@@ -485,12 +486,15 @@ const Dashboard = () => {
               onClose={() => setSelectedStudent(null)}
               student={selectedStudent}
               reFetchStudents={fetchData}
+              setEditLoading={(e) => {
+                setAddLoading(e);
+              }}
             />
           </div>
         )}
 
         <Toaster position="bottom-right" />
-        <footer className="fixed bottom-4 right-4 text-xs text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded shadow-md backdrop-blur-sm">
+        <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
           Made by{" "}
           <a
             href="https://github.com/Dharanish-AM"

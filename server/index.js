@@ -1,18 +1,19 @@
 const express = require("express");
-const axios = require("axios");
-const cheerio = require("cheerio");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const https = require("https");
-const puppeteer = require("puppeteer");
-
-const agent = new https.Agent({ family: 4 });
-
-const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
 const cron = require("node-cron");
-const { get } = require("http");
+const {
+  getCodeChefStats,
+  getHackerRankStats,
+  getLeetCodeStats,
+  getTryHackMeStats,
+  getGithubStats,
+  getSkillrackStats,
+  getCodeforcesStats,
+} = require("./scrapers/scraper");
+
 dotenv.config();
 
 const app = express();
@@ -78,6 +79,7 @@ async function getStatsForStudent(student) {
   const chefPromise = codechef
     ? getCodeChefStats(codechef)
     : Promise.resolve(null);
+  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
   const cfPromise = codeforces
     ? getCodeforcesStats(codeforces)
     : Promise.resolve(null);
@@ -85,15 +87,14 @@ async function getStatsForStudent(student) {
     skillrack && skillrack.startsWith("http")
       ? getSkillrackStats(skillrack)
       : Promise.resolve(null);
-  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
 
-  const [leet, hack, chef, cf, skill, githubResult] = await Promise.allSettled([
+  const [leet, hack, chef, githubResult, cf, skill] = await Promise.allSettled([
     leetPromise,
     hackPromise,
     chefPromise,
+    githubPromise,
     cfPromise,
     skillPromise,
-    githubPromise,
   ]);
 
   return {
@@ -164,56 +165,96 @@ app.get("/api/students/refetch", async (req, res) => {
   try {
     const { date } = req.query;
     console.log(date);
-    const students = await Student.find({});
+    const students = await Student.find({}).lean();
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
-    const updateOperations = students.map((student) => {
-      return getStatsForStudent(student)
-        .then((updatedStats) => {
-          const { stats } = updatedStats;
+    const batchSize = 10;
+    const studentBatches = [];
+    for (let i = 0; i < students.length; i += batchSize) {
+      studentBatches.push(students.slice(i, i + batchSize));
+    }
 
-          const isValidStats =
-            (!student.leetcode || stats.leetcode?.solved?.All != null) &&
-            (!student.hackerrank ||
-              (Array.isArray(stats.hackerrank?.badges) &&
-                stats.hackerrank.badges.length > 0)) &&
-            (!student.codechef || stats.codechef?.fullySolved != null) &&
-            (!student.codeforces || stats.codeforces?.contests != null) &&
-            (!student.skillrack ||
-              (typeof stats.skillrack === "object" &&
-                stats.skillrack.programsSolved != null));
+    const allUpdateOperations = [];
 
-          if (isValidStats) {
-            return {
-              updateOne: {
-                filter: { _id: student._id },
-                update: {
-                  stats: updatedStats.stats,
-                  updatedAt: date,
+    for (const studentBatch of studentBatches) {
+      const batchOperations = studentBatch.map((student) => {
+        return getStatsForStudent(student)
+          .then((updatedStats) => {
+            const { stats } = updatedStats;
+
+            const isValidStats =
+              (!student.leetcode || stats.leetcode?.solved?.All != null) &&
+              (!student.hackerrank ||
+                (Array.isArray(stats.hackerrank?.badges) &&
+                  stats.hackerrank.badges.length > 0)) &&
+              (!student.codechef || stats.codechef?.fullySolved != null) &&
+              (!student.codeforces || stats.codeforces?.contests != null) &&
+              (!student.skillrack ||
+                (typeof stats.skillrack === "object" &&
+                  stats.skillrack.programsSolved != null));
+
+            if (isValidStats) {
+              return {
+                updateOne: {
+                  filter: { _id: student._id },
+                  update: {
+                    stats: updatedStats.stats,
+                    updatedAt: date,
+                  },
                 },
-              },
-            };
-          } else {
-            console.warn(
-              `Skipping update for ${student.name} due to invalid stats`
-            );
+              };
+            } else {
+              const invalidPlatforms = [
+                !student.leetcode || stats.leetcode?.solved?.All != null
+                  ? null
+                  : "LeetCode",
+                !student.hackerrank ||
+                (Array.isArray(stats.hackerrank?.badges) &&
+                  stats.hackerrank.badges.length > 0)
+                  ? null
+                  : "HackerRank",
+                !student.codechef || stats.codechef?.fullySolved != null
+                  ? null
+                  : "CodeChef",
+                !student.codeforces || stats.codeforces?.contests != null
+                  ? null
+                  : "Codeforces",
+                !student.skillrack ||
+                (typeof stats.skillrack === "object" &&
+                  stats.skillrack.programsSolved != null)
+                  ? null
+                  : "Skillrack",
+              ].filter(Boolean);
+              console.warn(
+                `Skipping update for ${
+                  student.name
+                } due to invalid stats on platforms: ${invalidPlatforms.join(
+                  ", "
+                )}`
+              );
+              return null;
+            }
+          })
+          .catch((err) => {
+            console.error(`Error fetching stats for ${student.name}:`, err);
             return null;
-          }
-        })
-        .catch((err) => {
-          console.error(`Error fetching stats for ${student.name}:`, err);
-          return null;
-        });
-    });
+          });
+      });
 
-    const validUpdateOperations = (await Promise.all(updateOperations)).filter(
-      Boolean
-    );
+      const batchResults = await Promise.allSettled(batchOperations);
+      for (const result of batchResults) {
+        if (result.status === "fulfilled" && result.value) {
+          allUpdateOperations.push(result.value);
+        } else if (result.status === "rejected") {
+          console.error("Batch operation rejected:", result.reason);
+        }
+      }
+    }
 
-    if (validUpdateOperations.length > 0) {
-      const bulkWriteResult = await Student.bulkWrite(validUpdateOperations);
+    if (allUpdateOperations.length > 0) {
+      const bulkWriteResult = await Student.bulkWrite(allUpdateOperations);
       console.log("Bulk write result:", bulkWriteResult);
     }
 
@@ -344,322 +385,6 @@ app.put("/api/students/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to update student" });
   }
 });
-
-// Utility helper: sleep for ms milliseconds
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-async function getLeetCodeStats(username) {
-  const query = `
-    {
-      matchedUser(username: "${username}") {
-        submitStats {
-          acSubmissionNum {
-            difficulty
-            count
-          }
-        }
-      }
-    }
-  `;
-  try {
-    const res = await axios.post("https://leetcode.com/graphql", { query });
-    const stats = res.data.data.matchedUser.submitStats.acSubmissionNum;
-    return {
-      platform: "LeetCode",
-      username,
-      solved: {
-        All: stats.find((i) => i.difficulty === "All").count,
-        Easy: stats.find((i) => i.difficulty === "Easy").count,
-        Medium: stats.find((i) => i.difficulty === "Medium").count,
-        Hard: stats.find((i) => i.difficulty === "Hard").count,
-      },
-      rating: res.data.data.matchedUser.userContestRanking?.rating || "N/A",
-    };
-  } catch {
-    return { platform: "LeetCode", username, error: "Failed to fetch data" };
-  }
-}
-
-async function getHackerRankStats(username) {
-  const url = `https://www.hackerrank.com/${username}`;
-  try {
-    const { data } = await axios.get(
-      url,
-      {
-        headers: {
-          "User-Agent": "Mozilla/5.0",
-          "Accept-Language": "en-US,en;q=0.9",
-          Referer: `https://www.hackerrank.com/${username}`,
-        },
-      },
-      { httpsAgent: agent }
-    );
-
-    const $ = cheerio.load(data);
-    const badges = [];
-
-    $(".hacker-badge").each((i, el) => {
-      const badgeName = $(el).find(".badge-title").text().trim();
-      const stars = $(el).find(".badge-star").length;
-      if (badgeName) {
-        badges.push({ name: badgeName, stars });
-      }
-    });
-
-    return {
-      platform: "HackerRank",
-      username,
-      badges: badges.slice(0, 5),
-    };
-  } catch (error) {
-    console.warn(`HackerRank fetch failed for ${username}:`, error.message);
-    return null;
-  }
-}
-
-async function getCodeChefStats(username) {
-  const url = `https://www.codechef.com/users/${username}`;
-  try {
-    const { data } = await axios.get(url);
-    const $ = cheerio.load(data);
-
-    const rating = $("div.rating-number")
-      .contents()
-      .filter(function () {
-        return this.type === "text";
-      })
-      .text()
-      .trim()
-      .replace("?", "");
-
-    const solvedText = $("h3")
-      .filter((i, el) => $(el).text().includes("Total Problems Solved"))
-      .text()
-      .match(/\d+/);
-    const fullySolved = solvedText ? parseInt(solvedText[0], 10) : 0;
-
-    return {
-      platform: "CodeChef",
-      username,
-      rating,
-      fullySolved,
-    };
-  } catch {
-    return { platform: "CodeChef", username, error: "Failed to fetch data" };
-  }
-}
-
-async function getCodeforcesStats(username) {
-  try {
-    await sleep(1000);
-
-    const userInfoUrl = `https://codeforces.com/api/user.info?handles=${username}`;
-    const contestsUrl = `https://codeforces.com/api/user.rating?handle=${username}`;
-    const submissionsUrl = `https://codeforces.com/api/user.status?handle=${username}`;
-
-    const [userInfoRes, contestsRes, submissionsRes] = await Promise.all([
-      axios.get(userInfoUrl),
-      axios.get(contestsUrl),
-      axios.get(submissionsUrl),
-    ]);
-
-    const user = userInfoRes.data.result[0];
-    const contests = contestsRes.data.result.length;
-    const submissions = submissionsRes.data.result;
-
-    const solvedSet = new Set();
-    submissions.forEach((sub) => {
-      if (sub.verdict === "OK") {
-        const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
-        solvedSet.add(problemId);
-      }
-    });
-
-    return {
-      platform: "Codeforces",
-      username,
-      rating: user.rating || "Unrated",
-      rank: user.rank || "Unranked",
-      maxRating: user.maxRating || "N/A",
-      contests,
-      problemsSolved: solvedSet.size,
-    };
-  } catch (error) {
-    console.error("Error fetching Codeforces stats:", error.message);
-    return { platform: "Codeforces", username, error: "Failed to fetch data" };
-  }
-}
-
-async function getSkillrackStats(resumeUrl) {
-  if (!resumeUrl || !resumeUrl.startsWith("http")) {
-    return {
-      platform: "Skillrack",
-      error: "Skipped: Invalid or missing URL",
-    };
-  }
-  try {
-    const { data } = await axios.get(resumeUrl);
-    const $ = cheerio.load(data);
-
-    let rank = 0;
-    let programsSolved = 0;
-
-    $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim();
-      const value = $(el).find("div.value").text().trim();
-      if (label.includes("RANK")) rank = parseInt(value);
-      if (label.includes("PROGRAMS SOLVED")) programsSolved = parseInt(value);
-    });
-
-    const languages = {};
-    $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim().toUpperCase();
-      const value = $(el).find("div.value").text().trim();
-      if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
-        languages[label] = parseInt(value);
-      }
-    });
-
-    const certificates = [];
-    $("div.ui.brown.card").each((i, el) => {
-      const content = $(el).find("div.content");
-
-      const title = content.find("b").text().trim();
-      const dateMatch = content
-        .text()
-        .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
-      const date = dateMatch ? dateMatch[0] : "";
-      const link = content.find("a").attr("href");
-
-      if (title && link) {
-        certificates.push({ title, date, link });
-      }
-    });
-
-    return {
-      platform: "Skillrack",
-      rank,
-      programsSolved,
-      languages,
-      certificates,
-    };
-  } catch (error) {
-    console.error("Error fetching Skillrack stats:", error.message);
-    return {
-      platform: "Skillrack",
-      error: "Failed to fetch data",
-    };
-  }
-}
-
-async function getTryHackMeStats(username) {
-  const url = `https://tryhackme.com/p/${username}`;
-  const browser = await puppeteer.launch({ headless: "new" });
-  const page = await browser.newPage();
-
-  await page.goto(url, { waitUntil: "networkidle2" });
-
-  const stats = await page.evaluate(() => {
-    const getText = (label) => {
-      const statBox = Array.from(document.querySelectorAll("div")).find(
-        (div) => div.textContent.trim() === label
-      )?.parentElement;
-      return statBox?.querySelector("span")?.textContent?.trim();
-    };
-
-    const topPercentageEl = document.querySelector("div.sc-fSnEDd");
-    const topPercentage = topPercentageEl?.textContent?.trim();
-
-    return {
-      platform: "TryHackMe",
-      username: window.location.pathname.split("/").pop(),
-      rank: parseInt(getText("Rank")),
-      topPercentage: topPercentage?.includes("top") ? topPercentage : null,
-      badges: parseInt(getText("Badges")),
-      completedRooms: parseInt(getText("Completed rooms")),
-    };
-  });
-
-  await browser.close();
-  return stats;
-}
-
-// getTryHackMeStats("RedRogue").then(console.log);
-
-async function getGithubStats(username) {
-  try {
-    const headers = {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
-      "Content-Type": "application/json",
-      "User-Agent": "AlgoLog-App",
-    };
-
-    const query = `
-  query {
-    user(login: "${username}") {
-      repositories(first: 100, ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) {
-        totalCount
-        nodes {
-          name
-          languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
-            edges {
-              size
-              node { 
-                name
-              }
-            }
-          }
-        }
-      }
-      contributionsCollection {
-        contributionCalendar {
-          totalContributions
-        }
-      }
-    }
-  }
-`;
-
-    const res = await axios.post(
-      "https://api.github.com/graphql",
-      { query },
-      { headers }
-    );
-
-    const user = res.data.data.user;
-
-    const totalRepos = user.repositories.totalCount;
-    const totalCommits =
-      user.contributionsCollection.contributionCalendar.totalContributions;
-
-    const languageBytes = {};
-
-    user.repositories.nodes.forEach((repo) => {
-      repo.languages.edges.forEach(({ node, size }) => {
-        languageBytes[node.name] = (languageBytes[node.name] || 0) + size;
-      });
-    });
-
-    const topLanguages = Object.entries(languageBytes)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name]) => ({ name }));
-
-    return {
-      username,
-      totalCommits,
-      totalRepos,
-      longestStreak: 0,
-      topLanguages,
-    };
-  } catch (error) {
-    console.error("Error fetching GitHub stats:", error.message);
-    return { error: "Failed to fetch GitHub stats" };
-  }
-}
-
-getGithubStats("iam-elango").then(console.log);
 
 cron.schedule("0 0 * * *", async () => {
   console.log("Running cron job to fetch stats...");

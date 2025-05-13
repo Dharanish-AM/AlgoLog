@@ -13,7 +13,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
     codechef: "",
     codeforces: "",
     skillrack: "",
-    github: "", // Added github field
+    github: "",
   });
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         codechef: student?.codechef || "",
         codeforces: student?.codeforces || "",
         skillrack: student?.skillrack || "",
-        github: student?.github || "", // Set github value if it exists
+        github: student?.github || "",
       });
     }
   }, [student]);
@@ -43,7 +43,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
       name === "codechef" ||
       name === "codeforces" ||
       name === "skillrack" ||
-      name === "github" // Handle github field change
+      name === "github"
     ) {
       setFormData({ ...formData, [name]: value.trim() });
     } else {
@@ -60,7 +60,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
       codechef: formData.codechef.trim(),
       codeforces: formData.codeforces.trim(),
       skillrack: formData.skillrack.trim(),
-      github: formData.github.trim(), // Trim github input before saving
+      github: formData.github.trim(),
     };
     onSave(trimmedData);
     onClose();
@@ -112,7 +112,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
               }
               className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
             />
-          </div> 
+          </div>
         ))}
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
