@@ -186,7 +186,7 @@ const Dashboard = () => {
     } catch (err) {
       console.error("Error adding student:", err);
       setError("Failed to add student. Please try again.");
-      toast.error("Failed to add student.");
+      toast.error("Failed to add student.",error);
     } finally {
       setAddLoading(false);
     }
