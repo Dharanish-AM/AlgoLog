@@ -485,7 +485,7 @@ const Dashboard = () => {
 
         <Toaster position="bottom-right" />
         <footer className="fixed bottom-4 right-4 text-xs text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded shadow-md backdrop-blur-sm">
-          Made with 💻 by{" "}
+          Made by{" "}
           <a
             href="https://github.com/Dharanish-AM"
             target="_blank"
