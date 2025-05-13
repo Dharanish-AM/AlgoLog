@@ -373,7 +373,7 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
               <div className="space-y-3">
                 <div className="flex justify-between text-sm mb-4">
                   <span className="text-gray-600 dark:text-gray-300">
-                    Total Commits ({new Date().getFullYear()}):
+                    Total Commits:
                   </span>
                   <span className="font-semibold text-secondary-600 dark:text-secondary-400">
                     {github?.totalCommits ?? "N/A"}

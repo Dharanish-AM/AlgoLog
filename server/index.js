@@ -12,6 +12,7 @@ const User = require("./models/userSchema");
 const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
 const cron = require("node-cron");
+const { get } = require("http");
 dotenv.config();
 
 const app = express();
@@ -567,57 +568,77 @@ async function getGithubStats(username) {
       `https://api.github.com/users/${username}/repos?per_page=100`,
       { headers }
     );
-    const repos = reposRes.data;
+    const repos = reposRes.data.filter(repo => !repo.fork);
     const totalRepos = repos.length;
 
     let totalCommits = 0;
-    let commitDatesArr = [];
+    const commitDatesArr = [];
     const languageStats = {};
 
-    const fetchTasks = repos.map(async (repo) => {
-      const { name } = repo;
-
-      const [langRes, commitsRes] = await Promise.allSettled([
-        axios.get(`https://api.github.com/repos/${username}/${name}/languages`, { headers }),
-        axios.get(`https://api.github.com/repos/${username}/${name}/commits?per_page=100`, { headers }),
-      ]);
-
-      if (langRes.status === "fulfilled") {
-        const repoLangs = langRes.value.data;
-        for (const lang of Object.keys(repoLangs)) {
-          languageStats[lang] = (languageStats[lang] || 0) + 1;
+    for (const repo of repos) {
+      const repoName = repo.name;
+      let page = 1;
+      let hasNextPage = true;
+      const now = new Date();
+      const cutoff = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+      while (hasNextPage) {
+        try {
+          const commitRes = await axios.get(
+            `https://api.github.com/repos/${username}/${repoName}/commits?page=${page}&per_page=100`,
+            { headers }
+          );
+          const commits = commitRes.data;
+          totalCommits += commits.length;
+          commits.forEach(commit => {
+            const commitDate = commit.commit?.author?.date || commit.committer?.date;
+            if (commitDate) {
+              const formattedDate = commitDate.split("T")[0];
+              if (new Date(formattedDate) >= cutoff) {
+                commitDatesArr.push(formattedDate);
+              }
+            }
+          });
+          const linkHeader = commitRes.headers.link;
+          hasNextPage = linkHeader && linkHeader.includes('rel="next"');
+          page++;
+        } catch (error) {
+          if (error.response?.status === 409) {
+            console.warn(`Skipping repo ${repoName} due to no commits (409)`);
+            break;
+          } else {
+            console.error(`Error fetching commits for ${repoName}:`, error.message);
+            break;
+          }
         }
       }
-
-      if (commitsRes.status === "fulfilled") {
-        const commits = commitsRes.value.data;
-        totalCommits += commits.length;
-        commits.forEach(commit => {
-          const commitDate = commit.commit?.author?.date || commit.committer?.date;
-          if (commitDate) {
-            const formattedDate = commitDate.includes("T")
-              ? commitDate.split("T")[0]
-              : commitDate.substring(0, 10);
-            commitDatesArr.push(formattedDate);
-          }
-        });
+    }
+    const langFetches = repos.map(repo =>
+      axios
+        .get(`https://api.github.com/repos/${username}/${repo.name}/languages`, { headers })
+        .then(res => ({ repo: repo.name, langs: res.data }))
+        .catch(() => null)
+    );
+    const langsResults = await Promise.allSettled(langFetches);
+    langsResults.forEach(result => {
+      if (result.status === "fulfilled" && result.value) {
+        const { langs } = result.value;
+        for (const lang of Object.keys(langs)) {
+          languageStats[lang] = (languageStats[lang] || 0) + langs[lang];
+        }
       }
     });
 
-    await Promise.all(fetchTasks);
-
     const commitDates = Array.from(new Set(commitDatesArr))
-      .map((d) => new Date(d))
+      .map(date => new Date(date))
       .sort((a, b) => a - b)
-      .map((d) => d.toISOString().slice(0, 10));
+      .map(date => date.toISOString().slice(0, 10));
 
     let longestStreak = 0;
     let currentStreak = 0;
     let previousDate = null;
 
     for (const dateStr of commitDates) {
-      const currentDate = new Date(dateStr + 'T00:00:00Z');
-
+      const currentDate = new Date(dateStr + "T00:00:00Z");
       if (previousDate) {
         const diffDays = (currentDate - previousDate) / (1000 * 3600 * 24);
         if (diffDays === 1) {
@@ -626,16 +647,15 @@ async function getGithubStats(username) {
           currentStreak = 1;
         }
       } else {
-        currentStreak = 1; 
+        currentStreak = 1;
       }
-
       longestStreak = Math.max(longestStreak, currentStreak);
       previousDate = currentDate;
     }
 
-   const topLanguages = Object.entries(languageStats)
-  .sort((a, b) => b[1] - a[1])
-  .map(([language]) => ({ name: language })); 
+    const topLanguages = Object.entries(languageStats)
+      .sort((a, b) => b[1] - a[1])
+      .map(([language]) => ({ name: language }));
 
     return {
       username,
@@ -643,12 +663,14 @@ async function getGithubStats(username) {
       totalRepos,
       longestStreak,
       topLanguages,
-    }; 
+    };
   } catch (error) {
     console.error("Error fetching GitHub stats:", error.message);
     return { error: "Failed to fetch GitHub stats" };
   }
 }
+
+getGithubStats("Dharanish-AM").then(console.log);
 
 cron.schedule("0 0 * * *", async () => { 
   console.log("Running cron job to fetch stats...");
