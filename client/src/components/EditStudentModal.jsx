@@ -13,6 +13,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
     codechef: "",
     codeforces: "",
     skillrack: "",
+    github: "", // Added github field
   });
 
   useEffect(() => {
@@ -29,18 +30,40 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         codechef: student?.codechef || "",
         codeforces: student?.codeforces || "",
         skillrack: student?.skillrack || "",
+        github: student?.github || "", // Set github value if it exists
       });
     }
   }, [student]);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (
+      name === "leetcode" ||
+      name === "hackerrank" ||
+      name === "codechef" ||
+      name === "codeforces" ||
+      name === "skillrack" ||
+      name === "github" // Handle github field change
+    ) {
+      setFormData({ ...formData, [name]: value.trim() });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
-    onClose()
+    const trimmedData = {
+      ...formData,
+      leetcode: formData.leetcode.trim(),
+      hackerrank: formData.hackerrank.trim(),
+      codechef: formData.codechef.trim(),
+      codeforces: formData.codeforces.trim(),
+      skillrack: formData.skillrack.trim(),
+      github: formData.github.trim(), // Trim github input before saving
+    };
+    onSave(trimmedData);
+    onClose();
   };
 
   if (!isOpen) return null;
@@ -60,6 +83,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
           "codechef",
           "codeforces",
           "skillrack",
+          "github",
         ].map((field) => (
           <div key={field}>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">

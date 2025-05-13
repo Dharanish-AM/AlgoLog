@@ -4,12 +4,17 @@ import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
 
 const StudentCard = ({ student, onClose, reFetchStudents }) => {
-  const { name, leetcode, hackerrank, codechef, codeforces, skillrack } =
-    student.stats;
+  const {
+    name,
+    leetcode,
+    hackerrank,
+    codechef,
+    codeforces,
+    skillrack,
+    github,
+  } = student.stats;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(student);
-
-  console.log(skillrack);
 
   const handleEdit = () => {
     setIsEditOpen(true);
@@ -355,6 +360,55 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                   <span className="font-semibold text-blue-600 dark:text-blue-400">
                     {codeforces?.contests ?? "N/A"}
                   </span>
+                </div>
+              </div>
+            </div>
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <Trophy size={24} className="text-secondary-500" />
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  GitHub
+                </h4>
+              </div>
+              <div className="space-y-3">
+                <div className="flex justify-between text-sm mb-4">
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Total Commits ({new Date().getFullYear()}):
+                  </span>
+                  <span className="font-semibold text-secondary-600 dark:text-secondary-400">
+                    {github?.totalCommits ?? "N/A"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between text-sm mb-4">
+                  <span className="text-gray-600 dark:text-gray-300">
+                    Public Repository:
+                  </span>
+                  <span className="font-semibold text-secondary-600 dark:text-secondary-400">
+                    {github?.totalRepos ?? "N/A"}
+                  </span>
+                </div>
+
+                <div className="space-y-2">
+                  <div className="text-sm mb-4 font-medium text-gray-600 dark:text-gray-300">
+                    Top Languages
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    {github?.topLanguages ? (
+                      github.topLanguages.map((language, idx) => (
+                        <div
+                          key={idx}
+                          className="p-3 rounded-lg bg-gray-100 dark:bg-gray-700/50 text-center"
+                        >
+                          <div className="font-semibold text-gray-800 dark:text-white">
+                            {language.name}
+                          </div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-sm text-gray-500">N/A</div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

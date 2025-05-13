@@ -14,12 +14,22 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     codechef: "",
     codeforces: "",
     skillrack: "",
+    github: "", 
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const trimmedData = {
+      ...formData,
+      leetcode: formData.leetcode.trim(),
+      hackerrank: formData.hackerrank.trim(),
+      codechef: formData.codechef.trim(),
+      codeforces: formData.codeforces.trim(),
+      skillrack: formData.skillrack.trim(),
+      github: formData.github.trim(), 
+    };
     onClose();
-    onSubmit(formData);
+    onSubmit(trimmedData);
   };
 
   if (!isOpen) return null;
@@ -75,6 +85,12 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
               type: "url",
               required: true,
             },
+            {
+              label: "GitHub Profile Username", 
+              key: "github",
+              type: "text",
+              required: false,
+            },
           ].map(({ label, key, type = "text", required }, index) => (
             <React.Fragment key={key}>
               <div>
@@ -96,11 +112,24 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                       ? "Enter codeforces username (e.g., johndoe_cf)"
                       : key === "skillrack"
                       ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181....)"
+                      : key === "github"
+                      ? "Enter GitHub username (e.g., johndoe)"
                       : `Enter ${label.toLowerCase()}`
                   }
-                  onChange={(e) =>
-                    setFormData({ ...formData, [key]: e.target.value })
-                  }
+                  onChange={(e) => {
+                    let value = e.target.value;
+                    if (
+                      key === "leetcode" ||
+                      key === "hackerrank" ||
+                      key === "codechef" ||
+                      key === "codeforces" ||
+                      key === "skillrack" ||
+                      key === "github"
+                    ) {
+                      value = value.trimStart();
+                    }
+                    setFormData({ ...formData, [key]: value });
+                  }}
                   className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                 />
               </div>

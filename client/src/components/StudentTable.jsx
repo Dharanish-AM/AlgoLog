@@ -7,14 +7,10 @@ const StudentTable = ({
   error,
   sortField,
   sortDirection,
-  setSortField,
-  setSortDirection,
   selectedStudent,
   setSelectedStudent,
   isShowTopPerformer,
 }) => {
-
-
   const renderSortIcon = (field) => {
     if (sortField !== field) return null;
 
@@ -69,6 +65,7 @@ const StudentTable = ({
                 "CodeChef",
                 "CodeForces",
                 "SkillRack",
+                "GitHub Commits",
                 "Details",
               ].map((header, idx) => (
                 <th
@@ -159,7 +156,6 @@ const StudentTable = ({
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {console.log(student.stats.codechef)}
                       Rating:{" "}
                       {student.stats.codechef.rating
                         ? student.stats.codechef.rating
@@ -185,6 +181,15 @@ const StudentTable = ({
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       Rank: {student.stats.skillrack?.rank ?? "N/A"}
+                    </div>
+                  </td>
+
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 dark:text-gray-100">
+                      Commits: {student.stats.github?.totalCommits ?? "N/A"}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      Public Repos: {student.stats.github?.totalRepos ?? "N/A"}
                     </div>
                   </td>
 

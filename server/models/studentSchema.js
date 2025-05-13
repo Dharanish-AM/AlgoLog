@@ -13,6 +13,7 @@ const studentSchema = new mongoose.Schema(
     codechef: { type: String, required: true },
     codeforces: { type: String, required: true },
     skillrack: { type: String, required: true },
+    github: { type: String, required: true },
     stats: {
       leetcode: {
         platform: String,
@@ -62,6 +63,17 @@ const studentSchema = new mongoose.Schema(
             title: String,
             date: String,
             link: String,
+          },
+        ],
+      },
+      github: {
+        platform: String,
+        totalCommits: Number,
+        totalRepos: Number,
+        longestStreak: Number,
+        topLanguages: [
+          {
+            name: String,
           },
         ],
       },

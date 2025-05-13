@@ -45,6 +45,7 @@ async function getStatsForStudent(student) {
     codechef,
     codeforces,
     skillrack,
+    github, 
   } = student;
 
   const formatError = (platform, identifier, extraFields = {}, isUrl = false) => ({
@@ -69,13 +70,15 @@ async function getStatsForStudent(student) {
   const skillPromise = skillrack && skillrack.startsWith("http")
     ? getSkillrackStats(skillrack)
     : Promise.resolve(null);
+  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null); 
 
-  const [leet, hack, chef, cf, skill] = await Promise.allSettled([
+  const [leet, hack, chef, cf, skill, githubResult] = await Promise.allSettled([
     leetPromise,
     hackPromise,
     chefPromise,
     cfPromise,
     skillPromise,
+    githubPromise,
   ]);
 
   return {
@@ -102,6 +105,9 @@ async function getStatsForStudent(student) {
       skillrack: skill.status === "fulfilled" && skill.value && typeof skill.value === "object"
         ? skill.value
         : formatError("Skillrack", skillrack, { certificates: [] }, true),
+      github: githubResult.status === "fulfilled" && githubResult.value
+        ? githubResult.value
+        : formatError("GitHub", github),
     },
   };
 }
@@ -210,6 +216,7 @@ app.post("/api/students", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
+      github, 
     } = req.body;
 
     if (!name || !email || !rollNo) {
@@ -230,6 +237,7 @@ app.post("/api/students", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
+      github, 
     };
 
     const statsResult = await getStatsForStudent(studentInfo);
@@ -262,6 +270,7 @@ app.put("/api/students/:id", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
+      github, 
     } = req.body;
 
     console.log(`Updating student with ID: ${id}`);
@@ -283,6 +292,7 @@ app.put("/api/students/:id", async (req, res) => {
       codechef,
       codeforces,
       skillrack,
+      github,
     };
 
     const updatedStats = await getStatsForStudent({
@@ -545,7 +555,102 @@ async function getTryHackMeStats(username) {
 
 // getTryHackMeStats("RedRogue").then(console.log);
 
-cron.schedule("0 0 * * *", async () => {
+async function getGithubStats(username) {
+  try {
+    const headers = {
+      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Accept: "application/vnd.github+json",
+      "User-Agent": "AlgoLog-App",
+    };
+
+    const reposRes = await axios.get(
+      `https://api.github.com/users/${username}/repos?per_page=100`,
+      { headers }
+    );
+    const repos = reposRes.data;
+    const totalRepos = repos.length;
+
+    let totalCommits = 0;
+    let commitDatesArr = [];
+    const languageStats = {};
+
+    const fetchTasks = repos.map(async (repo) => {
+      const { name } = repo;
+
+      const [langRes, commitsRes] = await Promise.allSettled([
+        axios.get(`https://api.github.com/repos/${username}/${name}/languages`, { headers }),
+        axios.get(`https://api.github.com/repos/${username}/${name}/commits?per_page=100`, { headers }),
+      ]);
+
+      if (langRes.status === "fulfilled") {
+        const repoLangs = langRes.value.data;
+        for (const lang of Object.keys(repoLangs)) {
+          languageStats[lang] = (languageStats[lang] || 0) + 1;
+        }
+      }
+
+      if (commitsRes.status === "fulfilled") {
+        const commits = commitsRes.value.data;
+        totalCommits += commits.length;
+        commits.forEach(commit => {
+          const commitDate = commit.commit?.author?.date || commit.committer?.date;
+          if (commitDate) {
+            const formattedDate = commitDate.includes("T")
+              ? commitDate.split("T")[0]
+              : commitDate.substring(0, 10);
+            commitDatesArr.push(formattedDate);
+          }
+        });
+      }
+    });
+
+    await Promise.all(fetchTasks);
+
+    const commitDates = Array.from(new Set(commitDatesArr))
+      .map((d) => new Date(d))
+      .sort((a, b) => a - b)
+      .map((d) => d.toISOString().slice(0, 10));
+
+    let longestStreak = 0;
+    let currentStreak = 0;
+    let previousDate = null;
+
+    for (const dateStr of commitDates) {
+      const currentDate = new Date(dateStr + 'T00:00:00Z');
+
+      if (previousDate) {
+        const diffDays = (currentDate - previousDate) / (1000 * 3600 * 24);
+        if (diffDays === 1) {
+          currentStreak++;
+        } else if (diffDays > 1) {
+          currentStreak = 1;
+        }
+      } else {
+        currentStreak = 1; 
+      }
+
+      longestStreak = Math.max(longestStreak, currentStreak);
+      previousDate = currentDate;
+    }
+
+   const topLanguages = Object.entries(languageStats)
+  .sort((a, b) => b[1] - a[1])
+  .map(([language]) => ({ name: language })); 
+
+    return {
+      username,
+      totalCommits,
+      totalRepos,
+      longestStreak,
+      topLanguages,
+    }; 
+  } catch (error) {
+    console.error("Error fetching GitHub stats:", error.message);
+    return { error: "Failed to fetch GitHub stats" };
+  }
+}
+
+cron.schedule("0 0 * * *", async () => { 
   console.log("Running cron job to fetch stats...");
   const students = await Student.find();
   for (const student of students) {
@@ -554,7 +659,6 @@ cron.schedule("0 0 * * *", async () => {
   }
 });
 
-// getTryHackMeStats("RedRogue").then(console.log);
 
 // const skillrackUrl =
 //   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
