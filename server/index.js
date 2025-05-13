@@ -414,14 +414,25 @@ async function getCodeforcesStats(username) {
   try {
     const userInfoUrl = `https://codeforces.com/api/user.info?handles=${username}`;
     const contestsUrl = `https://codeforces.com/api/user.rating?handle=${username}`;
+    const submissionsUrl = `https://codeforces.com/api/user.status?handle=${username}`;
 
-    const [userInfoRes, contestsRes] = await Promise.all([
+    const [userInfoRes, contestsRes, submissionsRes] = await Promise.all([
       axios.get(userInfoUrl),
       axios.get(contestsUrl),
+      axios.get(submissionsUrl),
     ]);
 
     const user = userInfoRes.data.result[0];
     const contests = contestsRes.data.result.length;
+    const submissions = submissionsRes.data.result;
+
+    const solvedSet = new Set();
+    submissions.forEach((sub) => {
+      if (sub.verdict === "OK") {
+        const problemId = `${sub.problem.contestId}-${sub.problem.index}`;
+        solvedSet.add(problemId);
+      }
+    });
 
     return {
       platform: "Codeforces",
@@ -430,11 +441,14 @@ async function getCodeforcesStats(username) {
       rank: user.rank || "Unranked",
       maxRating: user.maxRating || "N/A",
       contests,
+      problemsSolved: solvedSet.size,
     };
-  } catch {
+  } catch (error) {
+    console.error("Error fetching Codeforces stats:", error.message);
     return { platform: "Codeforces", username, error: "Failed to fetch data" };
   }
 }
+
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
     return {

@@ -24,7 +24,6 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
   };
 
   const handleEditStudent = async (updatedData) => {
-    
     try {
       const response = await axios.put(
         `${import.meta.env.VITE_API_URL}/api/students/${student._id}`,
@@ -321,6 +320,14 @@ const StudentCard = ({ student, onClose, reFetchStudents }) => {
                 </h4>
               </div>
               <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Problems Solved
+                  </span>
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {codeforces?.problemsSolved ?? "N/A"}
+                  </span>
+                </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Rating

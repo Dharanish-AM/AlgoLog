@@ -44,6 +44,7 @@ const studentSchema = new mongoose.Schema(
         rank: String,
         maxRating: mongoose.Schema.Types.Mixed,
         contests: Number,
+        problemsSolved: Number,
       },
       skillrack: {
         platform: String,

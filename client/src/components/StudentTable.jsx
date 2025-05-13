@@ -179,10 +179,10 @@ const StudentTable = ({
 
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      Rating: {student.stats?.codeforces?.rating ?? "N/A"}
+                      Rating: {student.stats?.codeforces?.problemsSolved ?? "N/A"}
                     </div>
                     <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
-                      {student.stats?.codeforces?.rank ?? "N/A"}
+                      {student.stats?.codeforces?.rating ?? "N/A"}
                     </div>
                   </td>
 
