@@ -47,22 +47,28 @@ async function getStatsForStudent(student) {
     skillrack,
   } = student;
 
-  const leetPromise = leetcode
-    ? getLeetCodeStats(leetcode)
+  const formatError = (platform, identifier, extraFields = {}, isUrl = false) => ({
+    platform,
+    updatedAt: new Date().toISOString(),
+    ...extraFields,
+    error: identifier
+      ? isUrl
+        ? identifier.startsWith("http")
+          ? "Failed to fetch"
+          : "Invalid URL"
+        : "Failed to fetch"
+      : isUrl
+        ? "URL missing"
+        : "Username missing",
+  });
+
+  const leetPromise = leetcode ? getLeetCodeStats(leetcode) : Promise.resolve(null);
+  const hackPromise = hackerrank ? getHackerRankStats(hackerrank) : Promise.resolve(null);
+  const chefPromise = codechef ? getCodeChefStats(codechef) : Promise.resolve(null);
+  const cfPromise = codeforces ? getCodeforcesStats(codeforces) : Promise.resolve(null);
+  const skillPromise = skillrack && skillrack.startsWith("http")
+    ? getSkillrackStats(skillrack)
     : Promise.resolve(null);
-  const hackPromise = hackerrank
-    ? getHackerRankStats(hackerrank)
-    : Promise.resolve(null);
-  const chefPromise = codechef
-    ? getCodeChefStats(codechef)
-    : Promise.resolve(null);
-  const cfPromise = codeforces
-    ? getCodeforcesStats(codeforces)
-    : Promise.resolve(null);
-  const skillPromise =
-    skillrack && skillrack.startsWith("http")
-      ? getSkillrackStats(skillrack)
-      : Promise.resolve(null);
 
   const [leet, hack, chef, cf, skill] = await Promise.allSettled([
     leetPromise,
@@ -81,48 +87,21 @@ async function getStatsForStudent(student) {
     department,
     section,
     stats: {
-      leetcode:
-        leet.status === "fulfilled" && leet.value
-          ? leet.value
-          : {
-              platform: "LeetCode",
-              error: leetcode ? "Failed to fetch" : "Username missing",
-            },
-      hackerrank:
-        hack.status === "fulfilled" && hack.value
-          ? hack.value
-          : {
-              platform: "HackerRank",
-              error: hackerrank ? "Failed to fetch" : "Username missing",
-            },
-      codechef:
-        chef.status === "fulfilled" && chef.value
-          ? chef.value
-          : {
-              platform: "CodeChef",
-              error: codechef ? "Failed to fetch" : "Username missing",
-            },
-      codeforces:
-        cf.status === "fulfilled" && cf.value
-          ? cf.value
-          : {
-              platform: "Codeforces",
-              error: codeforces ? "Failed to fetch" : "Username missing",
-            },
-      skillrack:
-        skill.status === "fulfilled" &&
-        skill.value &&
-        typeof skill.value === "object"
-          ? skill.value
-          : {
-              platform: "Skillrack",
-              certificates: [],
-              error: skillrack
-                ? skillrack.startsWith("http")
-                  ? "Failed to fetch"
-                  : "Invalid URL"
-                : "URL missing",
-            },
+      leetcode: leet.status === "fulfilled" && leet.value
+        ? leet.value
+        : formatError("LeetCode", leetcode),
+      hackerrank: hack.status === "fulfilled" && hack.value
+        ? hack.value
+        : formatError("HackerRank", hackerrank),
+      codechef: chef.status === "fulfilled" && chef.value
+        ? chef.value
+        : formatError("CodeChef", codechef),
+      codeforces: cf.status === "fulfilled" && cf.value
+        ? cf.value
+        : formatError("Codeforces", codeforces),
+      skillrack: skill.status === "fulfilled" && skill.value && typeof skill.value === "object"
+        ? skill.value
+        : formatError("Skillrack", skillrack, { certificates: [] }, true),
     },
   };
 }
