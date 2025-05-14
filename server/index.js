@@ -179,7 +179,7 @@ app.get("/api/students/refetch", async (req, res) => {
     const allUpdateOperations = [];
 
     for (const studentBatch of studentBatches) {
-      const batchOperations = studentBatch.map((student) => {
+      const batchOperations = studentBatch.map(async (student) => {
         return getStatsForStudent(student)
           .then((updatedStats) => {
             const { stats } = updatedStats;
@@ -263,6 +263,43 @@ app.get("/api/students/refetch", async (req, res) => {
   } catch (error) {
     console.error("Error refetching student stats:", error);
     res.status(500).json({ error: "Failed to refetch stats for all students" });
+  }
+});
+
+app.get("/api/students/refetch/single", async (req, res) => {
+  try {
+    const { id } = req.query;
+    console.log(id)
+    const student = await Student.findById(id);
+    if (!student) {
+      return res.status(404).json({ error: "Student not found" });
+    }
+    const updatedStats = await getStatsForStudent(student);
+    const { stats } = updatedStats;
+    const isValidStats =
+      (!student.leetcode || stats.leetcode?.solved?.All != null) &&
+      (!student.hackerrank ||
+        (Array.isArray(stats.hackerrank?.badges) &&
+          stats.hackerrank.badges.length > 0)) &&
+      (!student.codechef || stats.codechef?.fullySolved != null) &&
+      (!student.codeforces || stats.codeforces?.contests != null) &&
+      (!student.skillrack ||
+        (typeof stats.skillrack === "object" &&
+          stats.skillrack.programsSolved != null));
+
+    if (isValidStats) {
+      const updatedStudent = await Student.findByIdAndUpdate(
+        id,
+        { stats: updatedStats.stats },
+        { new: true }
+      );
+      return res.status(200).json({ student: updatedStudent });
+    } else {
+      return res.status(400).json({ error: "Invalid stats data" });
+    }
+  } catch (error) {
+    console.error("Error refetching single student stats:", error);
+    res.status(500).json({ error: "Failed to refetch student stats" });
   }
 });
 

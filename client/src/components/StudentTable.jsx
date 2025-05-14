@@ -1,5 +1,5 @@
 import React from "react";
-import { ArrowUp, ArrowDown, ChevronRight } from "lucide-react";
+import { ChevronRight, RefreshCw } from "lucide-react";
 
 const StudentTable = ({
   students,
@@ -8,10 +8,8 @@ const StudentTable = ({
   selectedStudent,
   setSelectedStudent,
   isShowTopPerformer,
-  setSortField,
-  setSortDirection,
-  sortDirection,
-  sortField,
+  selectedPlatform,
+  handleRefetchSingleStudent,
 }) => {
   if (loading) {
     return (
@@ -59,26 +57,25 @@ const StudentTable = ({
                 { label: "SkillRack", key: "skillrack" },
                 { label: "GitHub", key: "github" },
                 { label: "Details", key: "name" },
+                { label: "Actions", key: "actions" },
               ].map(({ label, key }, idx) => (
                 <th
                   key={idx}
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 capitalize tracking-wider cursor-pointer"
-                  onClick={() => {
-                    if (isShowTopPerformer) return;
-                    setSortField(key);
-                    setSortDirection(sortDirection === "asc" ? "desc" : "asc");
-                  }}
+                  className={`px-6 py-3 text-left text-xs font-medium capitalize tracking-wider cursor-pointer ${
+                    selectedPlatform === key
+                      ? "bg-blue-100 text-gray-1000 dark:text-gray-100 dark:bg-blue-900/30 font-bold"
+                      : "text-gray-900 dark:text-gray-400"
+                  }`}
                 >
-                  <span className="flex items-center">
+                  <span
+                    className={`flex items-center ${
+                      selectedPlatform === key
+                        ? "text-blue-600 font-bold dark:text-blue-400 text-[0.9rem]"
+                        : ""
+                    }`}
+                  >
                     {label}
-                    {key &&
-                      sortField === key &&
-                      (sortDirection === "asc" ? (
-                        <ArrowUp size={16} className="ml-1" />
-                      ) : (
-                        <ArrowDown size={16} className="ml-1" />
-                      ))}
                   </span>
                 </th>
               ))}
@@ -125,7 +122,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "leetcode"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
                       {student.stats.leetcode?.solved?.All ?? "N/A"} solved
                     </div>
@@ -136,7 +139,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "hackerrank"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="flex flex-wrap gap-1">
                       {student.stats.hackerrank?.badges
                         ?.slice(0, 3)
@@ -156,7 +165,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "codechef"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
                       {student.stats.codechef.fullySolved ?? "N/A"} solved
                     </div>
@@ -168,7 +183,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "codeforces"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
                       Rating:{" "}
                       {student.stats?.codeforces?.problemsSolved ?? "N/A"}
@@ -178,7 +199,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "skillrack"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
                       {student.stats.skillrack?.programsSolved ?? "N/A"} solved
                     </div>
@@ -187,7 +214,13 @@ const StudentTable = ({
                     </div>
                   </td>
 
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className={`px-6 py-4 whitespace-nowrap ${
+                      selectedPlatform === "github"
+                        ? "bg-blue-50 dark:bg-blue-900/20 font-semibold"
+                        : ""
+                    }`}
+                  >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
                       Commits: {student.stats.github?.totalCommits ?? "N/A"}
                     </div>
@@ -207,6 +240,17 @@ const StudentTable = ({
                     >
                       {selectedStudent?._id === student._id ? "Hide" : "View"}
                       <ChevronRight size={16} className="ml-1" />
+                    </button>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <button
+                      onClick={() => {
+                        handleRefetchSingleStudent(student._id);
+                      }}
+                      className="text-gray-500 hover:text-purple-600 dark:hover:text-purple-400"
+                      title="Refresh Student"
+                    >
+                      <RefreshCw size={"1.2rem"} />
                     </button>
                   </td>
                 </tr>

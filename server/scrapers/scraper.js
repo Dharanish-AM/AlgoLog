@@ -39,36 +39,41 @@ async function getLeetCodeStats(username) {
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
-  try {
-    const { data } = await axios.get(url, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept-Language": "en-US,en;q=0.9",
-        Referer: url,
-      },
-      httpsAgent: agent,
-      timeout: 5000,
-    });
+  const maxAttempts = 3;
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { data } = await axios.get(url, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept-Language": "en-US,en;q=0.9",
+          Referer: url,
+        },
+        httpsAgent: agent,
+        timeout: 5000,
+      });
 
-    const $ = cheerio.load(data);
-    const badges = $(".hacker-badge")
-      .toArray()
-      .slice(0, 5)
-      .map((el) => {
-        const badgeName = $(el).find(".badge-title").text().trim();
-        const stars = $(el).find(".badge-star").length;
-        return badgeName ? { name: badgeName, stars } : null;
-      })
-      .filter(Boolean);
+      const $ = cheerio.load(data);
+      const badges = $(".hacker-badge")
+        .toArray()
+        .slice(0, 5)
+        .map((el) => {
+          const badgeName = $(el).find(".badge-title").text().trim();
+          const stars = $(el).find(".badge-star").length;
+          return badgeName ? { name: badgeName, stars } : null;
+        })
+        .filter(Boolean);
 
-    return {
-      platform: "HackerRank",
-      username,
-      badges,
-    };
-  } catch (error) {
-    console.warn(`HackerRank fetch failed for ${username}:`, error.message);
-    return null;
+      return {
+        platform: "HackerRank",
+        username,
+        badges,
+      };
+    } catch (error) {
+      console.warn(`Attempt ${attempt} failed to fetch HackerRank data for ${username}:`, error.message);
+      if (attempt < maxAttempts) await delay(1000 * attempt);
+      else return null;
+    }
   }
 }
 
@@ -207,59 +212,66 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
-  try {
-    const { data } = await axios.get(resumeUrl, {
-      headers: {
-        "User-Agent": "Mozilla/5.0",
-        "Accept-Language": "en-US,en;q=0.9",
-      },
-      timeout: 5000,
-      httpsAgent: agent,
-    });
-    const $ = cheerio.load(data);
+  const maxAttempts = 3;
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const { data } = await axios.get(resumeUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0",
+          "Accept-Language": "en-US,en;q=0.9",
+        },
+        timeout: 5000,
+        httpsAgent: agent,
+      });
+      const $ = cheerio.load(data);
 
-    let rank = 0;
-    let programsSolved = 0;
-    const languages = {};
-    $("div.statistic").each((i, el) => {
-      const label = $(el).find("div.label").text().trim().toUpperCase();
-      const value = parseInt($(el).find("div.value").text().trim(), 10);
-      if (label.includes("RANK")) rank = value;
-      else if (label.includes("PROGRAMS SOLVED")) programsSolved = value;
-      else if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
-        languages[label] = value;
+      let rank = 0;
+      let programsSolved = 0;
+      const languages = {};
+      $("div.statistic").each((i, el) => {
+        const label = $(el).find("div.label").text().trim().toUpperCase();
+        const value = parseInt($(el).find("div.value").text().trim(), 10);
+        if (label.includes("RANK")) rank = value;
+        else if (label.includes("PROGRAMS SOLVED")) programsSolved = value;
+        else if (["JAVA", "C", "SQL", "PYTHON3", "CPP"].includes(label)) {
+          languages[label] = value;
+        }
+      });
+
+      const certificates = [];
+      $("div.ui.brown.card").each((i, el) => {
+        const content = $(el).find("div.content");
+
+        const title = content.find("b").text().trim();
+        const dateMatch = content
+          .text()
+          .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
+        const date = dateMatch ? dateMatch[0] : "";
+        const link = content.find("a").attr("href");
+
+        if (title && link) {
+          certificates.push({ title, date, link });
+        }
+      });
+
+      return {
+        platform: "Skillrack",
+        rank,
+        programsSolved,
+        languages,
+        certificates,
+      };
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed to fetch Skillrack stats:`, error.message);
+      if (attempt < maxAttempts) await delay(1000 * attempt);
+      else {
+        return {
+          platform: "Skillrack",
+          error: "Failed to fetch data",
+        };
       }
-    });
-
-    const certificates = [];
-    $("div.ui.brown.card").each((i, el) => {
-      const content = $(el).find("div.content");
-
-      const title = content.find("b").text().trim();
-      const dateMatch = content
-        .text()
-        .match(/\d{2}-\d{2}-\d{4}( \d{2}:\d{2})?/);
-      const date = dateMatch ? dateMatch[0] : "";
-      const link = content.find("a").attr("href");
-
-      if (title && link) {
-        certificates.push({ title, date, link });
-      }
-    });
-
-    return {
-      platform: "Skillrack",
-      rank,
-      programsSolved,
-      languages,
-      certificates,
-    };
-  } catch (error) {
-    console.error("Error fetching Skillrack stats:", error.message);
-    return {
-      platform: "Skillrack",
-      error: "Failed to fetch data",
-    };
+    }
   }
 }
 

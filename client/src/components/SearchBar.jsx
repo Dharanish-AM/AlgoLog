@@ -1,6 +1,5 @@
 import React from "react";
 import { Search, X } from "lucide-react";
-import { PLATFORMS } from "../types";
 
 const SearchBar = ({
   searchTerm,
@@ -42,11 +41,13 @@ const SearchBar = ({
           onChange={(e) => setSelectedPlatform(e.target.value)}
           className="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200 shadow-sm appearance-none cursor-pointer"
         >
-          <option value={PLATFORMS.ALL}>All Platforms</option>
-          <option value={PLATFORMS.LEETCODE}>LeetCode</option>
-          <option value={PLATFORMS.HACKERRANK}>HackerRank</option>
-          <option value={PLATFORMS.CODECHEF}>CodeChef</option>
-          <option value={PLATFORMS.CODEFORCES}>Codeforces</option>
+          <option value={"all"}>All Platforms</option>
+          <option value={"leetcode"}>LeetCode</option>
+          <option value={"hackerrank"}>HackerRank</option>
+          <option value={"codechef"}>CodeChef</option>
+          <option value={"codeforces"}>Codeforces</option>
+          <option value={"skillrack"}>SkillRack</option>
+          <option value={"github"}>GitHub</option>
         </select>
       </div>
       <button
