@@ -18,6 +18,7 @@ const StudentTable = ({
     await handleRefetchSingleStudent(studentId);
     setRefreshingMap((prev) => ({ ...prev, [studentId]: false }));
   };
+
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
@@ -90,11 +91,25 @@ const StudentTable = ({
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {students?.map((student, index) => {
+              if (!student || !student._id) return null;
               const rankBadges = ["🥇", "🥈", "🥉"];
+              const borderColor = [
+                { border: "2px solid #FFD700" }, // Gold border for 1st
+                { border: "2px solid #C0C0C0" }, // Silver border for 2nd
+                { border: "2px solid #CD7F32" }, // Bronze border for 3rd
+              ];
+
+              const backgroundClass = index < 3 ? borderColor[index] : {};
 
               return (
                 <tr
                   key={student._id}
+                  style={{
+                    ...backgroundClass,
+                    ...(!isShowTopPerformer ? {
+                      border:"none"
+                    } : {}),
+                  }}
                   className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                     selectedStudent?._id === student._id
                       ? "bg-blue-50 dark:bg-blue-900/20"
@@ -245,7 +260,7 @@ const StudentTable = ({
                       }
                       className="text-blue-600 dark:text-blue-400 hover:text-blue-900 dark:hover:text-blue-300 flex items-center"
                     >
-                      {selectedStudent?._id === student._id ? "Hide" : "View"}
+                      {selectedStudent?._id === student?._id ? "Hide" : "View"}
                       <ChevronRight size={16} className="ml-1" />
                     </button>
                   </td>
@@ -257,7 +272,11 @@ const StudentTable = ({
                     >
                       <RefreshCw
                         size="1.2rem"
-                        className={refreshingMap[student._id] ? "animate-spin text-purple-400" : ""}
+                        className={
+                          refreshingMap[student._id]
+                            ? "animate-spin text-purple-400"
+                            : ""
+                        }
                       />
                     </button>
                   </td>

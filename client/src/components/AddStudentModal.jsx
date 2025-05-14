@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 
-const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
+const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -14,7 +14,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
     codechef: "",
     codeforces: "",
     skillrack: "",
-    github: "", 
+    github: "",
   });
 
   const handleSubmit = (e) => {
@@ -26,7 +26,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
       codechef: formData.codechef.trim(),
       codeforces: formData.codeforces.trim(),
       skillrack: formData.skillrack.trim(),
-      github: formData.github.trim(), 
+      github: formData.github.trim(),
     };
     onClose();
     onSubmit(trimmedData);
@@ -82,11 +82,11 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
             {
               label: "SkillRack Profile URL",
               key: "skillrack",
-              type: "url",
+              type: "text",
               required: true,
             },
             {
-              label: "GitHub Profile Username", 
+              label: "GitHub Profile Username",
               key: "github",
               type: "text",
               required: false,
@@ -127,6 +127,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit, loading }) => {
                       key === "github"
                     ) {
                       value = value.trimStart();
+                      if (key === "skillrack" && value.startsWith("http://")) {
+                        value = "https://" + value.slice(7); // Enforce https for skillrack
+                      }
                     }
                     setFormData({ ...formData, [key]: value });
                   }}

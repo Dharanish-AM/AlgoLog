@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
+import toast from "react-hot-toast";
+import { editStudent } from "../services/studentOperations";
+import { useDispatch } from "react-redux";
 
 const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
   const {
@@ -15,6 +18,8 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
   } = student.stats;
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(student);
+  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
 
   const handleEdit = () => {
     setIsEditOpen(true);
@@ -32,15 +37,16 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
     setEditLoading(true);
     onClose();
     try {
-      const response = await axios.put(
-        `${import.meta.env.VITE_API_URL}/api/students/${student._id}`,
-        updatedData
+      const response = await editStudent(
+        student._id,
+        updatedData,
+        token,
+        dispatch
       );
       if (response?.status === 200 || response?.status === 201) {
         setEditLoading(false);
         setIsEditOpen(false);
-        reFetchStudents();
-        toast.success("Student added successfully!");
+        toast.success("Student Updated successfully!");
       }
     } catch (error) {
       console.error("Error updating student:", error);
@@ -70,7 +76,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
           student={selectedStudent}
         />
       ) : (
-        <div className="overflow-auto scrollbar-hide bg-gradient-radial min-w-[45vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+        <div className="scrollbar-hide bg-gradient-radial min-w-[45vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
           <div className="bg-gradient-to-r from-purple-800 to-secondary-600 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm"></div>
             <div className="relative flex items-center gap-6">
@@ -88,13 +94,28 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                 )}
               </div>
               <div>
-                <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
-                <p className="text-blue-100 text-sm">
-                  {student.name} | {student.department} | {student.year}
-                </p>
-                <p className="text-blue-100 font-medium">
+                 <p className="text-blue-100 font-medium">
                   Competitive Programming Profile
                 </p>
+                <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
+                <p className="text-blue-100 text-sm">
+                  {student.name} | {student.rollNo} | {student.department} |{" "}
+                  {student.year}
+                </p>
+                <p className="text-gray-400 text-xs">
+                  Last Updated:{" "}
+                  {new Date(student.updatedAt).toLocaleString("en-US", {
+                    weekday: "short", // e.g. 'Tue'
+                    year: "numeric",
+                    month: "short", // e.g. 'May'
+                    day: "numeric", // e.g. '11'
+                    hour: "numeric", // e.g. '1'
+                    minute: "numeric", // e.g. '30'
+                    second: "numeric", // e.g. '45'
+                    hour12: true, // 12-hour time format
+                  })}
+                </p>
+               
               </div>
               <X
                 onClick={() => {

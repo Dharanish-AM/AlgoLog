@@ -151,7 +151,7 @@ app.get("/api/students", async (req, res) => {
       const { stats, ...studentWithoutStats } = student.toObject();
       return { ...studentWithoutStats, stats };
     });
-  
+
     res.status(200).json({
       students: results,
     });
@@ -260,7 +260,7 @@ app.get("/api/students/refetch", async (req, res) => {
 
     const updatedStudents = await Student.find({});
     res.status(200).json({ students: updatedStudents });
-  } catch (error) { 
+  } catch (error) {
     console.error("Error refetching student stats:", error);
     res.status(500).json({ error: "Failed to refetch stats for all students" });
   }
@@ -269,7 +269,7 @@ app.get("/api/students/refetch", async (req, res) => {
 app.get("/api/students/refetch/single", async (req, res) => {
   try {
     const { id } = req.query;
-    console.log(id)
+    console.log(id);
     const student = await Student.findById(id);
     if (!student) {
       return res.status(404).json({ error: "Student not found" });
@@ -320,6 +320,8 @@ app.post("/api/students", async (req, res) => {
       github,
     } = req.body;
 
+    console.log(req.body);
+
     if (!name || !email || !rollNo) {
       return res
         .status(400)
@@ -341,7 +343,12 @@ app.post("/api/students", async (req, res) => {
       github,
     };
 
-    const statsResult = await getStatsForStudent(studentInfo);
+    let statsResult = { stats: {} };
+    try {
+      statsResult = await getStatsForStudent(studentInfo);
+    } catch (err) {
+      console.warn("Stats fetch failed, proceeding with empty stats:", err);
+    }
 
     const newStudent = new Student({
       ...studentInfo,
@@ -416,7 +423,11 @@ app.put("/api/students/:id", async (req, res) => {
       { new: true }
     );
 
-    res.status(200).json(updatedStudent);
+    console.log("Updated student:", updatedStudent.name);
+
+    res.status(200).json({
+      student: updatedStudent,
+    });
   } catch (error) {
     console.error("Error updating student:", error);
     res.status(500).json({ error: "Failed to update student" });
@@ -441,3 +452,4 @@ const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
+ 
