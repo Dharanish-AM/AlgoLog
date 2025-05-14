@@ -151,7 +151,7 @@ app.get("/api/students", async (req, res) => {
       const { stats, ...studentWithoutStats } = student.toObject();
       return { ...studentWithoutStats, stats };
     });
-
+  
     res.status(200).json({
       students: results,
     });
@@ -260,7 +260,7 @@ app.get("/api/students/refetch", async (req, res) => {
 
     const updatedStudents = await Student.find({});
     res.status(200).json({ students: updatedStudents });
-  } catch (error) {
+  } catch (error) { 
     console.error("Error refetching student stats:", error);
     res.status(500).json({ error: "Failed to refetch stats for all students" });
   }

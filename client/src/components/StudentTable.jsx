@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
 
 const StudentTable = ({
@@ -11,6 +11,13 @@ const StudentTable = ({
   selectedPlatform,
   handleRefetchSingleStudent,
 }) => {
+  const [refreshingMap, setRefreshingMap] = useState({});
+
+  const handleRefreshClick = async (studentId) => {
+    setRefreshingMap((prev) => ({ ...prev, [studentId]: true }));
+    await handleRefetchSingleStudent(studentId);
+    setRefreshingMap((prev) => ({ ...prev, [studentId]: false }));
+  };
   if (loading) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 animate-pulse">
@@ -43,7 +50,7 @@ const StudentTable = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
       <div>
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
@@ -244,13 +251,14 @@ const StudentTable = ({
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
-                      onClick={() => {
-                        handleRefetchSingleStudent(student._id);
-                      }}
+                      onClick={() => handleRefreshClick(student._id)}
                       className="text-gray-500 hover:text-purple-600 dark:hover:text-purple-400"
                       title="Refresh Student"
                     >
-                      <RefreshCw size={"1.2rem"} />
+                      <RefreshCw
+                        size="1.2rem"
+                        className={refreshingMap[student._id] ? "animate-spin text-purple-400" : ""}
+                      />
                     </button>
                   </td>
                 </tr>
