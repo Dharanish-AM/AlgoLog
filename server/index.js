@@ -434,14 +434,14 @@ app.put("/api/students/:id", async (req, res) => {
   }
 });
 
-cron.schedule("0 0 * * *", async () => {
-  console.log("Running cron job to fetch stats...");
-  const students = await Student.find();
-  for (const student of students) {
-    const stats = await getStatsForStudent(student);
-    await Student.findByIdAndUpdate(student._id, { stats });
-  }
-});
+// cron.schedule("0 0 * * *", async () => {
+//   console.log("Running cron job to fetch stats...");
+//   const students = await Student.find();
+//   for (const student of students) {
+//     const stats = await getStatsForStudent(student);
+//     await Student.findByIdAndUpdate(student._id, { stats });
+//   }
+// });
 
 // const skillrackUrl =
 //   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
