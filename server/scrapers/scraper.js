@@ -2,6 +2,12 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const https = require("https");
+const Bottleneck = require("bottleneck");
+
+const codechefLimiter = new Bottleneck({
+  minTime: 7000, // one request every 7 seconds
+  maxConcurrent: 1,
+});
 
 const agent = new https.Agent({ family: 4 });
 
@@ -78,7 +84,7 @@ async function getHackerRankStats(username) {
     }
   }
 }
-
+ 
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 10;
@@ -122,12 +128,21 @@ async function getCodeChefStats(username) {
         fullySolved,
       };
     } catch (error) {
+      if (error.response && error.response.status === 404) {
+        console.warn(`User ${username} not found on CodeChef. Returning empty stats.`);
+        return {
+          platform: "CodeChef",
+          username,
+          rating: null,
+          fullySolved: null,
+        };
+      }
       console.warn(
         `Attempt ${attempt} failed to fetch CodeChef data for ${username}:`,
         error.message
       );
       if (attempt < maxAttempts) {
-        await delay(4000 * attempt);
+        await delay(10000 * attempt);
       } else {
         return {
           platform: "CodeChef",
@@ -386,12 +401,14 @@ async function getGithubStats(username) {
 
 // getGithubStats("iam-elango").then(console.log);
 
+const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
+
 module.exports = {
-  getCodeChefStats,
   getHackerRankStats,
   getLeetCodeStats,
   getTryHackMeStats,
   getGithubStats,
   getSkillrackStats,
   getCodeforcesStats,
+  getCodeChefStats: limitedGetCodeChefStats,
 };

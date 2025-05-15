@@ -77,7 +77,9 @@ async function getStatsForStudent(student) {
     ? getHackerRankStats(hackerrank)
     : Promise.resolve(null);
   const chefPromise = codechef
-    ? getCodeChefStats(codechef)
+    ? new Promise(resolve =>
+        setTimeout(() => resolve(getCodeChefStats(codechef)), 3000)
+      ).then(p => p)
     : Promise.resolve(null);
   const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
   const cfPromise = codeforces
@@ -181,6 +183,7 @@ app.get("/api/students/refetch", async (req, res) => {
     for (const studentBatch of studentBatches) {
       const batchOperations = studentBatch.map((student, index) => (async () => {
         await new Promise(resolve => setTimeout(resolve, 2000 * index));
+        console.log("Getting stats for student:", student.name);
         return getStatsForStudent(student)
           .then((updatedStats) => {
             const { stats } = updatedStats;
@@ -197,6 +200,7 @@ app.get("/api/students/refetch", async (req, res) => {
                   stats.skillrack.programsSolved != null));
 
             if (isValidStats) {
+              console.log("Successfully fetched stats for student:", student.name);
               return {
                 updateOne: {
                   filter: { _id: student._id },
@@ -227,6 +231,11 @@ app.get("/api/students/refetch", async (req, res) => {
                   stats.skillrack.programsSolved != null)
                   ? null
                   : "Skillrack",
+                !student.github || 
+                (typeof stats.github === "object" && 
+                  stats.github.totalCommits != null)
+                  ? null
+                  : "GitHub",
               ].filter(Boolean);
               console.warn(
                 `Skipping update for ${
@@ -260,6 +269,7 @@ app.get("/api/students/refetch", async (req, res) => {
     }
 
     const updatedStudents = await Student.find({});
+    console.log("Updated students:", updatedStudents.length);
     res.status(200).json({ students: updatedStudents });
   } catch (error) {
     console.error("Error refetching student stats:", error);
@@ -287,6 +297,10 @@ app.get("/api/students/refetch/single", async (req, res) => {
       (!student.skillrack ||
         (typeof stats.skillrack === "object" &&
           stats.skillrack.programsSolved != null));
+      (!student.github ||
+        (typeof stats.github === "object" &&
+          stats.github.totalCommits != null))
+      ;
 
     if (isValidStats) {
       const updatedStudent = await Student.findByIdAndUpdate(
