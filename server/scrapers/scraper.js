@@ -78,13 +78,16 @@ async function getHackerRankStats(username) {
         badges,
       };
     } catch (error) {
-      console.warn(`Attempt ${attempt} failed to fetch HackerRank data for ${username}:`, error.message);
+      console.warn(
+        `Attempt ${attempt} failed to fetch HackerRank data for ${username}:`,
+        error.message
+      );
       if (attempt < maxAttempts) await delay(2000 * attempt);
       else return null;
     }
   }
 }
- 
+
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 10;
@@ -95,10 +98,10 @@ async function getCodeChefStats(username) {
       const { data } = await axios.get(url, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
+          Accept: "text/html,application/xhtml+xml,application/xml;q=0.9",
           "Accept-Language": "en-US,en;q=0.9",
-          "Connection": "keep-alive",
-          "Referer": url,
+          Connection: "keep-alive",
+          Referer: url,
         },
         httpsAgent: agent,
         timeout: 15000,
@@ -129,7 +132,9 @@ async function getCodeChefStats(username) {
       };
     } catch (error) {
       if (error.response && error.response.status === 404) {
-        console.warn(`User ${username} not found on CodeChef. Returning empty stats.`);
+        console.warn(
+          `User ${username} not found on CodeChef. Returning empty stats.`
+        );
         return {
           platform: "CodeChef",
           username,
@@ -282,7 +287,10 @@ async function getSkillrackStats(resumeUrl) {
         certificates,
       };
     } catch (error) {
-      console.error(`Attempt ${attempt} failed to fetch Skillrack stats:`, error.message);
+      console.error(
+        `Attempt ${attempt} failed to fetch Skillrack stats:`,
+        error.message
+      );
       if (attempt < maxAttempts) await delay(1000 * attempt);
       else {
         return {
@@ -326,7 +334,7 @@ async function getTryHackMeStats(username) {
   return stats;
 }
 
-// getTryHackMeStats("RedRogue").then(console.log);
+//getTryHackMeStats("ben0309").then(console.log);
 
 async function getGithubStats(username) {
   try {

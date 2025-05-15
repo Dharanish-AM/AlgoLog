@@ -99,6 +99,7 @@ const Dashboard = () => {
         "codechef",
         "codeforces",
         "skillrack",
+        "github",
       ];
       return platforms.reduce((total, platform) => {
         const stats = student.stats?.[platform];
@@ -113,6 +114,8 @@ const Dashboard = () => {
             return total + (stats?.problemsSolved || 0);
           case "skillrack":
             return total + (stats?.programsSolved || 0);
+          case "github":
+            return total + (stats?.totalCommits || 0);
           default:
             return total;
         }

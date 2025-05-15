@@ -77,9 +77,9 @@ async function getStatsForStudent(student) {
     ? getHackerRankStats(hackerrank)
     : Promise.resolve(null);
   const chefPromise = codechef
-    ? new Promise(resolve =>
+    ? new Promise((resolve) =>
         setTimeout(() => resolve(getCodeChefStats(codechef)), 3000)
-      ).then(p => p)
+      ).then((p) => p)
     : Promise.resolve(null);
   const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
   const cfPromise = codeforces
@@ -181,77 +181,82 @@ app.get("/api/students/refetch", async (req, res) => {
     const allUpdateOperations = [];
 
     for (const studentBatch of studentBatches) {
-      const batchOperations = studentBatch.map((student, index) => (async () => {
-        await new Promise(resolve => setTimeout(resolve, 2000 * index));
-        console.log("Getting stats for student:", student.name);
-        return getStatsForStudent(student)
-          .then((updatedStats) => {
-            const { stats } = updatedStats;
+      const batchOperations = studentBatch.map((student, index) =>
+        (async () => {
+          await new Promise((resolve) => setTimeout(resolve, 2000 * index));
+          console.log("Getting stats for student:", student.name);
+          return getStatsForStudent(student)
+            .then((updatedStats) => {
+              const { stats } = updatedStats;
 
-            const isValidStats =
-              (!student.leetcode || stats.leetcode?.solved?.All != null) &&
-              (!student.hackerrank ||
-                (Array.isArray(stats.hackerrank?.badges) &&
-                  stats.hackerrank.badges.length > 0)) &&
-              (!student.codechef || stats.codechef?.fullySolved != null) &&
-              (!student.codeforces || stats.codeforces?.contests != null) &&
-              (!student.skillrack ||
-                (typeof stats.skillrack === "object" &&
-                  stats.skillrack.programsSolved != null));
+              const isValidStats =
+                (!student.leetcode || stats.leetcode?.solved?.All != null) &&
+                (!student.hackerrank ||
+                  (Array.isArray(stats.hackerrank?.badges) &&
+                    stats.hackerrank.badges.length > 0)) &&
+                (!student.codechef || stats.codechef?.fullySolved != null) &&
+                (!student.codeforces || stats.codeforces?.contests != null) &&
+                (!student.skillrack ||
+                  (typeof stats.skillrack === "object" &&
+                    stats.skillrack.programsSolved != null));
 
-            if (isValidStats) {
-              console.log("Successfully fetched stats for student:", student.name);
-              return {
-                updateOne: {
-                  filter: { _id: student._id },
-                  update: {
-                    stats: updatedStats.stats,
-                    updatedAt: date,
-                  },
-                },
-              };
-            } else {
-              const invalidPlatforms = [
-                !student.leetcode || stats.leetcode?.solved?.All != null
-                  ? null
-                  : "LeetCode",
-                !student.hackerrank ||
-                (Array.isArray(stats.hackerrank?.badges) &&
-                  stats.hackerrank.badges.length > 0)
-                  ? null
-                  : "HackerRank",
-                !student.codechef || stats.codechef?.fullySolved != null
-                  ? null
-                  : "CodeChef",
-                !student.codeforces || stats.codeforces?.contests != null
-                  ? null
-                  : "Codeforces",
-                !student.skillrack ||
-                (typeof stats.skillrack === "object" &&
-                  stats.skillrack.programsSolved != null)
-                  ? null
-                  : "Skillrack",
-                !student.github || 
-                (typeof stats.github === "object" && 
-                  stats.github.totalCommits != null)
-                  ? null
-                  : "GitHub",
-              ].filter(Boolean);
-              console.warn(
-                `Skipping update for ${
+              if (isValidStats) {
+                console.log(
+                  "Successfully fetched stats for student:",
                   student.name
-                } due to invalid stats on platforms: ${invalidPlatforms.join(
-                  ", "
-                )}`
-              );
+                );
+                return {
+                  updateOne: {
+                    filter: { _id: student._id },
+                    update: {
+                      stats: updatedStats.stats,
+                      updatedAt: date,
+                    },
+                  },
+                };
+              } else {
+                const invalidPlatforms = [
+                  !student.leetcode || stats.leetcode?.solved?.All != null
+                    ? null
+                    : "LeetCode",
+                  !student.hackerrank ||
+                  (Array.isArray(stats.hackerrank?.badges) &&
+                    stats.hackerrank.badges.length > 0)
+                    ? null
+                    : "HackerRank",
+                  !student.codechef || stats.codechef?.fullySolved != null
+                    ? null
+                    : "CodeChef",
+                  !student.codeforces || stats.codeforces?.contests != null
+                    ? null
+                    : "Codeforces",
+                  !student.skillrack ||
+                  (typeof stats.skillrack === "object" &&
+                    stats.skillrack.programsSolved != null)
+                    ? null
+                    : "Skillrack",
+                  !student.github ||
+                  (typeof stats.github === "object" &&
+                    stats.github.totalCommits != null)
+                    ? null
+                    : "GitHub",
+                ].filter(Boolean);
+                console.warn(
+                  `Skipping update for ${
+                    student.name
+                  } due to invalid stats on platforms: ${invalidPlatforms.join(
+                    ", "
+                  )}`
+                );
+                return null;
+              }
+            })
+            .catch((err) => {
+              console.error(`Error fetching stats for ${student.name}:`, err);
               return null;
-            }
-          })
-          .catch((err) => {
-            console.error(`Error fetching stats for ${student.name}:`, err);
-            return null;
-          });
-      })());
+            });
+        })()
+      );
 
       const batchResults = await Promise.allSettled(batchOperations);
       for (const result of batchResults) {
@@ -260,7 +265,7 @@ app.get("/api/students/refetch", async (req, res) => {
         } else if (result.status === "rejected") {
           console.error("Batch operation rejected:", result.reason);
         }
-      } 
+      }
     }
 
     if (allUpdateOperations.length > 0) {
@@ -269,7 +274,6 @@ app.get("/api/students/refetch", async (req, res) => {
     }
 
     const updatedStudents = await Student.find({});
-    console.log("Updated students:", updatedStudents.length);
     res.status(200).json({ students: updatedStudents });
   } catch (error) {
     console.error("Error refetching student stats:", error);
@@ -297,10 +301,8 @@ app.get("/api/students/refetch/single", async (req, res) => {
       (!student.skillrack ||
         (typeof stats.skillrack === "object" &&
           stats.skillrack.programsSolved != null));
-      (!student.github ||
-        (typeof stats.github === "object" &&
-          stats.github.totalCommits != null))
-      ;
+    !student.github ||
+      (typeof stats.github === "object" && stats.github.totalCommits != null);
 
     if (isValidStats) {
       const updatedStudent = await Student.findByIdAndUpdate(
@@ -463,7 +465,7 @@ app.put("/api/students/:id", async (req, res) => {
 // getSkillrackStats(skillrackUrl).then(console.log);
 
 const PORT = process.env.PORT || 8000;
- 
-app.listen(PORT, () => { 
+
+app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
-}); 
+});
