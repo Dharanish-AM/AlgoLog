@@ -12,7 +12,7 @@ function AppContent() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
 
   return (
-    <ThemeProvider>
+    <ThemeProvider toastOptions={{ duration: 9000 }}  >
       <BrowserRouter>
         <Routes>
           {isAuthenticated ? (

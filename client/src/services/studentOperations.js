@@ -91,7 +91,7 @@ export const refetchStudents = async (token, dispatch) => {
         type: "SET_STUDENTS",
         payload: students,
       });
-      return students;
+      return response;
     }
   } catch (error) {
     console.error("Error fetching students:", error);

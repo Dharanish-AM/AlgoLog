@@ -32,8 +32,13 @@ export default function Header() {
   const handleRefreshData = async () => {
     try {
       setLoading(true);
-      const students = await refetchStudents(token, dispatch);
-      setFilteredStudents(students);
+      const response = await refetchStudents(token, dispatch);
+        if(response.status === 200) {
+          toast.success(`${response.data.count} Students Refreshed Successfully!`);
+        } else {
+          toast.error("Failed to refresh data.");
+        }
+
       setLoading(false);
     } catch (err) {
       console.error("Error fetching student data:", err);

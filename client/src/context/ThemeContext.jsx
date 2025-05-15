@@ -2,13 +2,15 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const ThemeContext = createContext(undefined);
 
-export function ThemeProvider({ children }) {
+export function ThemeProvider({ children, toastOptions = { duration: 5000 } }) {
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) return savedTheme;
     
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   });
+
+  const [showToast, setShowToast] = useState(false);
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -20,12 +22,22 @@ export function ThemeProvider({ children }) {
     }
   }, [theme]);
 
+  useEffect(() => {
+    if (showToast) {
+      const timer = setTimeout(() => {
+        setShowToast(false);
+      }, toastOptions.duration || 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [showToast, toastOptions]);
+
   const toggleTheme = () => {
     setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    setShowToast(true);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, showToast }}>
       {children}
     </ThemeContext.Provider>
   );

@@ -77,9 +77,7 @@ async function getStatsForStudent(student) {
     ? getHackerRankStats(hackerrank)
     : Promise.resolve(null);
   const chefPromise = codechef
-    ? new Promise((resolve) =>
-        setTimeout(() => resolve(getCodeChefStats(codechef)), 3000)
-      ).then((p) => p)
+    ? getCodeChefStats(codechef)
     : Promise.resolve(null);
   const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
   const cfPromise = codeforces
@@ -169,7 +167,7 @@ app.get("/api/students/refetch", async (req, res) => {
     console.log(date);
     const students = await Student.find({}).lean();
     if (!students || students.length === 0) {
-      return res.status(200).json({ students: [] });
+      return res.status(200).json({ students: [], count: 0 });
     }
 
     const batchSize = 10;
@@ -179,6 +177,7 @@ app.get("/api/students/refetch", async (req, res) => {
     }
 
     const allUpdateOperations = [];
+    let validCount = 0;
 
     for (const studentBatch of studentBatches) {
       const batchOperations = studentBatch.map((student, index) =>
@@ -198,13 +197,17 @@ app.get("/api/students/refetch", async (req, res) => {
                 (!student.codeforces || stats.codeforces?.contests != null) &&
                 (!student.skillrack ||
                   (typeof stats.skillrack === "object" &&
-                    stats.skillrack.programsSolved != null));
+                    stats.skillrack.programsSolved != null)) &&
+                (!student.github ||
+                  (typeof stats.github === "object" &&
+                    stats.github.totalCommits != null));
 
               if (isValidStats) {
                 console.log(
                   "Successfully fetched stats for student:",
                   student.name
                 );
+                validCount++;
                 return {
                   updateOne: {
                     filter: { _id: student._id },
@@ -274,7 +277,10 @@ app.get("/api/students/refetch", async (req, res) => {
     }
 
     const updatedStudents = await Student.find({});
-    res.status(200).json({ students: updatedStudents });
+    console.log("The Valid Count is:", validCount);
+    res
+      .status(200)
+      .json({ students: updatedStudents, count: validCount, date: date });
   } catch (error) {
     console.error("Error refetching student stats:", error);
     res.status(500).json({ error: "Failed to refetch stats for all students" });
