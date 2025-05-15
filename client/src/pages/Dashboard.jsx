@@ -80,13 +80,13 @@ const Dashboard = () => {
         case "hackerrank":
           return stats.badges?.length || 0;
         case "codechef":
-          return stats.fullySolved || 0;
+          return stats?.fullySolved || 0;
         case "codeforces":
-          return stats.problemsSolved || 0;
+          return stats?.problemsSolved || 0;
         case "skillrack":
-          return stats.programsSolved || 0;
+          return stats?.programsSolved || 0;
         case "github":
-          return stats.totalCommits || 0;
+          return stats?.totalCommits || 0;
         default:
           return 0;
       }

@@ -195,11 +195,11 @@ const StudentTable = ({
                     }`}
                   >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {student.stats.codechef.fullySolved ?? "N/A"} solved
+                      {student.stats.codechef?.fullySolved ?? "N/A"} solved
                     </div>
                     <div className="text-xs text-gray-500 dark:text-gray-400">
                       Rating:{" "}
-                      {student.stats.codechef.rating
+                      {student.stats.codechef?.rating
                         ? student.stats.codechef.rating
                         : "N/A"}
                     </div>
