@@ -37,6 +37,8 @@ async function getLeetCodeStats(username) {
   }
 }
 
+// getLeetCodeStats("geethapriyans").then(console.log);
+
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
   const maxAttempts = 3;
@@ -50,7 +52,7 @@ async function getHackerRankStats(username) {
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 5000,
+        timeout: 15000,
       });
 
       const $ = cheerio.load(data);
@@ -71,7 +73,7 @@ async function getHackerRankStats(username) {
       };
     } catch (error) {
       console.warn(`Attempt ${attempt} failed to fetch HackerRank data for ${username}:`, error.message);
-      if (attempt < maxAttempts) await delay(1000 * attempt);
+      if (attempt < maxAttempts) await delay(2000 * attempt);
       else return null;
     }
   }
@@ -79,19 +81,21 @@ async function getHackerRankStats(username) {
 
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
-  const maxAttempts = 5;
+  const maxAttempts = 10;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const { data } = await axios.get(url, {
         headers: {
-          "User-Agent": "Mozilla/5.0",
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9",
           "Accept-Language": "en-US,en;q=0.9",
-          Referer: url,
+          "Connection": "keep-alive",
+          "Referer": url,
         },
         httpsAgent: agent,
-        timeout: 5000,
+        timeout: 15000,
       });
 
       const $ = cheerio.load(data);
@@ -123,7 +127,7 @@ async function getCodeChefStats(username) {
         error.message
       );
       if (attempt < maxAttempts) {
-        await delay(2000 * attempt);
+        await delay(4000 * attempt);
       } else {
         return {
           platform: "CodeChef",

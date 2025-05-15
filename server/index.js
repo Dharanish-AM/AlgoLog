@@ -179,7 +179,8 @@ app.get("/api/students/refetch", async (req, res) => {
     const allUpdateOperations = [];
 
     for (const studentBatch of studentBatches) {
-      const batchOperations = studentBatch.map(async (student) => {
+      const batchOperations = studentBatch.map((student, index) => (async () => {
+        await new Promise(resolve => setTimeout(resolve, 2000 * index));
         return getStatsForStudent(student)
           .then((updatedStats) => {
             const { stats } = updatedStats;
@@ -241,7 +242,7 @@ app.get("/api/students/refetch", async (req, res) => {
             console.error(`Error fetching stats for ${student.name}:`, err);
             return null;
           });
-      });
+      })());
 
       const batchResults = await Promise.allSettled(batchOperations);
       for (const result of batchResults) {
@@ -250,7 +251,7 @@ app.get("/api/students/refetch", async (req, res) => {
         } else if (result.status === "rejected") {
           console.error("Batch operation rejected:", result.reason);
         }
-      }
+      } 
     }
 
     if (allUpdateOperations.length > 0) {
@@ -448,8 +449,7 @@ app.put("/api/students/:id", async (req, res) => {
 // getSkillrackStats(skillrackUrl).then(console.log);
 
 const PORT = process.env.PORT || 8000;
-
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-});
  
+app.listen(PORT, () => { 
+  console.log(`Server is running on port ${PORT}`);
+}); 
