@@ -1,7 +1,7 @@
 const initialState = {
   token: null,
-  user: null,
-  isAuthenticated: true,
+  class: null,
+  isAuthenticated: false,
 };
 
 export const authReducer = (state = initialState, action) => {
@@ -9,13 +9,9 @@ export const authReducer = (state = initialState, action) => {
     case "SET_AUTH":
       return {
         ...state,
-        token: action.payload,
-        isAuthenticated: true,
-      };
-    case "SET_USER":
-      return {
-        ...state,
-        user: action.payload,
+        token: action.payload.token,
+        isAuthenticated: action.payload.isAuthenticated,
+        class: action.payload.class,
       };
     default:
       return state;

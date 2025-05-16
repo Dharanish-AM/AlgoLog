@@ -4,7 +4,7 @@ import StudentTable from "../components/StudentTable.jsx";
 import StudentCard from "../components/StudentCard.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import AddStudentModal from "../components/AddStudentModal.jsx";
-import { Code, Download, Loader, Search, Upload, UserPlus } from "lucide-react";
+import { Code, Download, Loader, Search, Upload, UserPlus, LogOut } from "lucide-react";
 import axios from "axios";
 import Papa from "papaparse";
 import toast from "react-hot-toast";
@@ -175,7 +175,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
+    <div className="min-h-screen scrollbar-hide bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       {addLoading && (
         <div className="fixed inset-0 w-screen h-screen bg-black bg-opacity-40 flex items-center justify-center z-50">
           <MoonLoader color="#C084FC" size={40} />

@@ -83,7 +83,13 @@ async function getHackerRankStats(username) {
         error.message
       );
       if (attempt < maxAttempts) await delay(2000 * attempt);
-      else return null;
+      else {
+        return {
+          platform: "HackerRank",
+          username,
+          error: "Failed to fetch data after multiple attempts",
+        };
+      }
     }
   }
 }

@@ -4,6 +4,9 @@ const mongoose = require("mongoose");
 const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
 const cron = require("node-cron");
+const Class = require("./models/classSchema");
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 const {
   getCodeChefStats,
   getHackerRankStats,
@@ -13,6 +16,8 @@ const {
   getSkillrackStats,
   getCodeforcesStats,
 } = require("./scrapers/scraper");
+const { generateToken } = require("./utils/jwt");
+const Department = require("./models/departmentSchema");
 
 dotenv.config();
 
@@ -454,6 +459,183 @@ app.put("/api/students/:id", async (req, res) => {
   } catch (error) {
     console.error("Error updating student:", error);
     res.status(500).json({ error: "Failed to update student" });
+  }
+});
+
+app.post("/api/class/login", async (req, res) => {
+  try {
+    const { username, password } = req.body;
+
+    if (!username || !password) {
+      return res
+        .status(400)
+        .json({ message: "Username and password are required" });
+    }
+
+    // Populate department field
+    const currentClass = await Class.findOne({ username }).populate("department");
+    if (!currentClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(password, currentClass.password);
+    if (!isPasswordMatch) {
+      return res.status(400).json({ message: "Invalid Credentials!" });
+    }
+
+    const token = await generateToken(currentClass.username, currentClass._id);
+
+    const { password: _, ...classWithoutPassword } = currentClass.toObject();
+
+    return res.status(200).json({
+      message: "Login successful",
+      class: classWithoutPassword,
+      token,
+    });
+  } catch (err) {
+    console.error("Error logging in class:", err);
+    return res.status(500).json({ error: "Failed to log in class" });
+  }
+});
+
+app.post("/api/class/register", async (req, res) => {
+  try {
+    const { password, email, departmentId, section } = req.body;
+
+    if (!password || !email || !departmentId) {
+      return res
+        .status(400)
+        .json({ message: "Username, password, name, and email are required" });
+    }
+
+    const existingClass = await Class.findOne({ email });
+    if (existingClass) {
+      return res.status(409).json({ message: "Class already exists" });
+    }
+
+    const classDepartment = await Department.findById(departmentId);
+
+    if (!classDepartment) {
+      return res.status(400).json({ message: "Department Not Found!" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    let newUserName;
+    let attempt = 0;
+    do {
+      const currentTime = new Date().getTime().toString().slice(-4);
+      newUserName = `${classDepartment.name}${section}${currentTime}`;
+      const existingUsername = await Class.findOne({ username: newUserName });
+      if (!existingUsername) break;
+      attempt++;
+    } while (attempt < 5);
+
+    if (attempt === 5) {
+      return res.status(500).json({
+        message: "Failed to generate unique username. Please try again.",
+      });
+    }
+
+    const newClass = new Class({
+      username: newUserName,
+      email,
+      department: classDepartment._id,
+      password: hashedPassword,
+      section,
+    });
+
+    await newClass.save();
+
+    if (classDepartment) {
+      classDepartment.classes.push(newClass._id);
+      await classDepartment.save();
+    }
+
+    res.status(201).json({
+      message: "Class registered successfully",
+      class: { username: newUserName, email, _id: newClass._id },
+    });
+  } catch (err) {
+    console.error("Error registering class:", err);
+    res.status(500).json({ error: "Failed to register class" });
+  }
+});
+
+app.get("/api/departments", async (req, res) => {
+  try {
+    const departments = await Department.find({}).populate("classes");
+    if (!departments || departments.length === 0) {
+      return res.status(200).json({ departments: [] });
+    }
+
+    res.status(200).json({ departments });
+  } catch (err) {
+    console.error("Error fetching departments:", err);
+    res.status(500).json({ error: "Failed to fetch departments" });
+  }
+});
+
+app.post("/api/department/create", async (req, res) => {
+  try {
+    const { name } = req.body;
+
+    if (!name) {
+      return res.status(400).json({ error: "Department name is required" });
+    }
+
+    const existing = await Department.findOne({ name });
+    if (existing) {
+      return res.status(409).json({ error: "Department already exists" });
+    }
+
+    const newDepartment = new Department({ name, classes: [] });
+    await newDepartment.save();
+
+    res.status(201).json({
+      message: "Department created successfully",
+      department: newDepartment,
+    });
+  } catch (err) {
+    console.error("Error creating department:", err);
+    res.status(500).json({ error: "Failed to create department" });
+  }
+});
+
+app.post("/api/class/check-token", async (req, res) => {
+  try {
+    const token = req.body.token;
+    if (!token) {
+      return res.status(400).json({ message: "Token is required" });
+    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    res.status(200).json({ message: "Token is valid" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/api/class/get-class", async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const username = decoded.username;
+    const classData = await Class.findOne({ username }).populate("department");
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+    const { password, ...classWithoutPassword } = classData.toObject();
+    res.status(200).json({ class: classWithoutPassword });
+  } catch (err) {
+    console.error("Error fetching class:", err);
+    res.status(500).json({ message: "Failed to fetch class" });
   }
 });
 

@@ -284,7 +284,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   HackerRank
                 </h4>
                 <a
-                  href={`https://www.hackerrank.com/${
+                  href={`https://www.hackerrank.com/profile/${
                     student.hackerrank || ""
                   }`}
                   target="_blank"

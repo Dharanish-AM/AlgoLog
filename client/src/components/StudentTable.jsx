@@ -213,8 +213,7 @@ const StudentTable = ({
                     }`}
                   >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      Rating:{" "}
-                      {student.stats?.codeforces?.problemsSolved ?? "N/A"}
+                      {student.stats?.codeforces?.problemsSolved ?? "N/A"} solved
                     </div>
                     <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
                       {student.stats?.codeforces?.rating ?? "N/A"}
