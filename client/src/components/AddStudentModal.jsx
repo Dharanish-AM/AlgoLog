@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Axis3DIcon, X } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { getDepartments } from "../services/studentOperations";
 
 const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -7,7 +9,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
     email: "",
     rollNo: "",
     year: "",
-    department: "",
+    classId: "",
     section: "",
     leetcode: "",
     hackerrank: "",
@@ -15,6 +17,17 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
     codeforces: "",
     skillrack: "",
     github: "",
+  });
+    const [departments, setDepartments] = useState([]);
+    const token = localStorage.getItem("token");
+    const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const dpt = await getDepartments(token, dispatch);
+      setDepartments(dpt);
+    };
+    fetchDepartments();
   });
 
   const handleSubmit = (e) => {
@@ -169,24 +182,21 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                     Department
                   </label>
                   <select
-                    value={formData.department}
+                    value={formData.classId}
                     required
                     onChange={(e) =>
-                      setFormData({ ...formData, department: e.target.value })
+                      setFormData({ ...formData, classId: e.target.value })
                     }
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="" disabled>
                       Select department
                     </option>
-                    <option value="CSE">CSE</option>
-                    <option value="IT">IT</option>
-                    <option value="ECE">ECE</option>
-                    <option value="EEE">EEE</option>
-                    <option value="MECH">MECH</option>
-                    <option value="CIVIL">CIVIL</option>
-                    <option value="AI&DS">AI&DS</option>
-                    <option value="AIML">AIML</option>
+                    {departments.map((dpt) => (
+                      <option key={dpt._id} value={dpt._id}>
+                        {dpt.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}

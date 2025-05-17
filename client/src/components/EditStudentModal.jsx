@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { getDepartments } from "../services/studentOperations";
 
 export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
   const [formData, setFormData] = useState({
@@ -14,6 +16,17 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
     codeforces: "",
     skillrack: "",
     github: "",
+  });
+  const [departments, setDepartments] = useState([]);
+  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      const dpt = await getDepartments(token, dispatch);
+      setDepartments(dpt);
+    };
+    fetchDepartments();
   });
 
   useEffect(() => {
@@ -128,14 +141,11 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             <option value="" disabled>
               Select department
             </option>
-            <option value="CSE">CSE</option>
-            <option value="IT">IT</option>
-            <option value="ECE">ECE</option>
-            <option value="EEE">EEE</option>
-            <option value="MECH">MECH</option>
-            <option value="CIVIL">CIVIL</option>
-            <option value="AI&DS">AI&DS</option>
-            <option value="AIML">AIML</option>
+            {departments.map((dpt) => (
+              <option key={dpt._id} value={dpt._id}>
+                {dpt.name}
+              </option>
+            ))}
           </select>
         </div>
         <div>

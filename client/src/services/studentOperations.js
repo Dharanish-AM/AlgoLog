@@ -1,13 +1,16 @@
 import axios from "axios";
 const API_URL = import.meta.env.VITE_API_URL;
 
-export const getStudents = async (token, dispatch) => {
+export const getStudents = async (classId, token, dispatch) => {
   try {
-    const response = await axios.get(`${API_URL}/api/students`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get(
+      `${API_URL}/api/students?classId=${classId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (response.status === 200) {
       const students = response.data.students;
 
@@ -24,13 +27,17 @@ export const getStudents = async (token, dispatch) => {
   }
 };
 
-export const addStudent = async (newStudent, token, dispatch) => {
+export const addStudent = async (newStudent, classId, token, dispatch) => {
   try {
-    const response = await axios.post(`${API_URL}/api/students`, newStudent, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.post(
+      `${API_URL}/api/students`,
+      { newStudent, classId },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (response.status === 200 || response.status === 201) {
       const addedStudent = response.data.student;
       dispatch({
@@ -75,10 +82,10 @@ export const refetchSingleStudent = async (studentId, token, dispatch) => {
   }
 };
 
-export const refetchStudents = async (token, dispatch) => {
+export const refetchStudents = async (classId, token, dispatch) => {
   try {
     const response = await axios.get(
-      `${API_URL}/api/students/refetch?date=${new Date().toString()}`,
+      `${API_URL}/api/students/refetch?date=${new Date().toString()}&classId=${classId}`,
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -127,3 +134,20 @@ export const editStudent = async (id, updatedData, token, dispatch) => {
     throw error;
   }
 };
+
+export const getDepartments = async (token, dispatch)=>{
+  try {
+    const response = await axios.get(`${API_URL}/api/departments`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.status === 200) {
+      const departments = response.data.departments;
+      return departments;
+    }
+  } catch (error) {
+    console.error("Error fetching departments:", error);
+    throw error;
+  }
+}

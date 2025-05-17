@@ -147,13 +147,16 @@ app.get("/", (req, res) => {
 
 app.get("/api/students", async (req, res) => {
   try {
-    const students = await Student.find({});
+    const classId = req.query.classId;
+    const students = await Student.find({
+      classId,
+    }).lean();
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
     const results = students.map((student) => {
-      const { stats, ...studentWithoutStats } = student.toObject();
+      const { stats, ...studentWithoutStats } = student;
       return { ...studentWithoutStats, stats };
     });
 
@@ -168,9 +171,12 @@ app.get("/api/students", async (req, res) => {
 
 app.get("/api/students/refetch", async (req, res) => {
   try {
+    const classId = req.query.classId;
     const { date } = req.query;
     console.log(date);
-    const students = await Student.find({}).lean();
+    const students = await Student.find({
+      classId,
+    }).lean();
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [], count: 0 });
     }
@@ -346,6 +352,7 @@ app.post("/api/students", async (req, res) => {
       codeforces,
       skillrack,
       github,
+      classId,
     } = req.body;
 
     console.log(req.body);
@@ -369,6 +376,7 @@ app.post("/api/students", async (req, res) => {
       codeforces,
       skillrack,
       github,
+      classId,
     };
 
     let statsResult = { stats: {} };
@@ -407,6 +415,7 @@ app.put("/api/students/:id", async (req, res) => {
       codeforces,
       skillrack,
       github,
+      classId,
     } = req.body;
 
     console.log(`Updating student with ID: ${id}`);
@@ -429,6 +438,7 @@ app.put("/api/students/:id", async (req, res) => {
       codeforces,
       skillrack,
       github,
+      classId,
     };
 
     const updatedStats = await getStatsForStudent({
@@ -473,12 +483,14 @@ app.post("/api/class/login", async (req, res) => {
     }
 
     // Populate department field
-    const currentClass = await Class.findOne({ username }).populate("department");
+    const currentClass = await Class.findOne({ username }).populate(
+      "department"
+    );
     if (!currentClass) {
       return res.status(404).json({ message: "Class not found" });
     }
 
-    const isPasswordMatch = await bcrypt.compare(password, currentClass.password);
+    const isPasswordMatch = bcrypt.compare(password, currentClass.password);
     if (!isPasswordMatch) {
       return res.status(400).json({ message: "Invalid Credentials!" });
     }

@@ -13,6 +13,9 @@ import {
   UserPlus,
   User,
   X,
+  Edit,
+  Eye,
+  LogOutIcon,
 } from "lucide-react";
 import Papa from "papaparse";
 import ThemeToggle from "./ThemeToggle";
@@ -21,6 +24,7 @@ import { addStudent, refetchStudents } from "../services/studentOperations";
 import { GridLoader, MoonLoader } from "react-spinners";
 import AddStudentModal from "./AddStudentModal";
 import toast from "react-hot-toast";
+import Profile from "./Profile";
 
 export default function Header() {
   const students = useSelector((state) => state.students.students);
@@ -34,12 +38,12 @@ export default function Header() {
   const [addLoading, setAddLoading] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  console.log(classUser)
+  console.log(classUser);
 
   const handleRefreshData = async () => {
     try {
       setLoading(true);
-      const response = await refetchStudents(token, dispatch);
+      const response = await refetchStudents(classUser._id, token, dispatch);
       if (response.status === 200) {
         toast.success(
           `${response.data.count} Students Refreshed Successfully!`
@@ -58,7 +62,12 @@ export default function Header() {
   const handleAddStudent = async (newStudent) => {
     setAddLoading(true);
     try {
-      const response = await addStudent(newStudent, token, dispatch);
+      const response = await addStudent(
+        newStudent,
+        classUser._id,
+        token,
+        dispatch
+      );
       if (response?.status === 200 || response?.status === 201) {
         setIsAddModalOpen(false);
         toast.success("Student added successfully!");
@@ -236,48 +245,7 @@ export default function Header() {
         onSubmit={handleAddStudent}
       />
       {isProfileModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 w-[35rem]">
-            <div className="w-full flex justify-between items-center mb-4">
-              <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                Profile
-              </div>
-              <X
-                className="text-gray-500 dark:text-gray-400 cursor-pointer"
-                onClick={() => setIsProfileModalOpen(false)}
-              />
-            </div>
-            <div className="space-y-4">
-              {[
-                { label: "Username", value: classUser.username, editable: true },
-                { label: "Email", value: classUser.email, editable: true },
-                { label: "Department", value: classUser.department.name || "N/A", editable: true },
-                { label: "Section", value: classUser.section, editable: true },
-                { label: "No. of Students", value: classUser.students?.length || 0, editable: false },
-              ].map((item) => (
-                <div key={item.label}>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{item.label}</label>
-                  <input
-                    type="text"
-                    readOnly={!item.editable}
-                    value={item.value}
-                    className={`w-full px-3 py-2 rounded-md ${
-                      item.editable ? 'bg-white dark:bg-gray-600' : 'bg-gray-100 dark:bg-gray-700'
-                    } text-gray-800 dark:text-white border border-gray-300 dark:border-gray-600 focus:outline-none`}
-                  />
-                </div>
-              ))}
-              <div className="flex flex-row gap-2 pt-4">
-                <button className="w-full text-sm font-medium px-4 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                  Edit Profile
-                </button>
-                <button className="w-full text-sm font-medium px-4 py-3 bg-blue-500 text-white rounded-md hover:bg-blue-600">
-                  Forgot Password
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Profile onClose={() => setIsProfileModalOpen(false)} />
       )}
     </div>
   );

@@ -32,6 +32,7 @@ const Dashboard = () => {
   const [addLoading, setAddLoading] = useState(false);
   const [showTopPerformer, setShowTopPerformer] = useState(false);
   const token = localStorage.getItem("token");
+  const classUser = useSelector((state) => state.auth.class);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -41,7 +42,7 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const students = await getStudents(token, dispatch);
+      const students = await getStudents(classUser._id,token, dispatch);
       setTotalCount(students ? students.length : 0);
       setLoading(false);
       setError(null);
