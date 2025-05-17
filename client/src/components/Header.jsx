@@ -84,27 +84,44 @@ export default function Header() {
 
   const handleExportCSV = () => {
     const csv = Papa.unparse(
-      students.map((student) => ({
-        name: student.name,
-        email: student.email,
-        rollNo: student.rollNo,
-        department: student.department,
-        year: student.year,
-        section: student.section,
-        leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
-        leetcode_medium: student.stats.leetcode?.solved?.Medium || 0,
-        leetcode_hard: student.stats.leetcode?.solved?.Hard || 0,
-        hackerrank_badges: student.stats.hackerrank?.badges?.length || 0,
-        codechef_rating: student.stats.codechef?.rating || 0,
-        codechef_solved: student.stats.codechef?.fullySolved || 0,
-        codeforces_rating: student.stats.codeforces?.rating || 0,
-        codeforces_rank: student.stats.codeforces?.rank || "N/A",
-        codeforces_contests: student.stats.codeforces?.contests || 0,
-        skillrack_solved: student.stats.skillrack?.programsSolved || 0,
-        skillrack_rank: student.stats.skillrack?.rank || "N/A",
-        github_commits: student.stats.github?.totalCommits || 0,
-        github_repos: student.stats.github?.totalRepos || 0,
-      }))
+      students.map((student) => {
+        const department =
+          typeof student.department === "string"
+            ? student.department
+            : student.department?.name || "N/A";
+
+        const section =
+          typeof student.section === "string"
+            ? student.section
+            : String(student.section || "N/A");
+
+        const year =
+          typeof student.year === "string"
+            ? student.year
+            : String(student.year || "N/A");
+
+        return {
+          name: student.name,
+          email: student.email,
+          rollNo: student.rollNo,
+          department,
+          year,
+          section,
+          leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
+          leetcode_medium: student.stats.leetcode?.solved?.Medium || 0,
+          leetcode_hard: student.stats.leetcode?.solved?.Hard || 0,
+          hackerrank_badges: student.stats.hackerrank?.badges?.length || 0,
+          codechef_rating: student.stats.codechef?.rating || 0,
+          codechef_solved: student.stats.codechef?.fullySolved || 0,
+          codeforces_rating: student.stats.codeforces?.rating || 0,
+          codeforces_rank: student.stats.codeforces?.rank || "N/A",
+          codeforces_contests: student.stats.codeforces?.contests || 0,
+          skillrack_solved: student.stats.skillrack?.programsSolved || 0,
+          skillrack_rank: student.stats.skillrack?.rank || "N/A",
+          github_commits: student.stats.github?.totalCommits || 0,
+          github_repos: student.stats.github?.totalRepos || 0,
+        };
+      })
     );
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });

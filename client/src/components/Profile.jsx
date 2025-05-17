@@ -107,7 +107,10 @@ export default function Profile({ onClose }) {
                 </button>
               )}
             </div>
-            <button className="w-full mt-4 flex gap-2  items-center justify-center text-sm font-medium px-4 py-3 bg-red-500 text-white rounded-md hover:bg-red-700">
+            <button onClick={()=>{
+                localStorage.removeItem("token");
+                window.location.reload();
+            }} className="w-full mt-4 flex gap-2  items-center justify-center text-sm font-medium px-4 py-3 bg-red-500 text-white rounded-md hover:bg-red-700">
               <LogOutIcon size={18} />
               Logout
             </button>

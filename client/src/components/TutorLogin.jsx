@@ -59,7 +59,7 @@ export default function TutorLogin() {
             value={formData.password}
             onChange={handleChange}
           />
-          <p className="block mt-4 text-sm text-gray-700 dark:text-gray-500">
+          <p className="block mt-4 cursor-pointer text-sm text-gray-700 dark:text-gray-500">
             Forgot Password ?
           </p>
         </div>

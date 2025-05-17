@@ -67,7 +67,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
             { label: "Name", key: "name", type: "text", required: true },
             { label: "Email", key: "email", type: "email", required: true },
             { label: "Roll Number", key: "rollNo", required: true },
-            { label: "Section", key: "section", required: true },
+            { label: "Section", key: "section", type: "dropdown", required: true },
             {
               label: "LeetCode Profile ID",
               key: "leetcode",
@@ -106,49 +106,70 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
             },
           ].map(({ label, key, type = "text", required }, index) => (
             <React.Fragment key={key}>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                  {label}
-                </label>
-                <input
-                  type={type}
-                  value={formData[key]}
-                  required={required}
-                  placeholder={
-                    key === "leetcode"
-                      ? "Enter leetcode username (e.g., johndoe123)"
-                      : key === "hackerrank"
-                      ? "Enter hackerrank username (e.g., johndoe_hr)"
-                      : key === "codechef"
-                      ? "Enter codechef username (e.g., johndoe_cc)"
-                      : key === "codeforces"
-                      ? "Enter codeforces username (e.g., johndoe_cf)"
-                      : key === "skillrack"
-                      ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181....)"
-                      : key === "github"
-                      ? "Enter GitHub username (e.g., johndoe)"
-                      : `Enter ${label.toLowerCase()}`
-                  }
-                  onChange={(e) => {
-                    let value = e.target.value;
-                    if (
-                      key === "leetcode" ||
-                      key === "hackerrank" ||
-                      key === "codechef" ||
-                      key === "codeforces" ||
-                      key === "skillrack" ||
-                      key === "github"
-                    ) {
-                      value = value.trimStart();
-                      if (key === "skillrack" && value.startsWith("http://")) {
-                        value = "https://" + value.slice(7); // Enforce https for skillrack
-                      }
+              {key === "section" ? (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    Section
+                  </label>
+                  <select
+                    value={formData.section}
+                    required
+                    onChange={(e) =>
+                      setFormData({ ...formData, section: e.target.value })
                     }
-                    setFormData({ ...formData, [key]: value });
-                  }}
-                  className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                />
-              </div>
+                    className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="" disabled>Select section</option>
+                    {["A", "B", "C", "D"].map((sec) => (
+                      <option key={sec} value={sec}>{sec}</option>
+                    ))}
+                  </select>
+                </div>
+              ) : (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {label}
+                  </label>
+                  <input
+                    type={type}
+                    value={formData[key]}
+                    required={required}
+                    placeholder={
+                      key === "leetcode"
+                        ? "Enter leetcode username (e.g., johndoe123)"
+                        : key === "hackerrank"
+                        ? "Enter hackerrank username (e.g., johndoe_hr)"
+                        : key === "codechef"
+                        ? "Enter codechef username (e.g., johndoe_cc)"
+                        : key === "codeforces"
+                        ? "Enter codeforces username (e.g., johndoe_cf)"
+                        : key === "skillrack"
+                        ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181....)"
+                        : key === "github"
+                        ? "Enter GitHub username (e.g., johndoe)"
+                        : `Enter ${label.toLowerCase()}`
+                    }
+                    onChange={(e) => {
+                      let value = e.target.value;
+                      if (
+                        key === "leetcode" ||
+                        key === "hackerrank" ||
+                        key === "codechef" ||
+                        key === "codeforces" ||
+                        key === "skillrack" ||
+                        key === "github"
+                      ) {
+                        value = value.trimStart();
+                        if (key === "skillrack" && value.startsWith("http://")) {
+                          value = "https://" + value.slice(7); // Enforce https for skillrack
+                        }
+                      }
+                      setFormData({ ...formData, [key]: value });
+                    }}
+                    className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  />
+                </div>
+              )}
               {key === "section" && (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">

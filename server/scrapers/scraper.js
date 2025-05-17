@@ -68,9 +68,8 @@ async function getHackerRankStats(username) {
         .map((el) => {
           const badgeName = $(el).find(".badge-title").text().trim();
           const stars = $(el).find(".badge-star").length;
-          return badgeName ? { name: badgeName, stars } : null;
-        })
-        .filter(Boolean);
+          return { name: badgeName || "", stars };
+        });
 
       return {
         platform: "HackerRank",
