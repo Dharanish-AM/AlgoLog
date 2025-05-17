@@ -236,7 +236,7 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
-  const maxAttempts = 3;
+  const maxAttempts = 10;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
