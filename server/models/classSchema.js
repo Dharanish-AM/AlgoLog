@@ -14,7 +14,7 @@ const classSchema = new mongoose.Schema({
   },
   students: {
     type: [mongoose.Schema.Types.ObjectId],
-    ref: "Students",
+    ref: "Student",
   },
   lastUpdated: {
     type: Date,

@@ -5,6 +5,7 @@ const Student = require("./models/studentSchema");
 const dotenv = require("dotenv");
 const cron = require("node-cron");
 const Class = require("./models/classSchema");
+const Admin = require("./models/adminSchema");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {
@@ -513,6 +514,7 @@ app.post("/api/class/login", async (req, res) => {
 app.post("/api/class/register", async (req, res) => {
   try {
     const { password, email, departmentId, section } = req.body;
+  
 
     if (!password || !email || !departmentId) {
       return res
@@ -651,8 +653,97 @@ app.get("/api/class/get-class", async (req, res) => {
   }
 });
 
-// cron.schedule("0 0 * * *", async () => {
-//   console.log("Running cron job to fetch stats...");
+app.post("/api/admin/create", (req, res) => {
+  const { name, email, password } = req.body;
+
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  const newAdmin = new Admin({
+    name,
+    email,
+    password: hashedPassword,
+  });
+
+  newAdmin
+    .save()
+    .then(() => {
+      res.status(200).json({ message: "Admin created successfully" });
+    })
+    .catch((err) => {
+      console.log(err);
+      res.status(500).json({ message: "Failed to create admin" });
+    });
+});
+
+app.post("/api/admin/login", async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res
+      .status(400)
+      .json({ message: "Username and password are required" });
+  }
+  try {
+    const admin = await Admin.findOne({ email });
+    if (!admin) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    const isPasswordValid = await bcrypt.compare(password, admin.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Invalid username or password" });
+    }
+    let adminWithoutPassword = admin.toObject();
+    delete adminWithoutPassword.password;
+
+    const token = await generateToken(admin.username, admin._id);
+    res.status(200).json({ token, admin: adminWithoutPassword });
+  } catch (err) {
+    console.error("Error logging in:", err);
+    res.status(500).json({ message: "Failed to log in" });
+  }
+});
+
+app.get("/api/admin/get-admin", async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const username = decoded.username;
+    const adminData = await Admin.findOne({ username });
+    if (!adminData) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+    const { password, ...adminWithoutPassword } = adminData.toObject();
+    res.status(200).json({ admin: adminWithoutPassword });
+  } catch (err) {
+    console.error("Error fetching admin:", err);
+    res.status(500).json({ message: "Failed to fetch admin" });
+  }
+});
+
+app.get("/api/admin/get-departments", async (req, res) => {
+  try {
+    const departments = await Department.find();
+    res.status(200).json({ departments });
+  } catch (err) {
+    console.error("Error fetching departments:", err);
+    res.status(500).json({ message: "Failed to fetch departments" });
+  }
+});
+
+app.get("/api/admin/get-classes", async (req, res) => {
+  try {
+    const classes = await Class.find().populate("students");
+    res.status(200).json({ classes });
+  } catch (err) {
+    console.error("Error fetching classes:", err);
+    res.status(500).json({ message: "Failed to fetch classes" });
+  }
+});
+
+// cron.schedule("0 0 * * *", async () => { 
+//   console.log("Running cron job to fetch stats..."); 
 //   const students = await Student.find();
 //   for (const student of students) {
 //     const stats = await getStatsForStudent(student);
