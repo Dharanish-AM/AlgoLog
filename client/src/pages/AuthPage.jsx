@@ -2,7 +2,7 @@ import React from "react";
 import Header from "../components/Header";
 import Illustration from "../assets/Coding workshop-bro.png";
 import Lottie from "lottie-react";
-import Animation from "../assets/Animation - 1747373498451.json";
+import Animation from "../assets/Animation - 1747407322934.json";
 import { useState } from "react";
 import StudentLogin from "../components/StudentLogin";
 import logo from "../../../client/algolog.png";

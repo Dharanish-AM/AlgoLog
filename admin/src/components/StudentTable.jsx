@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
+import { Search } from "lucide-react";
 
 const StudentTable = ({
   students,
@@ -9,9 +10,13 @@ const StudentTable = ({
   setSelectedStudent,
   isShowTopPerformer,
   selectedPlatform,
+  setSelectedPlatform,
+  onShowTopPerformer,
   handleRefetchSingleStudent,
 }) => {
   const [refreshingMap, setRefreshingMap] = useState({});
+  const [searchTerm, setSearchTerm] = useState("");
+  const [totalCount, setTotalCount] = useState(students ? students.length : 0);
 
   const handleRefreshClick = async (studentId) => {
     setRefreshingMap((prev) => ({ ...prev, [studentId]: true }));
@@ -52,7 +57,6 @@ const StudentTable = ({
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
-      <div>
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
@@ -106,9 +110,11 @@ const StudentTable = ({
                   key={student._id}
                   style={{
                     ...backgroundClass,
-                    ...(!isShowTopPerformer ? {
-                      border:"none"
-                    } : {}),
+                    ...(!isShowTopPerformer
+                      ? {
+                          border: "none",
+                        }
+                      : {}),
                   }}
                   className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${
                     selectedStudent?._id === student._id
@@ -213,7 +219,8 @@ const StudentTable = ({
                     }`}
                   >
                     <div className="text-sm text-gray-900 dark:text-gray-100">
-                      {student.stats?.codeforces?.problemsSolved ?? "N/A"} solved
+                      {student.stats?.codeforces?.problemsSolved ?? "N/A"}{" "}
+                      solved
                     </div>
                     <div className="text-xs capitalize text-gray-500 dark:text-gray-400">
                       {student.stats?.codeforces?.rating ?? "N/A"}
@@ -284,7 +291,6 @@ const StudentTable = ({
             })}
           </tbody>
         </table>
-      </div>
     </div>
   );
 };
