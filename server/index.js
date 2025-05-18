@@ -173,8 +173,9 @@ app.get("/api/students", async (req, res) => {
 app.get("/api/students/refetch", async (req, res) => {
   try {
     const classId = req.query.classId;
-    const { date } = req.query;
-    console.log(date);
+    if (!classId) {
+      return res.status(400).json({ error: "Class ID is required" });
+    }
     const students = await Student.find({
       classId,
     }).lean();
@@ -225,7 +226,6 @@ app.get("/api/students/refetch", async (req, res) => {
                     filter: { _id: student._id },
                     update: {
                       stats: updatedStats.stats,
-                      updatedAt: date,
                     },
                   },
                 };
@@ -288,11 +288,13 @@ app.get("/api/students/refetch", async (req, res) => {
       console.log("Bulk write result:", bulkWriteResult);
     }
 
-    const updatedStudents = await Student.find({});
+    const currentClass = await Class.findOne({ _id: classId });
+    const currentDate = new Date();
+    currentClass.studentsUpdatedAt = currentDate;
+    await currentClass.save();
+
     console.log("The Valid Count is:", validCount);
-    res
-      .status(200)
-      .json({ students: updatedStudents, count: validCount, date: date });
+    res.status(200).json({ count: validCount, date: currentDate });
   } catch (error) {
     console.error("Error refetching student stats:", error);
     res.status(500).json({ error: "Failed to refetch stats for all students" });
@@ -514,7 +516,6 @@ app.post("/api/class/login", async (req, res) => {
 app.post("/api/class/register", async (req, res) => {
   try {
     const { password, email, departmentId, section } = req.body;
-  
 
     if (!password || !email || !departmentId) {
       return res
@@ -742,8 +743,8 @@ app.get("/api/admin/get-classes", async (req, res) => {
   }
 });
 
-// cron.schedule("0 0 * * *", async () => { 
-//   console.log("Running cron job to fetch stats..."); 
+// cron.schedule("0 0 * * *", async () => {
+//   console.log("Running cron job to fetch stats...");
 //   const students = await Student.find();
 //   for (const student of students) {
 //     const stats = await getStatsForStudent(student);

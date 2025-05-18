@@ -83,8 +83,12 @@ export default function Header() {
   };
 
   const handleExportCSV = () => {
+    const sortedStudents = [...students].sort((a, b) =>
+      a.rollNo.localeCompare(b.rollNo) 
+    );
+
     const csv = Papa.unparse(
-      students.map((student) => {
+      sortedStudents.map((student) => {
         const department =
           typeof student.department === "string"
             ? student.department
@@ -159,8 +163,8 @@ export default function Header() {
       <div className="flex items-center gap-4">
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Last Updated:{" "}
-          {students && students[0]?.updatedAt
-            ? new Date(students[0].updatedAt).toLocaleString("en-US", {
+          {classUser
+            ? new Date(classUser.studentsUpdatedAt).toLocaleString("en-US", {
                 weekday: "short", // e.g. 'Tue'
                 year: "numeric",
                 month: "short", // e.g. 'May'

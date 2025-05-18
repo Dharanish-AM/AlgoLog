@@ -93,11 +93,7 @@ export const refetchStudents = async (classId, token, dispatch) => {
       }
     );
     if (response.status === 200) {
-      const students = response.data.students;
-      dispatch({
-        type: "SET_STUDENTS",
-        payload: students,
-      });
+      getStudents(classId, token, dispatch);
       return response;
     }
   } catch (error) {
