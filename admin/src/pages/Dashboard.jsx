@@ -74,13 +74,6 @@ export default function Dashboard() {
           </div>
           <StudentTable
             students={selectedClass.students}
-            loading={false}
-            error={null}
-            selectedStudent={null}
-            setSelectedStudent={() => {}}
-            isShowTopPerformer={false}
-            selectedPlatform={null}
-            handleRefetchSingleStudent={() => {}}
           />
         </div>
       )}

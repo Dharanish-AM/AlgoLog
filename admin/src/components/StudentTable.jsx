@@ -1,22 +1,18 @@
 import React, { useState } from "react";
 import { ChevronRight, RefreshCw } from "lucide-react";
 import { Search } from "lucide-react";
+import StudentCard from "./StudentCard";
 
 const StudentTable = ({
   students,
-  loading,
-  error,
-  selectedStudent,
-  setSelectedStudent,
-  isShowTopPerformer,
-  selectedPlatform,
-  setSelectedPlatform,
-  onShowTopPerformer,
-  handleRefetchSingleStudent,
 }) => {
   const [refreshingMap, setRefreshingMap] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [totalCount, setTotalCount] = useState(students ? students.length : 0);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [selectedPlatform, setSelectedPlatform] = useState(null);
+  const [isShowTopPerformer, setIsShowTopPerformer] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleRefreshClick = async (studentId) => {
     setRefreshingMap((prev) => ({ ...prev, [studentId]: true }));
@@ -38,14 +34,6 @@ const StudentTable = ({
     );
   }
 
-  if (error) {
-    return (
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-red-500 text-red-700 dark:text-red-400">
-        <p className="font-medium">Error loading student data</p>
-        <p className="text-sm mt-1">{error}</p>
-      </div>
-    );
-  }
 
   if (students?.length === 0) {
     return (
@@ -291,6 +279,9 @@ const StudentTable = ({
             })}
           </tbody>
         </table>
+        {
+          selectedStudent && <StudentCard student={selectedStudent} onClose={()=> setSelectedStudent(null)} />
+        }
     </div>
   );
 };
