@@ -20,7 +20,6 @@ export const getClasses = async (token, dispatch) => {
       type: "SET_CLASSES",
       payload: response.data.classes,
     });
-    console.log(response.data.classes);
   } catch (error) {
     throw error.response.data;
   }

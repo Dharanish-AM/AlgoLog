@@ -94,7 +94,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                 )}
               </div>
               <div>
-                 <p className="text-blue-100 font-medium">
+                <p className="text-blue-100 font-medium">
                   Competitive Programming Profile
                 </p>
                 <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
@@ -115,7 +115,6 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     hour12: true, // 12-hour time format
                   })}
                 </p>
-               
               </div>
               <X
                 onClick={() => {
@@ -357,7 +356,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     Rating
                   </span>
                   <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {codechef?.rating & "N/A"}
+                    {codechef?.rank ? codechef.rank : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
@@ -366,14 +365,6 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   </span>
                   <span className="font-semibold text-orange-600 dark:text-orange-400">
                     {codechef?.fullySolved ?? "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Rank
-                  </span>
-                  <span className="font-semibold text-orange-600 dark:text-orange-400">
-                    {codechef?.rank ?? "N/A"}
                   </span>
                 </div>
               </div>

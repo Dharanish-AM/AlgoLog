@@ -5,7 +5,6 @@ import { getClasses, getDepartments } from "../services/adminOperations";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft } from "lucide-react";
 import StudentTable from "../components/StudentTable";
-import toast from "react-hot-toast";
 import DepartmentsList from "../components/DepartmentsList";
 import ClassesList from "../components/ClassesList";
 

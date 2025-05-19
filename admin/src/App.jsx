@@ -6,6 +6,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import { getAdminUser } from "./services/authOperations";
 import { GridLoader } from "react-spinners";
+import Chart from "./pages/Chart";
 
 function App() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -51,7 +52,10 @@ function App() {
     <BrowserRouter>
       <Routes>
         {isAuthenticated ? (
-          <Route path="/" element={<Dashboard />} />
+          <>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/chart" element={<Chart />} />
+          </>
         ) : (
           <Route path="/" element={<Auth />} />
         )}

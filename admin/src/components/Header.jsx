@@ -4,12 +4,15 @@ import { UserPlus, Download, User, ChartBar, School, Plus } from "lucide-react";
 import Profile from "./Profile";
 import AddDepartment from "./AddDepartment";
 import AddClass from "./AddClass";
+import { useLocation, useNavigate } from "react-router-dom";
 
-export default function Header() {
+export default function Header({}) {
   const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
+  const navigation = useNavigate()
   const [isAddDepartmentModalOpen, setIsAddDepartmentModalOpen] =
     React.useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = React.useState(false);
+  const location = useLocation()
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -42,13 +45,21 @@ export default function Header() {
             Add Class
           </span>
         </button>
-        <button className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600">
+        <button onClick={()=>{
+          if(location.pathname === "/chart"){
+            navigation("/")
+          }else{
+            navigation("/chart")
+          }
+        }} className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600">
           <ChartBar
             className="w-5 h-5 text-gray-800 dark:text-gray-100"
             size={18}
           />
           <span className="text-sm text-gray-900 dark:text-gray-100">
-            View Analytics
+           {
+            location.pathname === "/chart" ? "View Dashboard" : "View Chart"
+           }
           </span>
         </button>
         <button className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-blue-600 text-gray-100 rounded-md hover:bg-blue-700">
