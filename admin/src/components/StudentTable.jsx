@@ -1,23 +1,123 @@
-import React, { useState } from "react";
-import { ChevronRight, RefreshCw } from "lucide-react";
+import React, { useState , useEffect} from "react";
+import { ChevronRight, RefreshCw, X } from "lucide-react";
 import { Search } from "lucide-react";
 import StudentCard from "./StudentCard";
 
-const StudentTable = ({
-  students,
-}) => {
+const StudentTable = ({ students }) => {
   const [refreshingMap, setRefreshingMap] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
   const [totalCount, setTotalCount] = useState(students ? students.length : 0);
+  const [filteredStudents, setFilteredStudents] = useState(students ? students : []);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [selectedPlatform, setSelectedPlatform] = useState(null);
   const [isShowTopPerformer, setIsShowTopPerformer] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+      const getScore = (student) => {
+        const stats = student?.stats?.[selectedPlatform?.toLowerCase?.() || ""];
+        if (!stats) return -1;
+
+        switch (selectedPlatform?.toLowerCase?.() || "") {
+          case "leetcode":
+            return stats.solved?.All || 0;
+          case "hackerrank":
+            return stats.badges?.length || 0;
+          case "codechef":
+            return stats?.fullySolved || 0;
+          case "codeforces":
+            return stats?.problemsSolved || 0;
+          case "skillrack":
+            return stats?.programsSolved || 0;
+          case "github":
+            return stats?.totalCommits || 0;
+          default:
+            return 0;
+        }
+      };
+  
+      const getTotalScore = (student) => {
+        const platforms = [
+          "leetcode",
+          "hackerrank",
+          "codechef",
+          "codeforces",
+          "skillrack",
+          "github",
+        ];
+        return platforms.reduce((total, platform) => {
+          const stats = student.stats?.[platform];
+          switch (platform) {
+            case "leetcode":
+              return total + (stats?.solved?.All || 0);
+            case "hackerrank":
+              return total + (stats?.badges?.length || 0);
+            case "codechef":
+              return total + (stats?.fullySolved || 0);
+            case "codeforces":
+              return total + (stats?.problemsSolved || 0);
+            case "skillrack":
+              return total + (stats?.programsSolved || 0);
+            case "github":
+              return total + (stats?.totalCommits || 0);
+            default:
+              return total;
+          }
+        }, 0);
+      };
+  
+      let result = students ? [...students] : [];
+  
+      if (searchTerm) {
+        const term = searchTerm?.toLowerCase();
+        result = result.filter(
+          (student) =>
+            student.name?.toLowerCase()?.includes(term) ||
+            student.rollNo?.toLowerCase()?.includes(term)
+        );
+      }
+  
+      if (isShowTopPerformer) {
+        result = result
+          .filter((student) => getTotalScore(student) > 0)
+          .sort((a, b) => {
+            const scoreDiff = getTotalScore(b) - getTotalScore(a);
+            if (scoreDiff !== 0) return scoreDiff;
+            const nameA = a.name?.toLowerCase() || "";
+            const nameB = b.name?.toLowerCase() || "";
+            return nameA.localeCompare(nameB);
+          });
+      } else {
+        result.sort((a, b) => {
+          if (selectedPlatform !== "all") {
+            const scoreDiff = getScore(b) - getScore(a);
+            if (scoreDiff !== 0) return scoreDiff;
+          }
+          return a.rollNo?.localeCompare(b.rollNo || "");
+        });
+      }
+  
+      setFilteredStudents(result);
+  
+      if (selectedStudent && !result.find((s) => s._id === selectedStudent._id)) {
+        setSelectedStudent(null);
+      }
+    }, [
+      students,
+      searchTerm,
+      selectedStudent,
+      selectedPlatform,
+      isShowTopPerformer,
+    ]);
+
   const handleRefreshClick = async (studentId) => {
     setRefreshingMap((prev) => ({ ...prev, [studentId]: true }));
     await handleRefetchSingleStudent(studentId);
     setRefreshingMap((prev) => ({ ...prev, [studentId]: false }));
+  };
+
+  const onShowTopPerformer = () => {
+    setIsShowTopPerformer(!isShowTopPerformer);
   };
 
   if (loading) {
@@ -34,8 +134,7 @@ const StudentTable = ({
     );
   }
 
-
-  if (students?.length === 0) {
+  if (filteredStudents?.length === 0) {
     return (
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-center text-gray-500 dark:text-gray-400">
         <p>No students found matching your criteria.</p>
@@ -44,7 +143,59 @@ const StudentTable = ({
   }
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md">
+    <div>
+      <div className="flex flex-col md:flex-row gap-4 w-full">
+        <div className="flex flex-row items-center justify-center px-4 py-2 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 text-sm dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500">
+          Total Students: {students?.length ? students.length : 0}
+        </div>
+        <div className="relative flex-row flex flex-grow">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center z-10">
+            <Search size={18} className="text-gray-400" />
+          </div>
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search students..."
+            className="pl-11 pr-10 py-3 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200 shadow-sm"
+          />
+          {searchTerm && (
+            <button
+              onClick={() => setSearchTerm("")}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
+              aria-label="Clear search"
+            >
+              <X
+                size={18}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200"
+              />
+            </button>
+          )}
+        </div>
+
+        <div className="flex-shrink-0">
+          <select
+            value={selectedPlatform || ""}
+            onChange={(e) => setSelectedPlatform(e.target.value)}
+            className="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200 shadow-sm appearance-none cursor-pointer"
+          >
+            <option value={"all"}>All Platforms</option>
+            <option value={"leetcode"}>LeetCode</option>
+            <option value={"hackerrank"}>HackerRank</option>
+            <option value={"codechef"}>CodeChef</option>
+            <option value={"codeforces"}>Codeforces</option>
+            <option value={"skillrack"}>SkillRack</option>
+            <option value={"github"}>GitHub</option>
+          </select>
+        </div>
+        <button
+          onClick={onShowTopPerformer}
+          className="px-4 py-2 rounded-xl bg-purple-500 text-white hover:bg-purple-600 transition-all text-sm font-medium"
+        >
+          Top Performers
+        </button>
+      </div>
+      <div className="bg-white dark:bg-gray-800 mt-6 rounded-lg shadow-md">
         <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
@@ -82,7 +233,7 @@ const StudentTable = ({
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {students?.map((student, index) => {
+            {filteredStudents?.map((student, index) => {
               if (!student || !student._id) return null;
               const rankBadges = ["🥇", "🥈", "🥉"];
               const borderColor = [
@@ -279,9 +430,13 @@ const StudentTable = ({
             })}
           </tbody>
         </table>
-        {
-          selectedStudent && <StudentCard student={selectedStudent} onClose={()=> setSelectedStudent(null)} />
-        }
+        {selectedStudent && (
+          <StudentCard
+            student={selectedStudent}
+            onClose={() => setSelectedStudent(null)}
+          />
+        )}
+      </div>
     </div>
   );
 };

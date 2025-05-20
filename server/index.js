@@ -515,9 +515,9 @@ app.post("/api/class/login", async (req, res) => {
 
 app.post("/api/class/register", async (req, res) => {
   try {
-    const { password, email, departmentId, section } = req.body;
+    const { password, email, departmentId, section,year } = req.body;
 
-    if (!password || !email || !departmentId) {
+    if (!password || !email || !departmentId || !year) {
       return res
         .status(400)
         .json({ message: "Username, password, name, and email are required" });
@@ -558,6 +558,7 @@ app.post("/api/class/register", async (req, res) => {
       department: classDepartment._id,
       password: hashedPassword,
       section,
+      year
     });
 
     await newClass.save();

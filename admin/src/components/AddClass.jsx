@@ -10,9 +10,10 @@ export default function AddClass({ onClose }) {
     password: "",
     section: "",
     departmentId: "",
+    year: "",
   });
   const token = localStorage.getItem("token");
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
   const departments = useSelector((state) => state.admin.departments);
 
@@ -26,7 +27,7 @@ export default function AddClass({ onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await addClass(token,formData, dispatch);
+    const response = await addClass(token, formData, dispatch);
     if (response.status === 201) {
       toast.success("Class added successfully");
       onClose();
@@ -73,6 +74,31 @@ export default function AddClass({ onClose }) {
               required
               placeholder="Enter password"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Year
+            </label>
+            <select
+              value={formData.year}
+              required
+              onChange={(e) =>
+                setFormData({ ...formData, year: e.target.value })
+              }
+              className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="" disabled>
+                Select academic year
+              </option>
+              <option value="2027-2031">2027-2031</option>
+              <option value="2026-2030">2026-2030</option>
+              <option value="2025-2029">2025-2029</option>
+              <option value="2024-2028">2024-2028</option>
+              <option value="2023-2027">2023-2027</option>
+              <option value="2022-2026">2022-2026</option>
+              <option value="2021-2025">2021-2025</option>
+              <option value="2020-2024">2020-2024</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

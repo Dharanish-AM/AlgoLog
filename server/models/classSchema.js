@@ -30,6 +30,9 @@ const classSchema = new mongoose.Schema({
   studentsUpdatedAt: {
     type: Date,
   },
+  year:{
+    type:String,
+  }
 });
 
 const Class = mongoose.model("Class", classSchema);
