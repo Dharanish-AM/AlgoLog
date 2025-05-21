@@ -47,7 +47,7 @@ async function getLeetCodeStats(username) {
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -58,7 +58,7 @@ async function getHackerRankStats(username) {
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 15000,
+        timeout: 20000,
       });
 
       const $ = cheerio.load(data);
@@ -70,6 +70,14 @@ async function getHackerRankStats(username) {
           const stars = $(el).find(".badge-star").length;
           return { name: badgeName || "", stars };
         });
+
+      if (badges.length === 0) {
+        return {
+          platform: "HackerRank",
+          username,
+          badges: [],
+        };
+      }
 
       return {
         platform: "HackerRank",
@@ -92,6 +100,8 @@ async function getHackerRankStats(username) {
     }
   }
 }
+
+getHackerRankStats("ranajay_s2021").then(console.log);
 
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;

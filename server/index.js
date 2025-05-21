@@ -39,6 +39,19 @@ mongoose
     console.error("Error connecting to MongoDB:", err);
   });
 
+// Retry helper for scraper calls
+async function withRetry(promiseFn, retries = 1) {
+  try {
+    return await promiseFn();
+  } catch (err) {
+    if (retries > 0) {
+      console.log("Retrying due to error:", err.message);
+      return withRetry(promiseFn, retries - 1);
+    }
+    throw err;
+  }
+}
+
 async function getStatsForStudent(student) {
   const {
     _id,
@@ -76,25 +89,28 @@ async function getStatsForStudent(student) {
       : "Username missing",
   });
 
+  // Wrap each scraper call with retry
   const leetPromise = leetcode
-    ? getLeetCodeStats(leetcode)
+    ? withRetry(() => getLeetCodeStats(leetcode))
     : Promise.resolve(null);
   const hackPromise = hackerrank
-    ? getHackerRankStats(hackerrank)
+    ? withRetry(() => getHackerRankStats(hackerrank))
     : Promise.resolve(null);
   const chefPromise = codechef
-    ? getCodeChefStats(codechef)
+    ? withRetry(() => getCodeChefStats(codechef))
     : Promise.resolve(null);
-  const githubPromise = github ? getGithubStats(github) : Promise.resolve(null);
+  const githubPromise = github
+    ? withRetry(() => getGithubStats(github))
+    : Promise.resolve(null);
   const cfPromise = codeforces
-    ? getCodeforcesStats(codeforces)
+    ? withRetry(() => getCodeforcesStats(codeforces))
     : Promise.resolve(null);
   const skillPromise =
     skillrack && skillrack.startsWith("http")
-      ? getSkillrackStats(skillrack)
+      ? withRetry(() => getSkillrackStats(skillrack))
       : Promise.resolve(null);
 
-  const [leet, hack, chef, githubResult, cf, skill] = await Promise.allSettled([
+  const results = await Promise.allSettled([
     leetPromise,
     hackPromise,
     chefPromise,
@@ -102,6 +118,38 @@ async function getStatsForStudent(student) {
     cfPromise,
     skillPromise,
   ]);
+
+  // Log individual failures
+  const platforms = [
+    "LeetCode",
+    "HackerRank",
+    "CodeChef",
+    "GitHub",
+    "Codeforces",
+    "Skillrack",
+  ];
+  results.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.warn(`Failed to fetch ${platforms[index]} stats:`, result.reason);
+    }
+  });
+
+  const [
+    leetResult,
+    hackResult,
+    chefResult,
+    githubResult,
+    cfResult,
+    skillResult,
+  ] = results;
+
+  const leet = leetResult.status === "fulfilled" ? leetResult.value : null;
+  const hack = hackResult.status === "fulfilled" ? hackResult.value : null;
+  const chef = chefResult.status === "fulfilled" ? chefResult.value : null;
+  const githubStats =
+    githubResult.status === "fulfilled" ? githubResult.value : null;
+  const cf = cfResult.status === "fulfilled" ? cfResult.value : null;
+  const skill = skillResult.status === "fulfilled" ? skillResult.value : null;
 
   return {
     _id,
@@ -112,32 +160,14 @@ async function getStatsForStudent(student) {
     department,
     section,
     stats: {
-      leetcode:
-        leet.status === "fulfilled" && leet.value
-          ? leet.value
-          : formatError("LeetCode", leetcode),
-      hackerrank:
-        hack.status === "fulfilled" && hack.value
-          ? hack.value
-          : formatError("HackerRank", hackerrank),
-      codechef:
-        chef.status === "fulfilled" && chef.value
-          ? chef.value
-          : formatError("CodeChef", codechef),
-      codeforces:
-        cf.status === "fulfilled" && cf.value
-          ? cf.value
-          : formatError("Codeforces", codeforces),
+      leetcode: leet || formatError("LeetCode", leetcode),
+      hackerrank: hack || formatError("HackerRank", hackerrank),
+      codechef: chef || formatError("CodeChef", codechef),
+      codeforces: cf || formatError("Codeforces", codeforces),
       skillrack:
-        skill.status === "fulfilled" &&
-        skill.value &&
-        typeof skill.value === "object"
-          ? skill.value
-          : formatError("Skillrack", skillrack, { certificates: [] }, true),
-      github:
-        githubResult.status === "fulfilled" && githubResult.value
-          ? githubResult.value
-          : formatError("GitHub", github),
+        skill ||
+        formatError("Skillrack", skillrack, { certificates: [] }, true),
+      github: githubStats || formatError("GitHub", github),
     },
   };
 }
@@ -204,8 +234,7 @@ app.get("/api/students/refetch", async (req, res) => {
               const isValidStats =
                 (!student.leetcode || stats.leetcode?.solved?.All != null) &&
                 (!student.hackerrank ||
-                  (Array.isArray(stats.hackerrank?.badges) &&
-                    stats.hackerrank.badges.length > 0)) &&
+                  Array.isArray(stats.hackerrank?.badges)) &&
                 (!student.codechef || stats.codechef?.fullySolved != null) &&
                 (!student.codeforces || stats.codeforces?.contests != null) &&
                 (!student.skillrack ||
@@ -313,16 +342,15 @@ app.get("/api/students/refetch/single", async (req, res) => {
     const { stats } = updatedStats;
     const isValidStats =
       (!student.leetcode || stats.leetcode?.solved?.All != null) &&
-      (!student.hackerrank ||
-        (Array.isArray(stats.hackerrank?.badges) &&
-          stats.hackerrank.badges.length > 0)) &&
+      (!student.hackerrank || Array.isArray(stats.hackerrank?.badges)) &&
       (!student.codechef || stats.codechef?.fullySolved != null) &&
       (!student.codeforces || stats.codeforces?.contests != null) &&
       (!student.skillrack ||
         (typeof stats.skillrack === "object" &&
-          stats.skillrack.programsSolved != null));
-    !student.github ||
-      (typeof stats.github === "object" && stats.github.totalCommits != null);
+          stats.skillrack.programsSolved != null)) &&
+      (!student.github ||
+        (typeof stats.github === "object" &&
+          stats.github.totalCommits != null));
 
     if (isValidStats) {
       const updatedStudent = await Student.findByIdAndUpdate(
@@ -515,7 +543,7 @@ app.post("/api/class/login", async (req, res) => {
 
 app.post("/api/class/register", async (req, res) => {
   try {
-    const { password, email, departmentId, section,year } = req.body;
+    const { password, email, departmentId, section, year } = req.body;
 
     if (!password || !email || !departmentId || !year) {
       return res
@@ -558,7 +586,7 @@ app.post("/api/class/register", async (req, res) => {
       department: classDepartment._id,
       password: hashedPassword,
       section,
-      year
+      year,
     });
 
     await newClass.save();
