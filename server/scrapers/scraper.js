@@ -2,6 +2,8 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const https = require("https");
+const dotenv = require("dotenv");
+dotenv.config();
 const Bottleneck = require("bottleneck");
 
 const codechefLimiter = new Bottleneck({
@@ -101,7 +103,7 @@ async function getHackerRankStats(username) {
   }
 }
 
-getHackerRankStats("ranajay_s2021").then(console.log);
+//getHackerRankStats("ranajay_s2021").then(console.log);
 
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
@@ -352,12 +354,13 @@ async function getTryHackMeStats(username) {
 //getTryHackMeStats("ben0309").then(console.log);
 
 async function getGithubStats(username) {
+  console.log(process.env.GITHUB_TOKEN)
   try {
     const headers = {
       Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
       "Content-Type": "application/json",
       "User-Agent": "AlgoLog-App",
-    };
+    }; 
 
     const query = `
   query {
@@ -390,7 +393,7 @@ async function getGithubStats(username) {
       { query },
       { headers }
     );
-
+ 
     const user = res.data.data.user;
 
     const totalRepos = user.repositories.totalCount;
@@ -422,7 +425,7 @@ async function getGithubStats(username) {
   }
 }
 
-// getGithubStats("iam-elango").then(console.log);
+//getGithubStats("iam-elango").then(console.log);
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
