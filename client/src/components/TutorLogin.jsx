@@ -14,12 +14,16 @@ export default function TutorLogin() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const response = await loginClass(formData, dispatch);
-    if (response.status === 200) {
-      toast.success("Login Success!");
-      window.location.reload();
-    } else {
-      toast.error(response.data.message);
+    try {
+      const response = await loginClass(formData, dispatch);
+      if (response?.status === 200) {
+        toast.success("Login Success!");
+        window.location.reload();
+      } else {
+        toast.error(response?.data?.message || "Login failed");
+      }
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "An error occurred");
     }
   };
 

@@ -521,8 +521,12 @@ app.post("/api/class/login", async (req, res) => {
       return res.status(404).json({ message: "Class not found" });
     }
 
-    const isPasswordMatch = bcrypt.compare(password, currentClass.password);
+    const isPasswordMatch = await bcrypt.compare(
+      password,
+      currentClass.password
+    );
     if (!isPasswordMatch) {
+      console.log("Invalid Credentials!");
       return res.status(400).json({ message: "Invalid Credentials!" });
     }
 
