@@ -203,6 +203,12 @@ app.get("/api/students", async (req, res) => {
 app.get("/api/students/refetch", async (req, res) => {
   try {
     const classId = req.query.classId;
+    console.log(
+      "Refetching stats for class ID:",
+      classId,
+      "at ",
+      new Date().toLocaleDateString()
+    );
     if (!classId) {
       return res.status(400).json({ error: "Class ID is required" });
     }
@@ -323,6 +329,12 @@ app.get("/api/students/refetch", async (req, res) => {
     await currentClass.save();
 
     console.log("The Valid Count is:", validCount);
+    console.log(
+      "Refetching stats completed for class ID:",
+      classId,
+      "at",
+      currentDate.toLocaleDateString()
+    );
     res.status(200).json({ count: validCount, date: currentDate });
   } catch (error) {
     console.error("Error refetching student stats:", error);

@@ -354,7 +354,6 @@ async function getTryHackMeStats(username) {
 //getTryHackMeStats("ben0309").then(console.log);
 
 async function getGithubStats(username) {
-  console.log(process.env.GITHUB_TOKEN)
   try {
     const headers = {
       Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,

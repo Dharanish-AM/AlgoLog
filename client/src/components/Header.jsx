@@ -84,7 +84,7 @@ export default function Header() {
 
   const handleExportCSV = () => {
     const sortedStudents = [...students].sort((a, b) =>
-      a.rollNo.localeCompare(b.rollNo) 
+      a.rollNo.localeCompare(b.rollNo)
     );
 
     const csv = Papa.unparse(
