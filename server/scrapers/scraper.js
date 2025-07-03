@@ -424,7 +424,7 @@ async function getGithubStats(username) {
   }
 }
 
-getGithubStats("sabarim6369").then(console.log);
+// getGithubStats("sabarim6369").then(console.log);
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
