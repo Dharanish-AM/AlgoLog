@@ -207,7 +207,7 @@ app.get("/api/students/refetch", async (req, res) => {
       "Refetching stats for class ID:",
       classId,
       "at ",
-      new Date().toLocaleDateString()
+      new Date().toLocaleString()
     );
     if (!classId) {
       return res.status(400).json({ error: "Class ID is required" });
@@ -525,7 +525,6 @@ app.post("/api/class/login", async (req, res) => {
         .json({ message: "Username and password are required" });
     }
 
-    // Populate department field
     const currentClass = await Class.findOne({ username }).populate(
       "department"
     );
@@ -679,6 +678,39 @@ app.post("/api/class/check-token", async (req, res) => {
   }
 });
 
+app.post("/api/class/change-password", async (req, res) => {
+  try {
+    const { classId, oldPassword, newPassword } = req.body;
+
+    if (!classId || !oldPassword || !newPassword) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    const classData = await Class.findById(classId);
+    if (!classData) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    const isPasswordMatch = await bcrypt.compare(
+      oldPassword,
+      classData.password
+    );
+    if (!isPasswordMatch) {
+      return res.status(401).json({ message: "Incorrect password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    classData.password = hashedPassword;
+
+    await classData.save();
+
+    res.status(200).json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error("Error changing password:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 app.get("/api/class/get-class", async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
@@ -696,6 +728,42 @@ app.get("/api/class/get-class", async (req, res) => {
   } catch (err) {
     console.error("Error fetching class:", err);
     res.status(500).json({ message: "Failed to fetch class" });
+  }
+});
+
+app.post("/api/class/update-class", async (req, res) => {
+  try {
+    const { classId, formData } = req.body;
+
+    if (!classId || !formData) {
+      return res
+        .status(400)
+        .json({ message: "classId and formData are required" });
+    }
+
+    const deptId = await Department.findOne({
+      name:formData.department
+    });
+
+    formData.department = deptId;
+
+    const updatedClass = await Class.findByIdAndUpdate(
+      classId,
+      { $set: formData },
+      { new: true } 
+    );
+
+    if (!updatedClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
+    res.status(200).json({
+      message: "Class updated successfully",
+      class: updatedClass,
+    });
+  } catch (err) {
+    console.error("Error updating class:", err);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

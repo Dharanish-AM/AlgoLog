@@ -57,3 +57,36 @@ export const getClass = async (token) => {
     throw error;
   }
 };
+
+export const changePassword = async (
+  classId,
+  oldPassword,
+  newPassword,
+  token
+) => {
+  try {
+    console.log(classId,
+  oldPassword,
+  newPassword,
+  token)
+    const response = await axios.post(
+      `${API_URL}/api/class/change-password`,
+      {
+        classId,
+        oldPassword,
+        newPassword,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200 || response.status === 201) {
+      return response;
+    }
+  } catch (error) {
+    console.error("Error changing password:", error);
+    throw error;
+  }
+};

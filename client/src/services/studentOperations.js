@@ -131,7 +131,7 @@ export const editStudent = async (id, updatedData, token, dispatch) => {
   }
 };
 
-export const getDepartments = async (token, dispatch)=>{
+export const getDepartments = async (token, dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/api/departments`, {
       headers: {
@@ -146,4 +146,34 @@ export const getDepartments = async (token, dispatch)=>{
     console.error("Error fetching departments:", error);
     throw error;
   }
-}
+};
+
+export const updateClass = async (classId, formData, token) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/class/update-class`,
+      {
+        classId,
+        formData,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      return {
+        status: response.status,
+        class: response.data.class,
+        message: "Class updated successfully",
+      };
+    } else {
+      throw new Error("Failed to update class");
+    }
+  } catch (err) {
+    console.error("Error updating class:", err);
+    throw err;
+  }
+};
