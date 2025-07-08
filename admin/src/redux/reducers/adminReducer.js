@@ -2,6 +2,9 @@ const initialState = {
   departmensts: [],
   classes: [],
   students: [],
+  currentDepartment: null,
+  currentClass: null,
+  currentYear: null
 };
 
 export const adminReducer = (state = initialState, action) => {
@@ -20,6 +23,21 @@ export const adminReducer = (state = initialState, action) => {
       return {
         ...state,
         students: action.payload,
+      };
+    case "SET_CURRENT_DEPARTMENT":
+      return {
+        ...state,
+        currentDepartment: action.payload,
+      };
+    case "SET_CURRENT_CLASS":
+      return {
+        ...state,
+        currentClass: action.payload,
+      };
+    case "SET_CURRENT_YEAR":
+      return {
+        ...state,
+        currentYear: action.payload,
       };
     default:
       return state;

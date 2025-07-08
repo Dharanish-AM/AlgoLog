@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ArrowLeft, Edit } from "lucide-react";
+import { useDispatch } from "react-redux";
 
 export default function ClassesList({
   departmentId,
@@ -10,12 +11,19 @@ export default function ClassesList({
   setSelectedDepartmentName,
 }) {
   const [selectedBatch, setSelectedBatch] = React.useState("all");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch({
+      type: "SET_CURRENT_YEAR",
+      payload: selectedBatch,
+    });
+  }, [selectedBatch]);
 
   const filteredClasses = classes
     .filter((cls) => cls.department === departmentId)
     .filter(
-      (cls) =>
-        selectedBatch === "all" || cls.year?.toString() === selectedBatch
+      (cls) => selectedBatch === "all" || cls.year?.toString() === selectedBatch
     );
 
   return (

@@ -24,6 +24,20 @@ export default function Dashboard() {
     fetchClasses();
   }, []);
 
+  useEffect(()=>{
+    dispatch({
+      type: "SET_CURRENT_DEPARTMENT",
+      payload: selectedDepartment,
+    })
+  },[selectedDepartment])
+
+  useEffect(()=>{
+    dispatch({
+      type: "SET_CURRENT_CLASS",
+      payload: selectedClass,
+    })
+  },[selectedClass])
+
   const fetchClasses = async () => {
     await getClasses(token, dispatch);
   };
