@@ -104,7 +104,9 @@ export default function Header({}) {
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-      <div className="flex items-center">
+      <div onClick={()=>{
+        window.location.reload()
+      }} className="flex cursor-pointer items-center">
         <img
           src={logo}
           alt="AlgoLog Logo"

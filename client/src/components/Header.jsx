@@ -150,7 +150,9 @@ export default function Header() {
           <MoonLoader color="#C084FC" size={40} />
         </div>
       )}
-      <div className="flex items-center">
+      <div onClick={()=>{
+        window.location.reload();
+      }} className="flex cursor-pointer items-center">
         <img
           src={logo}
           alt="AlgoLog Logo"
