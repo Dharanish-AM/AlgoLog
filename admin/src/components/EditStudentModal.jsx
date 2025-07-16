@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { getDepartments } from "../services/studentOperations";
+import { getDepartments } from "../services/adminOperations";
 
 export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
   const [formData, setFormData] = useState({

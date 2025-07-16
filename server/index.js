@@ -742,7 +742,7 @@ app.post("/api/class/update-class", async (req, res) => {
     }
 
     const deptId = await Department.findOne({
-      name:formData.department
+      name: formData.department,
     });
 
     formData.department = deptId;
@@ -750,7 +750,7 @@ app.post("/api/class/update-class", async (req, res) => {
     const updatedClass = await Class.findByIdAndUpdate(
       classId,
       { $set: formData },
-      { new: true } 
+      { new: true }
     );
 
     if (!updatedClass) {
@@ -853,6 +853,70 @@ app.get("/api/admin/get-classes", async (req, res) => {
   } catch (err) {
     console.error("Error fetching classes:", err);
     res.status(500).json({ message: "Failed to fetch classes" });
+  }
+});
+
+//student
+
+app.post("/api/student/login", async (req, res) => {
+  const { rollNo, password } = req.body;
+
+  if (!rollNo || !password) {
+    return res
+      .status(400)
+      .json({ message: "Roll number and password are required" });
+  }
+
+  try {
+    const student = await Student.findOne({
+      rollNo: new RegExp(`^${rollNo}$`, "i"),
+    });
+
+    if (!student || !student.password) {
+      return res
+        .status(401)
+        .json({ message: "Invalid roll number or password" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, student.password);
+    if (!isPasswordValid) {
+      return res
+        .status(401)
+        .json({ message: "Invalid roll number or password" });
+    }
+
+    const studentWithoutPassword = student.toObject();
+    delete studentWithoutPassword.password;
+
+    const token =await generateToken(student.name, student._id);
+
+    return res.status(200).json({
+      token,
+      student: studentWithoutPassword,
+    });
+  } catch (err) {
+    console.error("Error logging in:", err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+app.get("/api/student/get-student", async (req, res) => {
+  try {
+    const token = req.headers.authorization.split(" ")[1];
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    if (!decoded) {
+      return res.status(401).json({ message: "Invalid token" });
+    }
+    const name = decoded.username;
+    const studentData = await Student.findOne({ name });
+    if (!studentData) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+    const { password, ...studentWithoutPassword } = studentData.toObject();
+    res.status(200).json({ student: studentWithoutPassword });
+  } catch (err) {
+    console.error("Error fetching student:", err);
+    res.status(500).json({ message: "Failed to fetch student" });
   }
 });
 

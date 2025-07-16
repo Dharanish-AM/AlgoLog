@@ -1,0 +1,118 @@
+import React, { useEffect } from "react";
+import StudentProfile from "./pages/StudentProfile";
+import Auth from "./pages/Auth";
+import toast, { Toaster } from "react-hot-toast";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import axios from "axios";
+import { GridLoader } from "react-spinners";
+
+function App() {
+  const [isAuthenticated, setIsAuthenticated] = React.useState(false);
+  const [student, setStudent] = React.useState(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      getStudent();
+    }
+    if (!token) setIsLoading(false);
+  }, []);
+
+  const handleLogin = async (rollNo, password) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/student/login`,
+        {
+          rollNo,
+          password,
+        }
+      );
+
+      if (response.data?.token) {
+        toast.success("Login successful!");
+        setIsAuthenticated(true);
+        localStorage.setItem("token", response.data.token);
+        console.log("Login successful:", response.data);
+        getStudent();
+      }
+    } catch (err) {
+      console.error("Login failed:", err?.response?.data || err.message);
+      toast.error(
+        "Login failed: " + (err.response?.data?.message || err.message)
+      );
+    }
+  };
+
+  const getStudent = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        setIsAuthenticated(false);
+        localStorage.removeItem("token");
+        setIsLoading(false);
+        return;
+      }
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/student/get-student`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      console.log("Student data:", response.data.student);
+      setStudent(response.data.student);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+    } catch (err) {
+      console.error("Error fetching student data:", err);
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("token");
+    setStudent(null);
+    window.location.reload();
+  };
+
+  if (isLoading)
+    return (
+      <div className="bg-[#161F2D] flex justify-center items-center h-screen">
+        <GridLoader color="#C084FC" size={20} />
+      </div>
+    );
+
+  return (
+    <Router>
+      <Routes>
+        {!isAuthenticated ? (
+          <Route path="*" element={<Auth handleLogin={handleLogin} />} />
+        ) : (
+          <Route
+            path="*"
+            element={
+              <StudentProfile handleLogout={handleLogout} student={student} />
+            }
+          />
+        )}
+      </Routes>
+      <Toaster position="bottom-right" />
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-400 bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+        Made by{" "}
+        <a
+          href="https://github.com/Dharanish-AM"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-purple-400 hover:underline"
+        >
+          @dharanisham
+        </a>
+      </footer>
+    </Router>
+  );
+}
+
+export default App;

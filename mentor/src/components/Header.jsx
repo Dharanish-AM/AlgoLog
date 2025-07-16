@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import logo from "../../../client/algolog.png";
+import logo from "../../../mentor/algolog.png";
 import {
   BarChart,
   Code,

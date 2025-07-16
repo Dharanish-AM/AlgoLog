@@ -1,27 +1,18 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 const ThemeContext = createContext(undefined);
 
 export function ThemeProvider({ children, toastOptions = { duration: 5000 } }) {
-  const [theme, setTheme] = useState(() => {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) return savedTheme;
-    
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  });
-
+  
+  const [theme, setTheme] = useState("dark");
   const [showToast, setShowToast] = useState(false);
 
+  
   useEffect(() => {
-    localStorage.setItem('theme', theme);
-    
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
+    document.documentElement.classList.add("dark");
+  }, []);
 
+  
   useEffect(() => {
     if (showToast) {
       const timer = setTimeout(() => {
@@ -31,8 +22,9 @@ export function ThemeProvider({ children, toastOptions = { duration: 5000 } }) {
     }
   }, [showToast, toastOptions]);
 
+  
   const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
+    
     setShowToast(true);
   };
 
@@ -46,7 +38,7 @@ export function ThemeProvider({ children, toastOptions = { duration: 5000 } }) {
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error("useTheme must be used within a ThemeProvider");
   }
   return context;
 }

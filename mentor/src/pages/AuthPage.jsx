@@ -5,7 +5,7 @@ import Lottie from "lottie-react";
 import Animation from "../assets/Animation - 1747407322934.json";
 import { useState } from "react";
 import StudentLogin from "../components/StudentLogin";
-import logo from "../../../client/algolog.png";
+import logo from "../../../mentor/algolog.png";
 import TutorLogin from "../components/TutorLogin";
 import Animation1 from "../assets/Animation - 1747407322934.json";
 import { Headphones, HeadphonesIcon, LucideHeadphones } from "lucide-react";

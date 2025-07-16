@@ -3,7 +3,7 @@ import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
-import EditStudentModal from "../../../client/src/components/EditStudentModal";
+import EditStudentModal from "./EditStudentModal";
 
 export const StudentCard = ({
   student,

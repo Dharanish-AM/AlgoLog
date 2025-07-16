@@ -9,7 +9,7 @@ import axios from "axios";
 import Papa from "papaparse";
 import toast from "react-hot-toast";
 import { GridLoader, MoonLoader } from "react-spinners";
-import logo from "../../../client/algolog.png";
+import logo from "../../../mentor/algolog.png";
 import {
   addStudent,
   getStudents,
