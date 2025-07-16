@@ -933,6 +933,19 @@ app.get("/api/student/get-student", async (req, res) => {
 //   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
 // getSkillrackStats(skillrackUrl).then(console.log);
 
+
+// const tmp = async()=>{
+//   const students = await Student.find();
+//   const pass = "sece@123"
+//   for (const student of students) {
+//     const hashpass = await bcrypt.hash(pass, 10);
+//     student.password = hashpass;
+//     await student.save();
+
+//   }
+// }
+
+
 const PORT = process.env.PORT || 8000;
 
 app.listen(PORT, () => {

@@ -124,11 +124,11 @@ const StudentProfile = ({ student, handleLogout }) => {
         <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 md:p-8 mb-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <User className="w-8 h-8 text-white" />
+              <div className="w-16 aspect-square h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                <span className="text-2xl font-bold ">{student.name[0].toUpperCase()}</span>
               </div>
               <div>
-                <h1 className="text-3xl flex-wrap font-bold text-white">
+                <h1 className="text-2xl flex-wrap font-bold text-white">
                   {student.name}
                 </h1>
                 <p className="text-gray-400">Student Performance Dashboard</p>
