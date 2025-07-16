@@ -1,0 +1,11 @@
+admin/node_modules
+admin/.env
+
+mentor/node_modules
+mentor/.env
+
+server/node_modules
+server/*.env
+
+student/node_modules
+student/.env

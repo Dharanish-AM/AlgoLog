@@ -123,7 +123,7 @@ const StudentProfile = ({
         <div className="flex items-center relative gap-4">
           <button
             onClick={() => setIsShowModalOptions(true)}
-            className="flex border cursor-pointer ml-3 border-gray-500 items-center gap-2 p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex border cursor-pointer border-gray-500 items-center gap-2 p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
           >
             <User
               size={"1.5rem"}
