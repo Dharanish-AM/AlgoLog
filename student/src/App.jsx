@@ -21,6 +21,7 @@ function App() {
   }, []);
 
   const handleLogin = async (rollNo, password) => {
+    setIsLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_API_URL}/api/student/login`,
@@ -42,6 +43,8 @@ function App() {
       toast.error(
         "Login failed: " + (err.response?.data?.message || err.message)
       );
+    } finally {
+      setIsLoading(false);
     }
   };
 

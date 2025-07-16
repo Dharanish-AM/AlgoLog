@@ -49,7 +49,7 @@ export default function Auth({ handleLogin }) {
               />
               <button
                 type="submit"
-                className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md shadow-md"
+                className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md shadow-md"
               >
                 Login
               </button>

@@ -81,7 +81,6 @@ const StudentProfile = ({
     // Handle missing time
     const time = timePart || "00:00";
 
-    // Create ISO-compatible format
     const isoFormat = `${year}-${month}-${day}T${time}`;
 
     const date = new Date(isoFormat);
@@ -467,7 +466,7 @@ const StudentProfile = ({
             </div>
             <div className="space-y-2 mb-4">
               <h4 className="font-semibold text-white">Top Languages</h4>
-              {Object.entries(student.stats.skillrack.languages)
+              {Object.entries(student?.stats?.skillrack?.languages || {})
                 .slice(0, 3)
                 .map(([lang, count]) => (
                   <div key={lang} className="flex justify-between items-center">
