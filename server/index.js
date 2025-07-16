@@ -286,7 +286,9 @@ app.get("/api/students/refetch", async (req, res) => {
     console.log(`\n🎯 Update Summary`);
     console.log(`- ✅ Total Updated: ${updatedCount}`);
     console.log(`- ❌ Skipped: ${failedStudents.length}`);
-    console.log(`- ⌛ Duration: ${(Date.now() - start) / 1000}s`);
+    console.log(
+      `- ⌛ Duration: ${((Date.now() - start) / 60000).toFixed(2)} mins`
+    );
     console.log(`📆 Completed at: ${new Date().toLocaleString()}`);
 
     res.status(200).json({

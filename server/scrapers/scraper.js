@@ -244,7 +244,7 @@ async function getCodeforcesStats(username) {
   }
 }
 
-// getCodeforcesStats("optimus18").then(console.log);
+// getCodeforcesStats("guruvishal_30").then(console.log);
 
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
@@ -359,7 +359,6 @@ async function getGithubStats(username) {
     if (!token) {
       throw new Error("GitHub token not found");
     }
-    console.log("Token found: ", token);
     const headers = {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",

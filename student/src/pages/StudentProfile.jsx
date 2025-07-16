@@ -72,6 +72,29 @@ const StudentProfile = ({
     }
   };
 
+  function formatDate(dateStr) {
+    if (!dateStr) return "Invalid date";
+
+    const [datePart, timePart] = dateStr.split(" ");
+    const [day, month, year] = datePart.split("-");
+
+    // Handle missing time
+    const time = timePart || "00:00";
+
+    // Create ISO-compatible format
+    const isoFormat = `${year}-${month}-${day}T${time}`;
+
+    const date = new Date(isoFormat);
+
+    if (isNaN(date)) return "Invalid date";
+
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  }
+
   if (!student) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -473,7 +496,9 @@ const StudentProfile = ({
                       <ExternalLink className="w-4 h-4" />
                     </a>
                   </div>
-                  <div className="text-xs text-gray-400">{cert.date}</div>
+                  <div className="text-xs text-gray-400">
+                    {formatDate(cert.date)}
+                  </div>
                 </div>
               ))}
             </div>
