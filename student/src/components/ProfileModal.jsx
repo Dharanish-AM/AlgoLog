@@ -9,7 +9,7 @@ const departments = [
   { _id: "it", name: "IT" },
 ];
 
-export default function ProfileModal({ student, onClose, handleUpdate }) {
+export default function ProfileModal({ student, onClose, handleUpdate,handleChangePassword }) {
   const [data, setData] = useState(student);
 
   useEffect(() => {
@@ -51,8 +51,8 @@ export default function ProfileModal({ student, onClose, handleUpdate }) {
             className="text-gray-400 cursor-pointer"
           />
         </div>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {[
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {[
             "name",
             "email",
             "rollNo",
@@ -157,6 +157,7 @@ export default function ProfileModal({ student, onClose, handleUpdate }) {
           <div className="flex justify-end gap-3 mt-4">
             <button
               type="submit"
+              onClick={handleChangePassword}
               className="px-4 sm:py-3 py-1 text-sm cursor-pointer w-full bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Change Password

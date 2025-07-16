@@ -22,6 +22,7 @@ import {
 import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
 import { GridLoader } from "react-spinners";
+import ChangePasswordModal from "../components/ChangePasswordModal";
 
 const StudentProfile = ({
   student,
@@ -29,9 +30,12 @@ const StudentProfile = ({
   handleRefresh,
   isRefreshing,
   handleUpdate,
+  handleUpdatePassword,
 }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShowModalOptions, setIsShowModalOptions] = useState(false);
+  const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
+    useState(false);
   const modalOptionsRed = useRef();
 
   useEffect(() => {
@@ -531,6 +535,17 @@ const StudentProfile = ({
           onClose={() => setIsProfileModalOpen(false)}
           student={student}
           handleUpdate={handleUpdate}
+          handleChangePassword={() => {
+            setIsProfileModalOpen(false);
+            setIsChangePasswordModalOpen(true);
+          }}
+        />
+      )}
+      {isChangePasswordModalOpen && (
+        <ChangePasswordModal
+          onClose={() => setIsChangePasswordModalOpen(false)}
+          student={student}
+          handleUpdatePassword={handleUpdatePassword}
         />
       )}
     </div>

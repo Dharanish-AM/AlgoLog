@@ -923,6 +923,38 @@ app.get("/api/student/get-student", async (req, res) => {
   }
 });
 
+app.post("/api/student/change-password", async (req, res) => {
+  try {
+    const { studentId, oldPassword, newPassword } = req.body;
+
+    if (!studentId || !oldPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Student ID, old password, and new password are required",
+      });
+    }
+
+    const student = await Student.findById(studentId);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const isPasswordValid = await bcrypt.compare(oldPassword, student.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({ message: "Incorrect old password" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    student.password = hashedPassword;
+    await student.save();
+
+    console.log(`✅ Password changed for: ${student.name}`);
+    return res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("🔥 Error in change-password:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 // cron.schedule("0 0 * * *", async () => {
 //   console.log("Running cron job to fetch stats...");
 //   const students = await Student.find();
@@ -937,14 +969,17 @@ app.get("/api/student/get-student", async (req, res) => {
 // getSkillrackStats(skillrackUrl).then(console.log);
 
 // const tmp = async()=>{
-//   const students = await Student.find();
+//   const student = await Student.findById("681ec46ff535a91222cf9b97");
 //   const pass = "sece@123"
 //   for (const student of students) {
 //     const hashpass = await bcrypt.hash(pass, 10);
 //     student.password = hashpass;
 //     await student.save();
-
 //   }
+
+//   let hashpass = await bcrypt.hash(pass, 10);
+//   student.password = hashpass;
+//   await student.save();
 // }
 
 const PORT = process.env.PORT || 8000;

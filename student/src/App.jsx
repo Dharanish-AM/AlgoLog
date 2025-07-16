@@ -130,6 +130,32 @@ function App() {
     }
   };
 
+  const handleUpdatePassword = async (oldPassword, newPassword) => {
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/student/change-password`,
+        {
+          studentId: student._id,
+          oldPassword,
+          newPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status === 200 || response.status === 201) {
+        toast.success("Password updated successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        `Failed to update password: ${err.response?.data?.error || err.message}`
+      );
+    }
+  };
+
   if (isLoading)
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -151,6 +177,7 @@ function App() {
                 handleLogout={handleLogout}
                 student={student}
                 isRefreshing={isRefreshing}
+                handleUpdatePassword={handleUpdatePassword}
                 handleUpdate={handleUpdate}
               />
             }
