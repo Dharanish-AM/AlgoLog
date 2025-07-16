@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Edit2,
   Save,
@@ -26,6 +26,22 @@ import { GridLoader } from "react-spinners";
 const StudentProfile = ({ student, handleLogout }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShowModalOptions, setIsShowModalOptions] = useState(false);
+  const modalOptionsRed = useRef();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        modalOptionsRed.current &&
+        !modalOptionsRed.current.contains(event.target)
+      ) {
+        setIsShowModalOptions(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  });
 
   const renderStars = (count) => {
     return Array.from({ length: count }, (_, i) => (
@@ -33,7 +49,6 @@ const StudentProfile = ({ student, handleLogout }) => {
     ));
   };
 
-  // Dark mode difficulty badge
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
       case "Easy":
@@ -85,6 +100,7 @@ const StudentProfile = ({ student, handleLogout }) => {
           </button>
           {isShowModalOptions && (
             <div
+              ref={modalOptionsRed}
               onMouseLeave={() => setIsShowModalOptions(false)}
               className="absolute right-4 top-14 w-48 bg-gray-800 rounded-xl shadow-lg ring-1 ring-black/10 z-50 p-2"
             >
@@ -112,14 +128,14 @@ const StudentProfile = ({ student, handleLogout }) => {
                 <User className="w-8 h-8 text-white" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-white">
+                <h1 className="text-3xl flex-wrap font-bold text-white">
                   {student.name}
                 </h1>
                 <p className="text-gray-400">Student Performance Dashboard</p>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-6">
-              <div className="text-sm text-gray-200 dark:text-gray-200">
+              <div className="text-sm text-gray-400">
                 Last Updated:{" "}
                 {student
                   ? new Date(student.updatedAt).toLocaleString("en-US", {
@@ -134,7 +150,7 @@ const StudentProfile = ({ student, handleLogout }) => {
                     })
                   : "N/A"}
               </div>
-              <button className="flex cursor-pointer items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
+              <button className="flex cursor-pointer justify-center w-full sm:w-fit sm:h-fit items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
                 <RefreshCwIcon className="w-5 h-5" />
                 <span>Refresh</span>
               </button>
@@ -158,7 +174,7 @@ const StudentProfile = ({ student, handleLogout }) => {
                 <span>Email</span>
               </label>
 
-              <p className="text-white">{student.email}</p>
+              <p className="text-white break-words">{student.email}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">

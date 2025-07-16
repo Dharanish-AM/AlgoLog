@@ -40,8 +40,8 @@ export default function ProfileModal({ student, onClose }) {
   }
 
   return (
-    <div className="fixed bg-black/40 inset-0 flex items-center justify-center z-50">
-      <div className="bg-white scrollbar-hide dark:bg-gray-800 p-6 rounded-lg shadow-lg w-full max-w-xl max-h-[45rem] overflow-y-auto">
+    <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50">
+      <div className="bg-white scrollbar-hide dark:bg-gray-800 p-6 rounded-lg shadow-lg sm:w-full max-w-xl sm:max-h-[90h] h-[90%] w-[90%] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Edit Student
@@ -157,7 +157,7 @@ export default function ProfileModal({ student, onClose }) {
           <div className="flex justify-end gap-3 mt-4">
             <button
               type="submit"
-              className="px-4 py-3 text-sm cursor-pointer w-full bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              className="px-4 sm:py-3 py-1 text-sm cursor-pointer w-full bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Change Password
             </button>
