@@ -5,6 +5,11 @@ const studentSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true },
     rollNo: { type: String, required: true },
+    password: { type: String, required: true },
+    classId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Class",
+    },
     department: { type: String, required: true },
     section: { type: String, required: true },
     year: { type: String, required: true },

@@ -2,6 +2,8 @@ const axios = require("axios");
 const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const https = require("https");
+const dotenv = require("dotenv");
+dotenv.config();
 const Bottleneck = require("bottleneck");
 
 const codechefLimiter = new Bottleneck({
@@ -47,7 +49,7 @@ async function getLeetCodeStats(username) {
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
-  const maxAttempts = 3;
+  const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -58,7 +60,7 @@ async function getHackerRankStats(username) {
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 15000,
+        timeout: 20000,
       });
 
       const $ = cheerio.load(data);
@@ -68,9 +70,16 @@ async function getHackerRankStats(username) {
         .map((el) => {
           const badgeName = $(el).find(".badge-title").text().trim();
           const stars = $(el).find(".badge-star").length;
-          return badgeName ? { name: badgeName, stars } : null;
-        })
-        .filter(Boolean);
+          return { name: badgeName || "", stars };
+        });
+
+      if (badges.length === 0) {
+        return {
+          platform: "HackerRank",
+          username,
+          badges: [],
+        };
+      }
 
       return {
         platform: "HackerRank",
@@ -83,10 +92,18 @@ async function getHackerRankStats(username) {
         error.message
       );
       if (attempt < maxAttempts) await delay(2000 * attempt);
-      else return null;
+      else {
+        return {
+          platform: "HackerRank",
+          username,
+          error: "Failed to fetch data after multiple attempts",
+        };
+      }
     }
   }
 }
+
+//getHackerRankStats("ranajay_s2021").then(console.log);
 
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
@@ -342,7 +359,7 @@ async function getGithubStats(username) {
       Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
       "Content-Type": "application/json",
       "User-Agent": "AlgoLog-App",
-    };
+    }; 
 
     const query = `
   query {
@@ -375,7 +392,7 @@ async function getGithubStats(username) {
       { query },
       { headers }
     );
-
+ 
     const user = res.data.data.user;
 
     const totalRepos = user.repositories.totalCount;
@@ -407,7 +424,7 @@ async function getGithubStats(username) {
   }
 }
 
-// getGithubStats("iam-elango").then(console.log);
+// getGithubStats("sabarim6369").then(console.log);
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
