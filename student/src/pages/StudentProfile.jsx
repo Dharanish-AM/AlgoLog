@@ -23,7 +23,13 @@ import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
 import { GridLoader } from "react-spinners";
 
-const StudentProfile = ({ student, handleLogout }) => {
+const StudentProfile = ({
+  student,
+  handleLogout,
+  handleRefresh,
+  isRefreshing,
+  handleUpdate,
+}) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShowModalOptions, setIsShowModalOptions] = useState(false);
   const modalOptionsRed = useRef();
@@ -125,7 +131,9 @@ const StudentProfile = ({ student, handleLogout }) => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
             <div className="flex items-center space-x-4 mb-4 md:mb-0">
               <div className="w-16 aspect-square h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold ">{student.name[0].toUpperCase()}</span>
+                <span className="text-2xl font-bold ">
+                  {student.name[0].toUpperCase()}
+                </span>
               </div>
               <div>
                 <h1 className="text-2xl flex-wrap font-bold text-white">
@@ -150,10 +158,24 @@ const StudentProfile = ({ student, handleLogout }) => {
                     })
                   : "N/A"}
               </div>
-              <button className="flex cursor-pointer justify-center w-full sm:w-fit sm:h-fit items-center space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                <RefreshCwIcon className="w-5 h-5" />
-                <span>Refresh</span>
-              </button>
+              {isRefreshing ? (
+                <button
+                  disabled
+                  onClick={handleRefresh}
+                  className="flex justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg"
+                >
+                  <RefreshCwIcon className="w-5 h-5 animate-spin" />
+                  <span>Refreshing...</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleRefresh}
+                  className="flex justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
+                >
+                  <RefreshCwIcon className="w-5 h-5" />
+                  <span>Refresh</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -508,6 +530,7 @@ const StudentProfile = ({ student, handleLogout }) => {
         <ProfileModal
           onClose={() => setIsProfileModalOpen(false)}
           student={student}
+          handleUpdate={handleUpdate}
         />
       )}
     </div>

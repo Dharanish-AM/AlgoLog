@@ -10,6 +10,7 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
   const [student, setStudent] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isRefreshing, setIsRefreshing] = React.useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -78,6 +79,57 @@ function App() {
     window.location.reload();
   };
 
+  const handleRefresh = async () => {
+    try {
+      setIsRefreshing(true);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${
+          student._id
+        }`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+      if (response.status === 200) {
+        setStudent(response.data.student);
+        toast.success("Data refreshed successfully!");
+      }
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to refresh data. ", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  const handleUpdate = async (updatedStudent) => {
+    try {
+      const { _id, ...data } = updatedStudent;
+
+      const response = await axios.put(
+        `${import.meta.env.VITE_API_URL}/api/students/${_id}`,
+        data,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        }
+      );
+
+      if (response.status === 200) {
+        setStudent(response.data.student);
+        toast.success("Profile updated successfully!");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        `Failed to update profile: ${err.response?.data?.error || err.message}`
+      );
+    }
+  };
+
   if (isLoading)
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -94,7 +146,13 @@ function App() {
           <Route
             path="*"
             element={
-              <StudentProfile handleLogout={handleLogout} student={student} />
+              <StudentProfile
+                handleRefresh={handleRefresh}
+                handleLogout={handleLogout}
+                student={student}
+                isRefreshing={isRefreshing}
+                handleUpdate={handleUpdate}
+              />
             }
           />
         )}

@@ -9,7 +9,7 @@ const departments = [
   { _id: "it", name: "IT" },
 ];
 
-export default function ProfileModal({ student, onClose }) {
+export default function ProfileModal({ student, onClose, handleUpdate }) {
   const [data, setData] = useState(student);
 
   useEffect(() => {
@@ -27,7 +27,7 @@ export default function ProfileModal({ student, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Saving student data:", data);
+    handleUpdate(data);
     onClose();
   };
 

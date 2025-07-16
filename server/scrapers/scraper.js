@@ -355,8 +355,13 @@ async function getTryHackMeStats(username) {
 
 async function getGithubStats(username) {
   try {
+    const token = process.env.GITHUB_TOKEN;
+    if (!token) {
+      throw new Error("GitHub token not found");
+    }
+    console.log("Token found: ", token);
     const headers = {
-      Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+      Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       "User-Agent": "AlgoLog-App",
     }; 
