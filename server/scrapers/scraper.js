@@ -16,7 +16,10 @@ const platformLimits = {
 };
 
 const limiters = Object.fromEntries(
-  Object.entries(platformLimits).map(([key, options]) => [key, new Bottleneck(options)])
+  Object.entries(platformLimits).map(([key, options]) => [
+    key,
+    new Bottleneck(options),
+  ])
 );
 
 const {
@@ -40,12 +43,14 @@ async function getLeetCodeStats(username) {
             count
           }
         }
+          
       }
     }
   `;
   try {
     const res = await axios.post("https://leetcode.com/graphql", { query });
     const stats = res.data.data.matchedUser.submitStats.acSubmissionNum;
+
     return {
       platform: "LeetCode",
       username,
@@ -62,7 +67,7 @@ async function getLeetCodeStats(username) {
   }
 }
 
-// getLeetCodeStats("geethapriyans").then(console.log);
+getLeetCodeStats("geethapriyans").then(console.log);
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
@@ -131,7 +136,8 @@ async function getCodeChefStats(username) {
     try {
       const { data } = await axios.get(url, {
         headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9",
           "Accept-Language": "en-US,en;q=0.9",
           Connection: "keep-alive",
@@ -141,8 +147,27 @@ async function getCodeChefStats(username) {
         timeout: 15000,
       });
 
+      // Check for invalid profile
+      if (
+        data.includes(
+          "The username specified does not exist in our database."
+        ) ||
+        data.includes("404 Page Not Found") ||
+        data.includes("not found") ||
+        data.trim().length < 1000
+      ) {
+        console.warn(`User ${username} not found or invalid CodeChef page.`);
+        return {
+          platform: "CodeChef",
+          username,
+          rating: null,
+          fullySolved: null,
+        };
+      }
+
       const $ = cheerio.load(data);
 
+      // Extract rating
       let rating = $("div.rating-number")
         .contents()
         .filter(function () {
@@ -152,10 +177,7 @@ async function getCodeChefStats(username) {
         .trim()
         .replace("?", "");
 
-      if (!rating) {
-        rating = $("div.rating-number").text().trim();
-      }
-
+      // Extract total problems solved
       const solvedText = $("h3")
         .filter((i, el) => $(el).text().includes("Total Problems Solved"))
         .text()
@@ -166,7 +188,9 @@ async function getCodeChefStats(username) {
         throw new Error("Invalid or empty CodeChef profile page");
       }
 
-      console.info(`[Codechef] ✅ Success for ${username} on attempt ${attempt}`);
+      console.info(
+        `[CodeChef] ✅ Success for ${username} on attempt ${attempt}`
+      );
 
       return {
         platform: "CodeChef",
@@ -175,9 +199,15 @@ async function getCodeChefStats(username) {
         fullySolved,
       };
     } catch (error) {
-      if (error.response && error.response.status === 404) {
+      const isEmptyProfile =
+        error.message &&
+        error.message.includes("Invalid or empty CodeChef profile page");
+
+      const isNotFound = error.response && error.response.status === 404;
+
+      if (isEmptyProfile || isNotFound) {
         console.warn(
-          `User ${username} not found on CodeChef. Returning empty stats.`
+          `Skipped CodeChef fetch for ${username}: ${error.message}`
         );
         return {
           platform: "CodeChef",
@@ -186,10 +216,12 @@ async function getCodeChefStats(username) {
           fullySolved: null,
         };
       }
+
       console.warn(
         `Attempt ${attempt} failed to fetch CodeChef data for ${username}:`,
         error.message
       );
+
       if (attempt < maxAttempts) {
         await delay(3000 * attempt);
       } else {
@@ -217,6 +249,24 @@ async function getCodeforcesStats(username) {
         axios.get(profileUrl, { headers: { "User-Agent": "Mozilla/5.0" } }),
         axios.get(contestsUrl, { headers: { "User-Agent": "Mozilla/5.0" } }),
       ]);
+
+      if (
+        profileRes.data.includes(
+          `Codeforces.showMessage("Can't find such user"`
+        ) ||
+        profileRes.data.includes(`showMessage("Can't find such user"`)
+      ) {
+        console.warn(`User ${username} not found on Codeforces.`);
+        return {
+          platform: "Codeforces",
+          username,
+          rating: null,
+          rank: null,
+          maxRating: null,
+          contests: 0,
+          problemsSolved: 0,
+        };
+      }
 
       const $ = cheerio.load(profileRes.data);
 
@@ -280,7 +330,7 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
-  const maxAttempts = 10;
+  const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -394,7 +444,7 @@ async function getGithubStats(username) {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
       "User-Agent": "AlgoLog-App",
-    }; 
+    };
 
     const query = `
   query {
@@ -427,7 +477,7 @@ async function getGithubStats(username) {
       { query },
       { headers }
     );
- 
+
     const user = res.data.data.user;
 
     const totalRepos = user.repositories.totalCount;

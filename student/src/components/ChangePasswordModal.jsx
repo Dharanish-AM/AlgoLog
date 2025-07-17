@@ -3,7 +3,6 @@ import React from "react";
 
 export default function ChangePasswordModal({
   onClose,
-  student,
   handleUpdatePassword,
 }) {
   const [showPasswords, setShowPasswords] = React.useState({

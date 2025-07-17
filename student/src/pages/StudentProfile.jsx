@@ -284,18 +284,12 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.leetcode}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+            <div className="mb-4">
+              <div className="text-center w-full py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
                   {student.stats?.leetcode?.solved?.All}
                 </div>
                 <div className="text-sm text-gray-400">Total Solved</div>
-              </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-white">
-                  {student.stats.leetcode.rating}
-                </div>
-                <div className="text-sm text-gray-400">Rating</div>
               </div>
             </div>
             <div className="space-y-2">
