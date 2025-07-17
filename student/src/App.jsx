@@ -65,7 +65,6 @@ function App() {
           },
         }
       );
-      console.log("Student data:", response.data.student);
       setStudent(response.data.student);
       setIsAuthenticated(true);
       setIsLoading(false);

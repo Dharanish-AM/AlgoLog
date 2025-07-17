@@ -6,10 +6,27 @@ const dotenv = require("dotenv");
 dotenv.config();
 const Bottleneck = require("bottleneck");
 
-const codechefLimiter = new Bottleneck({
-  minTime: 7000, // one request every 7 seconds
-  maxConcurrent: 1,
-});
+const platformLimits = {
+  codechef: { minTime: 7000, maxConcurrent: 1 },
+  leetcode: { minTime: 2000 },
+  hackerrank: { minTime: 3000 },
+  github: { minTime: 1000 },
+  skillrack: { minTime: 3000 },
+  codeforces: { minTime: 2000 },
+};
+
+const limiters = Object.fromEntries(
+  Object.entries(platformLimits).map(([key, options]) => [key, new Bottleneck(options)])
+);
+
+const {
+  codechef: codechefLimiter,
+  leetcode: leetcodeLimiter,
+  hackerrank: hackerrankLimiter,
+  github: githubLimiter,
+  skillrack: skillrackLimiter,
+  codeforces: codeforcesLimiter,
+} = limiters;
 
 const agent = new https.Agent({ family: 4 });
 
@@ -296,6 +313,10 @@ async function getSkillrackStats(resumeUrl) {
         }
       });
 
+      if (rank === 0 && programsSolved === 0 && certificates.length === 0) {
+        throw new Error("Inavalid Skillrack URL");
+      }
+
       return {
         platform: "Skillrack",
         rank,
@@ -428,16 +449,22 @@ async function getGithubStats(username) {
   }
 }
 
-// getGithubStats("").then(console.log);
+// getGithubStats("sabarim6369").then(console.log);
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
+const limitedGetLeetCodeStats = leetcodeLimiter.wrap(getLeetCodeStats);
+const limitedGetHackerRankStats = hackerrankLimiter.wrap(getHackerRankStats);
+const limitedGetGithubStats = githubLimiter.wrap(getGithubStats);
+const limitedGetSkillrackStats = skillrackLimiter.wrap(getSkillrackStats);
+const limitedGetCodeforcesStats = codeforcesLimiter.wrap(getCodeforcesStats);
+
 module.exports = {
-  getHackerRankStats,
-  getLeetCodeStats,
-  getTryHackMeStats,
-  getGithubStats,
-  getSkillrackStats,
-  getCodeforcesStats,
+  getLeetCodeStats: limitedGetLeetCodeStats,
+  getHackerRankStats: limitedGetHackerRankStats,
+  getGithubStats: limitedGetGithubStats,
   getCodeChefStats: limitedGetCodeChefStats,
+  getSkillrackStats: limitedGetSkillrackStats,
+  getCodeforcesStats: limitedGetCodeforcesStats,
+  getTryHackMeStats,
 };

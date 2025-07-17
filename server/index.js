@@ -62,7 +62,26 @@ async function withRetry(
   }
 }
 
-async function getStatsForStudent(student) {
+function formatError(platform, identifier, extraFields = {}, isUrl = false) {
+  const errorMessage = identifier
+    ? isUrl
+      ? identifier.startsWith("http")
+        ? "Failed to fetch"
+        : "Invalid URL"
+      : "Failed to fetch"
+    : isUrl
+    ? "URL missing"
+    : "Username missing";
+
+  return {
+    platform,
+    updatedAt: new Date().toISOString(),
+    ...extraFields,
+    error: errorMessage,
+  };
+}
+
+async function getStatsForStudent(student, oldStats = {}) {
   const {
     _id,
     name,
@@ -81,107 +100,48 @@ async function getStatsForStudent(student) {
 
   console.log(`\n🔍 Starting fetch for student: ${name} (${rollNo})`);
 
-  const formatError = (
-    platform,
-    identifier,
-    extraFields = {},
-    isUrl = false
-  ) => ({
-    platform,
-    updatedAt: new Date().toISOString(),
-    ...extraFields,
-    error: identifier
-      ? isUrl
-        ? identifier.startsWith("http")
-          ? "Failed to fetch"
-          : "Invalid URL"
-        : "Failed to fetch"
-      : isUrl
-      ? "URL missing"
-      : "Username missing",
-  });
-
-  const fetches = [
-    {
-      platform: "LeetCode",
-      value: leetcode,
-      isUrl: false,
-      extra: {},
-      fn: () => getLeetCodeStats(leetcode),
-    },
-    {
-      platform: "HackerRank",
-      value: hackerrank,
-      isUrl: false,
-      extra: {},
-      fn: () => getHackerRankStats(hackerrank),
-    },
-    {
-      platform: "CodeChef",
-      value: codechef,
-      isUrl: false,
-      extra: {},
-      fn: () => getCodeChefStats(codechef),
-    },
-    {
-      platform: "GitHub",
-      value: github,
-      isUrl: false,
-      extra: {},
-      fn: () => getGithubStats(github),
-    },
-    {
-      platform: "Codeforces",
-      value: codeforces,
-      isUrl: false,
-      extra: {},
-      fn: () => getCodeforcesStats(codeforces),
-    },
-    {
-      platform: "Skillrack",
-      value: skillrack,
-      isUrl: true,
-      extra: { certificates: [] },
-      fn: () => getSkillrackStats(skillrack),
-    },
+  const platforms = [
+    ["leetcode", leetcode, false, getLeetCodeStats],
+    ["hackerrank", hackerrank, false, getHackerRankStats],
+    ["codechef", codechef, false, getCodeChefStats],
+    ["github", github, false, getGithubStats],
+    ["codeforces", codeforces, false, getCodeforcesStats],
+    ["skillrack", skillrack, true, getSkillrackStats],
   ];
 
-  const results = await Promise.allSettled(
-    fetches.map(({ platform, value, fn, isUrl }) => {
+  const statsEntries = await Promise.all(
+    platforms.map(async ([key, value, isUrl, fetchFn]) => {
+      const platformName = key.charAt(0).toUpperCase() + key.slice(1);
+
       if (!value || (isUrl && !value.startsWith("http"))) {
         console.warn(
-          `[${platform}] ⚠️ Skipping due to invalid or missing identifier.`
+          `[${platformName}] ⚠️ Skipping due to invalid or missing identifier.`
         );
-        return Promise.resolve({
-          platform,
-          status: "skipped",
-          result: formatError(platform, value, {}, isUrl),
-        });
+        return [
+          key,
+          oldStats[key] || formatError(platformName, value, {}, isUrl),
+        ];
       }
 
-      return withRetry(fn, 1, platform, value)
-        .then((res) => ({ platform, status: "fulfilled", result: res }))
-        .catch((err) => ({
-          platform,
-          status: "rejected",
-          result: formatError(platform, value, {}, isUrl),
-        }));
+      try {
+        const result = await withRetry(
+          () => fetchFn(value),
+          2,
+          platformName,
+          value
+        );
+        return [key, result];
+      } catch (err) {
+        console.warn(
+          `[${platformName}] ❗ Using old stats due to fetch failure`
+        );
+        return [
+          key,
+          oldStats[key] || formatError(platformName, value, {}, isUrl),
+        ];
+      }
     })
   );
-
-  const stats = {};
-  results.forEach((res, i) => {
-    const key = fetches[i].platform.toLowerCase();
-    if (res.value?.status === "skipped") {
-      stats[key] = res.value.result;
-    } else if (res.status === "fulfilled") {
-      stats[key] = res.value.result;
-    } else if (res.status === "rejected") {
-      stats[key] =
-        res.reason?.result ||
-        formatError(fetches[i].platform, fetches[i].value);
-    }
-  });
 
   console.log(`✅ Finished fetching all platforms for: ${name} (${rollNo})`);
 
@@ -193,7 +153,7 @@ async function getStatsForStudent(student) {
     year,
     department,
     section,
-    stats,
+    stats: Object.fromEntries(statsEntries),
   };
 }
 
@@ -224,8 +184,6 @@ app.get("/api/students", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch students and stats" });
   }
 });
-
-const GITHUB_TOKEN = process.env.GITHUB_TOKEN || null;
 
 app.get("/api/students/refetch", async (req, res) => {
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -262,23 +220,23 @@ app.get("/api/students/refetch", async (req, res) => {
       );
 
       try {
-        const updatedStats = await getStatsForStudent(student);
+        const updatedStats = await getStatsForStudent(student, student.stats);
+
+        const mergedStats = {
+          ...student.stats,
+          ...updatedStats.stats,
+        };
 
         await Student.findByIdAndUpdate(student._id, {
-          stats: updatedStats.stats,
+          stats: mergedStats,
         });
-
         console.log(`✅ Updated: ${student.name}`);
         updatedCount++;
       } catch (err) {
         console.error(`🔥 Failed: ${student.name} – ${err.message}`);
         failedStudents.push({ name: student.name, rollNo: student.rollNo });
       }
-
-      await delay(2000); // ⏳ Delay between students (API safety)
     }
-
-    // 🗂️ Update class timestamp
     const currentClass = await Class.findByIdAndUpdate(classId, {
       studentsUpdatedAt: now,
     });
@@ -323,7 +281,7 @@ app.get("/api/students/refetch/single", async (req, res) => {
 
     console.log(`[INFO] Student: ${student.name} (${student.rollNo})`);
 
-    const updatedStats = await getStatsForStudent(student);
+    const updatedStats = await getStatsForStudent(student, student.stats);
     const { stats } = updatedStats;
 
     const failedPlatforms = [];
@@ -370,9 +328,14 @@ app.get("/api/students/refetch/single", async (req, res) => {
       console.log(`[SUCCESS] All stats valid for ${student.name}`);
     }
 
+    const mergedStats = {
+      ...student.stats,
+      ...stats,
+    };
+
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
-      { stats },
+      { stats: mergedStats },
       { new: true }
     );
 
@@ -433,7 +396,7 @@ app.post("/api/students", async (req, res) => {
 
     let statsResult = { stats: {} };
     try {
-      statsResult = await getStatsForStudent(studentInfo);
+      statsResult = await getStatsForStudent(studentInfo, studentInfo.stats);
     } catch (err) {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
@@ -493,10 +456,13 @@ app.put("/api/students/:id", async (req, res) => {
       classId,
     };
 
-    const updatedStats = await getStatsForStudent({
-      _id: existingStudent._id,
-      ...updatedData,
-    });
+    const updatedStats = await getStatsForStudent(
+      {
+        _id: existingStudent._id,
+        ...updatedData,
+      },
+      existingStudent.stats || {}
+    );
 
     const stats = updatedStats?.stats || existingStudent.stats;
 
@@ -966,23 +932,23 @@ app.post("/api/student/change-password", async (req, res) => {
 //   }
 // });
 
-// const skillrackUrl =
-//   "https://www.skillrack.com/faces/resume.xhtml?id=484181&key=761fea3322a6375533ddd850099a73a57d20956a";
-// getSkillrackStats(skillrackUrl).then(console.log);
-
-// const tmp = async()=>{
-//   const student = await Student.findById("681ec46ff535a91222cf9b97");
-//   const pass = "sece@123"
-//   for (const student of students) {
-//     const hashpass = await bcrypt.hash(pass, 10);
-//     student.password = hashpass;
-//     await student.save();
+// const tmp = async () => {
+//   try {
+//     console.log("Starting . . .");
+//     const students = await Student.find();
+//     const pass = "sece@123";
+//     for (const student of students) {
+//       const hashpass = await bcrypt.hash(pass, 10);
+//       student.password = hashpass;
+//       await student.save();
+//     }
+//     console.log("Done . . .");
+//   } catch (err) {
+//     console.log(err);
 //   }
+// };
 
-//   let hashpass = await bcrypt.hash(pass, 10);
-//   student.password = hashpass;
-//   await student.save();
-// }
+
 
 const PORT = process.env.PORT || 8000;
 
