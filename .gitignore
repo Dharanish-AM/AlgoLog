@@ -9,3 +9,6 @@ server/*.env
 
 student/node_modules
 student/.env
+
+.vscode
+.scannerwork

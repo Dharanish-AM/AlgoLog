@@ -67,7 +67,7 @@ async function getLeetCodeStats(username) {
   }
 }
 
-getLeetCodeStats("geethapriyans").then(console.log);
+// getLeetCodeStats("geethapriyans").then(console.log);
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
