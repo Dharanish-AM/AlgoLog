@@ -222,10 +222,13 @@ app.get("/api/students/refetch", async (req, res) => {
       try {
         const updatedStats = await getStatsForStudent(student, student.stats);
 
-        const mergedStats = {
-          ...student.stats,
-          ...updatedStats.stats,
-        };
+        // Only overwrite platforms whose stats did not have an error
+        const mergedStats = { ...student.stats };
+        for (const [platform, platformStats] of Object.entries(updatedStats.stats)) {
+          if (!platformStats.error) {
+            mergedStats[platform] = platformStats;
+          }
+        }
 
         await Student.findByIdAndUpdate(student._id, {
           stats: mergedStats,
@@ -328,10 +331,12 @@ app.get("/api/students/refetch/single", async (req, res) => {
       console.log(`[SUCCESS] All stats valid for ${student.name}`);
     }
 
-    const mergedStats = {
-      ...student.stats,
-      ...stats,
-    };
+    const mergedStats = { ...student.stats };
+    for (const [platform, platformStats] of Object.entries(stats)) {
+      if (!platformStats.error) {
+        mergedStats[platform] = platformStats;
+      }
+    }
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
