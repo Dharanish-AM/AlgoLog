@@ -28,7 +28,28 @@ const studentSchema = new mongoose.Schema(
           Medium: Number,
           Hard: Number,
         },
-        rating: String,
+        rating: Number,
+        globalRanking: Number,
+        contestCount: Number,
+        topPercentage: Number,
+        badges: [
+          {
+            name: String,
+            stars: Number,
+          },
+        ],
+        contests: [
+          {
+            title: String,
+            startTime: Number,
+            rating: Number,
+            ranking: Number,
+            problemsSolved: Number,
+            totalProblems: Number,
+            trendDirection: String,
+            finishTimeInSeconds: Number,
+          },
+        ],
       },
       hackerrank: {
         platform: String,

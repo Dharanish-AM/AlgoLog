@@ -35,21 +35,48 @@ const agent = new https.Agent({ family: 4 });
 
 async function getLeetCodeStats(username) {
   const query = `
-    {
-      matchedUser(username: "${username}") {
+    query userContestRankingInfo($username: String!) {
+      matchedUser(username: $username) {
         submitStats {
           acSubmissionNum {
             difficulty
             count
           }
         }
-          
+      }
+      userContestRanking(username: $username) {
+        attendedContestsCount
+        rating
+        globalRanking
+        totalParticipants
+        topPercentage
+        badge {
+          name
+        }
+      }
+      userContestRankingHistory(username: $username) {
+        attended
+        trendDirection
+        problemsSolved
+        totalProblems
+        finishTimeInSeconds
+        rating
+        ranking
+        contest {
+          title
+          startTime
+        }
       }
     }
   `;
   try {
-    const res = await axios.post("https://leetcode.com/graphql", { query });
+    const res = await axios.post("https://leetcode.com/graphql", {
+      query,
+      variables: { username },
+    });
     const stats = res.data.data.matchedUser.submitStats.acSubmissionNum;
+    const contestInfo = res.data.data.userContestRanking;
+    const contestHistory = res.data.data.userContestRankingHistory;
 
     return {
       platform: "LeetCode",
@@ -60,7 +87,23 @@ async function getLeetCodeStats(username) {
         Medium: stats.find((i) => i.difficulty === "Medium").count,
         Hard: stats.find((i) => i.difficulty === "Hard").count,
       },
-      rating: res.data.data.matchedUser.userContestRanking?.rating || "N/A",
+      rating: contestInfo?.rating || "N/A",
+      globalRanking: contestInfo?.globalRanking || "N/A",
+      contestCount: contestInfo?.attendedContestsCount || 0,
+      topPercentage: contestInfo?.topPercentage || "N/A",
+      contests: contestHistory
+        .filter((contest) => contest.attended)
+        .map((contest) => ({
+          title: contest.contest.title,
+          startTime: contest.contest.startTime,
+          rating: contest.rating,
+          ranking: contest.ranking,
+          problemsSolved: contest.problemsSolved,
+          totalProblems: contest.totalProblems,
+          trendDirection: contest.trendDirection,
+          finishTimeInSeconds: contest.finishTimeInSeconds,
+        })),
+      badges: contestInfo?.badge ? [contestInfo.badge.name] : [],
     };
   } catch {
     return { platform: "LeetCode", username, error: "Failed to fetch data" };

@@ -7,6 +7,7 @@ const SearchBar = ({
   selectedPlatform,
   setSelectedPlatform,
   onShowTopPerformer,
+  isTopPerformer
 }) => {
   return (
     <div className="flex flex-col md:flex-row gap-4 w-full">
@@ -17,7 +18,12 @@ const SearchBar = ({
         <input
           type="text"
           value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
+          onChange={(e) => {
+            if(isTopPerformer){
+              onShowTopPerformer()
+            }
+            setSearchTerm(e.target.value);
+          }}
           placeholder="Search students..."
           className="pl-11 pr-10 py-3 w-full rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200 shadow-sm"
         />

@@ -72,10 +72,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     const getScore = (student) => {
-      const stats = student.stats?.[selectedPlatform.toLowerCase()];
+      const stats = student?.stats?.[selectedPlatform?.toLowerCase()];
       if (!stats) return -1;
 
-      switch (selectedPlatform.toLowerCase()) {
+      switch (selectedPlatform?.toLowerCase()) {
         case "leetcode":
           return stats.solved?.All || 0;
         case "hackerrank":
@@ -199,6 +199,7 @@ const Dashboard = () => {
             onShowTopPerformer={() => {
               setShowTopPerformer((prev) => !prev);
             }}
+            isTopPerformer={showTopPerformer}
           />
         </div>
 
