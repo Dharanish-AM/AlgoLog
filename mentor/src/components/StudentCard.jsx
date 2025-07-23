@@ -76,7 +76,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
           student={selectedStudent}
         />
       ) : (
-        <div className="scrollbar-hide bg-gradient-radial min-w-[45vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+        <div className="scrollbar-hide bg-gradient-radial min-w-[75vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
           <div className="bg-gradient-to-r from-purple-800 to-secondary-600 p-6 relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm"></div>
             <div className="relative flex items-center gap-6">
@@ -99,7 +99,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                 </p>
                 <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
                 <p className="text-blue-100 text-sm">
-                  {student.name} | {student.rollNo} | {student.department} |{" "}
+                  {student.name} | {student.rollNo} | {student.department}-{student.section} |{" "}
                   {student.year}
                 </p>
                 <p className="text-gray-400 text-xs">
@@ -126,7 +126,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
               />
             </div>
           </div>
-          <div className="flex flex-col gap-8 p-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 p-8">
             <div className="space-y-6 border border-gray-700 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
                 <Code size={24} className="text-primary-500" />
@@ -183,7 +183,18 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     </div>
                   </div>
                 </div>
-                {student.stats.leetcode.rating && (
+                {!student.stats.leetcode.rating && (
+                  <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
+                    <div className="text-xl font-bold text-white">
+                      #
+                      {student.stats.leetcode.globalRanking
+                        ? student.stats.leetcode.globalRanking.toLocaleString()
+                        : 0}
+                    </div>
+                    <div className="text-sm text-gray-400">Global Rank</div>
+                  </div>
+                )}
+                {student.stats.leetcode.rating ?  (
                   <div className="mt-8 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
@@ -197,11 +208,14 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                       <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                         <div className="text-xl font-bold text-white">
                           #
-                          {student.stats.leetcode.globalRanking.toLocaleString()}
+                          {student.stats.leetcode.globalRanking
+                            ? student.stats.leetcode.globalRanking.toLocaleString()
+                            : 0}
                         </div>
                         <div className="text-sm text-gray-400">Global Rank</div>
                       </div>
                     </div>
+
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                         <div className="text-xl font-bold text-white">
@@ -279,7 +293,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                       </div>
                     )}
                   </div>
-                )}
+                ):null}
               </div>
             </div>
             <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
@@ -417,7 +431,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                             <Star
                               key={i}
                               size={14}
-                              className="text-yellow-400"
+                              className="text-yellow-400 fill-yellow-400"
                             />
                           ))}
                         </div>

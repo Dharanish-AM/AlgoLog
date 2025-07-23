@@ -38,7 +38,7 @@ const StudentProfile = ({
     useState(false);
   const modalOptionsRed = useRef();
 
-  console.log(student)
+  console.log(student);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -286,12 +286,21 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.leetcode}</p>
               </div>
             </div>
-            <div className="mb-4">
-              <div className="text-center w-full py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+            <div className="mb-4 flex gap-4 items-center justify-between">
+              <div className="text-center w-1/2 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
                   {student.stats?.leetcode?.solved?.All}
                 </div>
                 <div className="text-sm text-gray-400">Total Solved</div>
+              </div>
+              <div className="bg-gray-700 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600">
+                <div className="text-xl font-bold text-white">
+                  #
+                  {student.stats.leetcode.globalRanking
+                    ? student.stats.leetcode.globalRanking.toLocaleString()
+                    : 0}
+                </div>
+                <div className="text-sm text-gray-400">Global Rank</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -313,21 +322,15 @@ const StudentProfile = ({
                   </div>
                 ))}
             </div>
-            {/* Additional LeetCode Stats and Contest History */}
+
             {student.stats.leetcode.rating && (
               <div className="mt-6 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                    <div className="text-xl font-bold text-white">
+                <div className="flex w-full">
+                  <div className="bg-gray-700 w-full p-4 rounded-lg text-center hover:bg-gray-600">
+                    <div className="text-xl font-bold text-blue-400">
                       {Math.round(student.stats.leetcode.rating)}
                     </div>
                     <div className="text-sm text-gray-400">Contest Rating</div>
-                  </div>
-                  <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                    <div className="text-xl font-bold text-white">
-                      #{student.stats.leetcode.globalRanking.toLocaleString()}
-                    </div>
-                    <div className="text-sm text-gray-400">Global Rank</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
@@ -335,7 +338,9 @@ const StudentProfile = ({
                     <div className="text-xl font-bold text-white">
                       {student.stats.leetcode.contestCount}
                     </div>
-                    <div className="text-sm text-gray-400">Contests Attended</div>
+                    <div className="text-sm text-gray-400">
+                      Contests Attended
+                    </div>
                   </div>
                   <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                     <div className="text-xl font-bold text-white">
@@ -346,7 +351,9 @@ const StudentProfile = ({
                 </div>
                 {student.stats.leetcode.contests.length > 0 && (
                   <div className="mt-6 space-y-4">
-                    <h4 className="text-white text-lg font-semibold">Contest History</h4>
+                    <h4 className="text-white text-lg font-semibold">
+                      Contest History
+                    </h4>
                     <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-hide">
                       {[...student.stats.leetcode.contests]
                         .sort((a, b) => b.startTime - a.startTime)
@@ -358,7 +365,9 @@ const StudentProfile = ({
                             <div className="flex justify-between text-white font-medium">
                               <span>{contest.title}</span>
                               <span className="text-sm text-gray-400">
-                                {new Date(contest.startTime * 1000).toLocaleDateString("en-US", {
+                                {new Date(
+                                  contest.startTime * 1000
+                                ).toLocaleDateString("en-US", {
                                   year: "numeric",
                                   month: "short",
                                   day: "numeric",
@@ -368,14 +377,23 @@ const StudentProfile = ({
                             <div className="text-sm text-gray-300 mt-1 space-y-1">
                               <div>📈 Rating: {contest.rating}</div>
                               <div>🏅 Rank: {contest.ranking}</div>
-                              <div>✅ Problems Solved: {contest.problemsSolved}/{contest.totalProblems}</div>
+                              <div>
+                                ✅ Problems Solved: {contest.problemsSolved}/
+                                {contest.totalProblems}
+                              </div>
                               <div>📉 Trend: {contest.trendDirection}</div>
                               <div>
                                 ⏱️ Finish Time:{" "}
                                 {contest.finishTimeInSeconds >= 3600
-                                  ? `${Math.floor(contest.finishTimeInSeconds / 3600)}h ${Math.floor((contest.finishTimeInSeconds % 3600) / 60)}m ${contest.finishTimeInSeconds % 60}s`
+                                  ? `${Math.floor(
+                                      contest.finishTimeInSeconds / 3600
+                                    )}h ${Math.floor(
+                                      (contest.finishTimeInSeconds % 3600) / 60
+                                    )}m ${contest.finishTimeInSeconds % 60}s`
                                   : contest.finishTimeInSeconds >= 60
-                                  ? `${Math.floor(contest.finishTimeInSeconds / 60)}m ${contest.finishTimeInSeconds % 60}s`
+                                  ? `${Math.floor(
+                                      contest.finishTimeInSeconds / 60
+                                    )}m ${contest.finishTimeInSeconds % 60}s`
                                   : `${contest.finishTimeInSeconds}s`}
                               </div>
                             </div>

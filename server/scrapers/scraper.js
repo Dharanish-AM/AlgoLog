@@ -87,10 +87,16 @@ async function getLeetCodeStats(username) {
         Medium: stats.find((i) => i.difficulty === "Medium").count,
         Hard: stats.find((i) => i.difficulty === "Hard").count,
       },
-      rating: contestInfo?.rating || "N/A",
-      globalRanking: contestInfo?.globalRanking || "N/A",
-      contestCount: contestInfo?.attendedContestsCount || 0,
-      topPercentage: contestInfo?.topPercentage || "N/A",
+      rating: isNaN(contestInfo?.rating) ? 0 : contestInfo.rating,
+      globalRanking: isNaN(contestInfo?.globalRanking)
+        ? 0
+        : contestInfo.globalRanking,
+      contestCount: isNaN(contestInfo?.attendedContestsCount)
+        ? 0
+        : contestInfo.attendedContestsCount,
+      topPercentage: isNaN(contestInfo?.topPercentage)
+        ? 0
+        : contestInfo.topPercentage,
       contests: contestHistory
         .filter((contest) => contest.attended)
         .map((contest) => ({

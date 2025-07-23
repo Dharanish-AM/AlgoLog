@@ -101,16 +101,41 @@ async function getStatsForStudent(student, oldStats = {}) {
   console.log(`\n🔍 Starting fetch for student: ${name} (${rollNo})`);
 
   const platforms = [
-    ["leetcode", leetcode, false, getLeetCodeStats],
-    ["hackerrank", hackerrank, false, getHackerRankStats],
-    ["codechef", codechef, false, getCodeChefStats],
-    ["github", github, false, getGithubStats],
-    ["codeforces", codeforces, false, getCodeforcesStats],
-    ["skillrack", skillrack, true, getSkillrackStats],
+    {
+      key: "leetcode",
+      value: leetcode,
+      isUrl: false,
+      fetchFn: getLeetCodeStats,
+    },
+    {
+      key: "hackerrank",
+      value: hackerrank,
+      isUrl: false,
+      fetchFn: getHackerRankStats,
+    },
+    {
+      key: "codechef",
+      value: codechef,
+      isUrl: false,
+      fetchFn: getCodeChefStats,
+    },
+    { key: "github", value: github, isUrl: false, fetchFn: getGithubStats },
+    {
+      key: "codeforces",
+      value: codeforces,
+      isUrl: false,
+      fetchFn: getCodeforcesStats,
+    },
+    {
+      key: "skillrack",
+      value: skillrack,
+      isUrl: true,
+      fetchFn: getSkillrackStats,
+    },
   ];
 
-  const statsEntries = await Promise.all(
-    platforms.map(async ([key, value, isUrl, fetchFn]) => {
+  const statsEntries = await Promise.allSettled(
+    platforms.map(async ({ key, value, isUrl, fetchFn }) => {
       const platformName = key.charAt(0).toUpperCase() + key.slice(1);
 
       if (!value || (isUrl && !value.startsWith("http"))) {
@@ -143,6 +168,10 @@ async function getStatsForStudent(student, oldStats = {}) {
     })
   );
 
+  const finalStats = Object.fromEntries(
+    statsEntries.map((entry) => entry.value)
+  );
+
   console.log(`✅ Finished fetching all platforms for: ${name} (${rollNo})`);
 
   return {
@@ -153,7 +182,7 @@ async function getStatsForStudent(student, oldStats = {}) {
     year,
     department,
     section,
-    stats: Object.fromEntries(statsEntries),
+    stats: finalStats,
   };
 }
 
@@ -224,7 +253,9 @@ app.get("/api/students/refetch", async (req, res) => {
 
         // Only overwrite platforms whose stats did not have an error
         const mergedStats = { ...student.stats };
-        for (const [platform, platformStats] of Object.entries(updatedStats.stats)) {
+        for (const [platform, platformStats] of Object.entries(
+          updatedStats.stats
+        )) {
           if (!platformStats.error) {
             mergedStats[platform] = platformStats;
           }
