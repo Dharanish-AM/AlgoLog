@@ -8,9 +8,14 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store.js";
 import { Toaster } from "react-hot-toast";
 import AuthPage from "./pages/AuthPage.jsx";
-import { checkTokenValidity, handleGetUser } from "./services/authOperations.js";
+import {
+  checkTokenValidity,
+  handleGetUser,
+} from "./services/authOperations.js";
 import { GridLoader } from "react-spinners";
 import DepartmentDash from "./pages/department/DepartmentDash.jsx";
+import ClassList from "./pages/department/ClassList.jsx";
+import DepartmentChart from "./pages/department/DepartmentChart.jsx";
 
 function AppContent() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -57,7 +62,6 @@ function AppContent() {
     handleCheckValidity();
   }, [token]);
 
-
   if (loading && !role) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -71,15 +75,22 @@ function AppContent() {
       <BrowserRouter>
         <Routes>
           {!isAuthenticated ? (
-            <Route path="/" element={<AuthPage />} />
+            <>
+              <Route path="/" element={<AuthPage />} />
+              <Route path="*" element={<AuthPage />} />
+            </>
           ) : role === "class" ? (
             <>
               <Route path="/" element={<Dashboard />} />
               <Route path="/chart" element={<Chart />} />
+              <Route path="*" element={<Dashboard />} />
             </>
           ) : role === "department" ? (
             <>
               <Route path="/" element={<DepartmentDash />} />
+              <Route path="/class/:id" element={<ClassList />} />
+              <Route path="/chart" element={<DepartmentChart />} />
+              <Route path="*" element={<DepartmentDash />} />
             </>
           ) : null}
         </Routes>

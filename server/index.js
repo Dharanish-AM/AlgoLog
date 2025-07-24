@@ -6,7 +6,7 @@ const dotenv = require("dotenv");
 const cron = require("node-cron");
 const Class = require("./models/classSchema");
 const Admin = require("./models/adminSchema");
-const PORT = process.env.PORT || 8000
+const PORT = process.env.PORT || 8000;
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const {
@@ -654,6 +654,29 @@ app.post("/api/class/register", async (req, res) => {
   }
 });
 
+app.post("/api/department/login", async (req, res) => {
+  const { departmentId, password } = req.body;
+  if (!departmentId || !password) {
+    return res.status(400).json({ message: "All fields required" });
+  }
+
+  const department = await Department.findById(departmentId);
+  if (!department || !department.password) {
+    return res.status(404).json({ message: "Department not found" });
+  }
+
+  const isMatch = await bcrypt.compare(password, department.password);
+  if (!isMatch) {
+    return res.status(401).json({ message: "Incorrect password" });
+  }
+
+  const token = await generateToken(department.name, department._id);
+  const deptWithoutPass = department.toObject();
+  delete deptWithoutPass.password;
+
+  res.status(200).json({ token, department: deptWithoutPass });
+});
+
 app.get("/api/departments", async (req, res) => {
   try {
     const departments = await Department.find({}).populate("classes");
@@ -676,12 +699,18 @@ app.post("/api/department/create", async (req, res) => {
       return res.status(400).json({ error: "Department name is required" });
     }
 
-    const existing = await Department.findOne({ name });
+    const existing = await Department.findOne({
+      name: new RegExp(`^${name}$`, "i"),
+    });
     if (existing) {
       return res.status(409).json({ error: "Department already exists" });
     }
 
+    const pass = `${name}@123`;
+    const hashPass = await bcrypt.hash(pass, 10);
+
     const newDepartment = new Department({ name, classes: [] });
+    newDepartment.password = hashPass;
     await newDepartment.save();
 
     res.status(201).json({
@@ -696,7 +725,7 @@ app.post("/api/department/create", async (req, res) => {
 
 app.post("/api/check-token", async (req, res) => {
   try {
-    const token = req.body.token; 
+    const token = req.body.token;
     if (!token) {
       return res.status(400).json({ message: "Token is required" });
     }
@@ -745,8 +774,8 @@ app.post("/api/class/change-password", async (req, res) => {
 });
 
 app.post("/api/get-user", async (req, res) => {
-  try { 
-    const token = req.body?.token
+  try {
+    const token = req.body?.token;
     if (!token) {
       return res.status(400).json({ message: "Token is required" });
     }
@@ -756,30 +785,40 @@ app.post("/api/get-user", async (req, res) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const [admin, classData, departmentData] = await Promise.all([
+    const [departmentData, admin, classData] = await Promise.all([
+      Department.findById(decoded.id)
+        .select("+password")
+        .populate({
+          path: "classes",
+          populate: {
+            path: "students",
+            model: "Student",
+            populate: {
+              path: "department",
+              select: "-password -classes",
+            },
+          },
+        }),
       Admin.findById(decoded.id),
       Class.findById(decoded.id).populate("department"),
-      Department.findById(decoded.id).populate({
-        path: "classes",
-        populate: {
-          path: "students",
-          model: "Student",
-        },
-      }),
     ]);
+
+    if (departmentData) {
+      return res.status(200).json({ user: departmentData, role: "department" });
+    }
 
     if (admin) {
       const { password, ...adminWithoutPassword } = admin.toObject();
-      return res.status(200).json({ user: adminWithoutPassword, role: "admin" });
+      return res
+        .status(200)
+        .json({ user: adminWithoutPassword, role: "admin" });
     }
 
     if (classData) {
       const { password, ...classWithoutPassword } = classData.toObject();
-      return res.status(200).json({ user: classWithoutPassword, role: "class" });
-    }
-
-    if (departmentData) {
-      return res.status(200).json({ user: departmentData, role: "department" });
+      return res
+        .status(200)
+        .json({ user: classWithoutPassword, role: "class" });
     }
 
     return res.status(404).json({ message: "User not found" });
@@ -896,10 +935,11 @@ app.get("/api/admin/get-admin", async (req, res) => {
 
 app.get("/api/admin/get-departments", async (req, res) => {
   try {
-    const departments = await Department.find();
+    const departments = await Department.find().select("-password");
     res.status(200).json({ departments });
   } catch (err) {
     console.error("Error fetching departments:", err);
+    rt;
     res.status(500).json({ message: "Failed to fetch departments" });
   }
 });
@@ -1047,6 +1087,18 @@ app.post("/api/student/change-password", async (req, res) => {
 
 // tmp();
 
+// const temp = async()=>{
+//   console.log("START")
+//   const departments = await Department.find()
+//   const pass = "cse@123"
+//   const hashPass = await bcrypt.hash(pass,10)
+
+//   departments.forEach(async(d)=>{
+//     d.password = hashPass
+//     await d.save()
+//   })
+//   console.log("END")
+// }
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

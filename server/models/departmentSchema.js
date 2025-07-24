@@ -6,6 +6,9 @@ const departmentSchema = new mongoose.Schema({
     type: [mongoose.Schema.Types.ObjectId],
     ref: "Class",
   },
+  password:{
+    type:String
+  }
 });
 
 const Department = mongoose.model("Department", departmentSchema);

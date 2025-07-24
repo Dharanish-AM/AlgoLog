@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import axios from "axios";
+import { loginDepartment } from "../services/authOperations";
 
 export default function DepartmentLogin() {
   const [formData, setFormData] = useState({ departmentId: "", password: "" });
@@ -29,7 +30,7 @@ export default function DepartmentLogin() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await loginDepartment(formData, dispatch); // call auth service
+      const response = await loginDepartment(formData, dispatch); 
       if (response?.status === 200) {
         toast.success("Login Success!");
         window.location.reload();

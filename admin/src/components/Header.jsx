@@ -74,7 +74,7 @@ export default function Header({}) {
           name: student.name,
           email: student.email,
           rollNo: student.rollNo,
-          department,
+          department: department.name,
           year,
           section,
           leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,

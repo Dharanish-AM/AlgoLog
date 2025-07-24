@@ -5,18 +5,45 @@ export const loginClass = async (formData, dispatch) => {
   try {
     const response = await axios.post(`${API_URL}/api/class/login`, formData);
     if (response.status === 200 && response.data) {
-      console.log("Login Data :", response.data)
+      console.log("Login Data :", response.data);
       dispatch({
         type: "SET_USER",
         payload: {
           token: response.data.token,
           class: response.data.class,
           isAuthenticated: true,
-          role:"class"
+          role: "class",
         },
       });
       localStorage.setItem("token", response.data.token);
       console.log("Class Login Success!");
+      return response;
+    } else {
+      console.error("Login failed with status:", response.status);
+      throw new Error("Login failed. Please try again.");
+    }
+  } catch (err) {
+    console.error("Error while Login:", err);
+    throw err;
+  }
+};
+
+export const loginDepartment = async (formData, dispatch) => {
+  try {
+    const response = await axios.post(`${API_URL}/api/department/login`, formData);
+    if (response.status === 200 && response.data) {
+      console.log("Login Data :", response.data);
+      dispatch({
+        type: "SET_USER",
+        payload: {
+          token: response.data.token,
+          class: response.data.class,
+          isAuthenticated: true,
+          role: "department",
+        },
+      });
+      localStorage.setItem("token", response.data.token);
+      console.log("Department Login Success!");
       return response;
     } else {
       console.error("Login failed with status:", response.status);
@@ -50,9 +77,9 @@ export const handleGetUser = async (token) => {
       token,
     });
     if (response.status === 200) {
-      console.log("GOt User: ", response.data)
+      console.log("GOt User: ", response.data);
       return response.data;
-    } 
+    }
   } catch (error) {
     console.error("Error checking token validity:", error);
     throw error;

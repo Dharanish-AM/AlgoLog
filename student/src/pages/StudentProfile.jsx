@@ -38,8 +38,6 @@ const StudentProfile = ({
     useState(false);
   const modalOptionsRed = useRef();
 
-console.log("Student Data:", JSON.stringify(student, null, 2));
-
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
