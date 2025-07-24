@@ -80,7 +80,7 @@ export default function Dashboard() {
                 setSelectedClass("");
               }}
               size={26}
-              className="inline block cursor-pointer mr-2 text-gray-500 dark:text-gray-400"
+              className="block cursor-pointer mr-2 text-gray-500 dark:text-gray-400"
             />
             <p className="text-2xl font-bold text-gray-900 dark:text-white">
               {selectedDepartmentName} - {selectedClass.username}

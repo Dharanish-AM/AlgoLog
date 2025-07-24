@@ -69,7 +69,7 @@ export default function ClassesList({
             <div
               key={cls._id}
               onClick={() => setSelectedClass(cls)}
-              className="bg-white flex flex-col gap-2 dark:bg-gray-800 relative p-6 rounded-lg shadow hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out border border-gray-200 dark:border-gray-700 cursor-pointer flex flex-col items-start justify-center text-center"
+              className="bg-white mt-2 flex-col gap-2 dark:bg-gray-800 relative p-6 rounded-lg shadow hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out border border-gray-200 dark:border-gray-700 cursor-pointer flex items-start justify-center text-center"
             >
               <Edit
                 size={20}
