@@ -38,7 +38,7 @@ const StudentProfile = ({
     useState(false);
   const modalOptionsRed = useRef();
 
-  console.log(student);
+console.log("Student Data:", JSON.stringify(student, null, 2));
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -242,7 +242,7 @@ const StudentProfile = ({
                 <span>Department</span>
               </label>
 
-              <p className="text-white">{student.department}</p>
+              <p className="text-white">{student.department.name}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
@@ -294,7 +294,7 @@ const StudentProfile = ({
                 <div className="text-sm text-gray-400">Total Solved</div>
               </div>
               <div className="bg-gray-700 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600">
-                <div className="text-xl font-bold text-white">
+                <div className="text-xl font-bold text-purple-400">
                   #
                   {student.stats.leetcode.globalRanking
                     ? student.stats.leetcode.globalRanking.toLocaleString()
@@ -381,7 +381,6 @@ const StudentProfile = ({
                                 ✅ Problems Solved: {contest.problemsSolved}/
                                 {contest.totalProblems}
                               </div>
-                              <div>📉 Trend: {contest.trendDirection}</div>
                               <div>
                                 ⏱️ Finish Time:{" "}
                                 {contest.finishTimeInSeconds >= 3600
@@ -611,7 +610,7 @@ const StudentProfile = ({
             </div>
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-white">
+                <div className="text-2xl font-bold text-purple-400">
                   {student.stats.github.totalCommits}
                 </div>
                 <div className="text-sm text-gray-400">Total Commits</div>

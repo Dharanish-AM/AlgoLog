@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Dashboard from "./pages/Dashboard.jsx";
 import { ThemeProvider } from "./context/ThemeContext.jsx";
 import "./index.css";
@@ -8,12 +8,15 @@ import { Provider, useDispatch, useSelector } from "react-redux";
 import store from "./redux/store.js";
 import { Toaster } from "react-hot-toast";
 import AuthPage from "./pages/AuthPage.jsx";
-import { checkTokenValidity, getClass } from "./services/authOperations.js";
+import { checkTokenValidity, handleGetUser } from "./services/authOperations.js";
 import { GridLoader } from "react-spinners";
+import DepartmentDash from "./pages/department/DepartmentDash.jsx";
 
 function AppContent() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+  const role = useSelector((state) => state.auth.role); //class, department
   const token = localStorage.getItem("token");
+  localStorage.setItem("theme", "dark");
   const [loading, setLoading] = React.useState(true);
   const dispatch = useDispatch();
 
@@ -31,14 +34,16 @@ function AppContent() {
           setLoading(false);
           return;
         }
-        const classuser = await getClass(token);
-        if (classuser) {
+        const res = await handleGetUser(token);
+        if (res) {
           dispatch({
             type: "SET_AUTH",
             payload: {
               isAuthenticated: true,
-              class: classuser,
+              class: res.user,
+              department: res.user,
               token: token,
+              role: res.role,
             },
           });
         }
@@ -52,7 +57,8 @@ function AppContent() {
     handleCheckValidity();
   }, [token]);
 
-  if (loading) {
+
+  if (loading && !role) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
         <GridLoader color="#C084FC" size={20} />
@@ -64,16 +70,18 @@ function AppContent() {
     <ThemeProvider toastOptions={{ duration: 9000 }}>
       <BrowserRouter>
         <Routes>
-          {isAuthenticated ? (
+          {!isAuthenticated ? (
+            <Route path="/" element={<AuthPage />} />
+          ) : role === "class" ? (
             <>
               <Route path="/" element={<Dashboard />} />
               <Route path="/chart" element={<Chart />} />
             </>
-          ) : (
+          ) : role === "department" ? (
             <>
-              <Route path="/" element={<AuthPage />} />
+              <Route path="/" element={<DepartmentDash />} />
             </>
-          )}
+          ) : null}
         </Routes>
       </BrowserRouter>
       <Toaster position="bottom-right" />

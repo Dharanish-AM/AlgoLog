@@ -11,6 +11,7 @@ function App() {
   const [student, setStudent] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
+  const [departments, setDepartments] = React.useState([]);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -19,6 +20,19 @@ function App() {
     }
     if (!token) setIsLoading(false);
   }, []);
+
+  const fetchDepartments = async () => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/departments`
+      );
+      setDepartments(response.data.departments);
+      console.log(response.data.departments);
+    } catch (err) {
+      console.error("Error fetching departments:", err);
+      toast.error("Failed to fetch departments.");
+    }
+  };
 
   const handleLogin = async (rollNo, password) => {
     setIsLoading(true);
@@ -43,6 +57,30 @@ function App() {
       toast.error(
         "Login failed: " + (err.response?.data?.message || err.message)
       );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignup = async (formData) => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/students`,
+        formData
+      );
+
+      if (response.status === 201 || response.status === 200) {
+        console.log("Signup successful:", response.data);
+        toast.success("Signup Successful!");
+        return true;
+      }
+    } catch (err) {
+      console.error("Signup failed:", err?.response?.data || err.message);
+      toast.error(
+        "Signup failed: " + (err.response?.data?.message || err.message)
+      );
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -169,7 +207,17 @@ function App() {
     <Router>
       <Routes>
         {!isAuthenticated ? (
-          <Route path="*" element={<Auth handleLogin={handleLogin} />} />
+          <Route
+            path="*"
+            element={
+              <Auth
+                handleSignup={handleSignup}
+                fetchDepartments={fetchDepartments}
+                handleLogin={handleLogin}
+                departments={departments}
+              />
+            }
+          />
         ) : (
           <Route
             path="*"

@@ -35,7 +35,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         name: student.name || "",
         email: student.email || "",
         rollNo: student.rollNo || "",
-        department: student.department || "",
+        department: student.departmen.name || "",
         year: student.year || "",
         section: student.section || "",
         leetcode: student?.leetcode || "",

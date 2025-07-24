@@ -56,7 +56,7 @@ export default function Header({}) {
     const csv = Papa.unparse(
       sortedStudents.map((student) => {
         const department =
-          typeof student.department === "string"
+          typeof student.department.name === "string"
             ? student.department
             : student.department?.name || "N/A";
 

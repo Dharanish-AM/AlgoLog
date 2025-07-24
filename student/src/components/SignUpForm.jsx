@@ -1,33 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Axis3DIcon, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
-import { getDepartments } from "../services/studentOperations";
 
-const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
+const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     rollNo: "",
     year: "",
-    section: "",
     department: "",
+    section: "",
     leetcode: "",
     hackerrank: "",
     codechef: "",
     codeforces: "",
     skillrack: "",
     github: "",
-  });
-  const [departments, setDepartments] = useState([]);
-  const token = localStorage.getItem("token");
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      const dpt = await getDepartments(token, dispatch);
-      setDepartments(dpt);
-    };
-    fetchDepartments();
   });
 
   const handleSubmit = (e) => {
@@ -41,6 +29,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
       skillrack: formData.skillrack.trim(),
       github: formData.github.trim(),
     };
+    console.log("Submitting form data:", trimmedData);
     onClose();
     onSubmit(trimmedData);
   };
@@ -48,11 +37,11 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50">
       <div className="scrollbar-hide bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-[50vw] max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Add New Student
+            Register
           </h2>
           <button
             onClick={onClose}
@@ -109,7 +98,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
               type: "text",
               required: false,
             },
-          ].map(({ label, key, type = "text", required }, index) => (
+          ].map(({ label, key, type = "text", required }) => (
             <React.Fragment key={key}>
               {key === "section" ? (
                 <>
@@ -135,6 +124,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                       ))}
                     </select>
                   </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                       Department
@@ -183,7 +173,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                         : `Enter ${label.toLowerCase()}`
                     }
                     onChange={(e) => {
-                      let value = e.target.value;
+                      let value = key === "rollNo" ? e.target.value.toUpperCase() : e.target.value;
                       if (
                         key === "leetcode" ||
                         key === "hackerrank" ||
@@ -200,7 +190,7 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                           value = "https://" + value.slice(7); // Enforce https for skillrack
                         }
                       }
-                      setFormData({ ...formData, [key]: key === "rollNo" ? value.toUpperCase() : value });
+                      setFormData({ ...formData, [key]: value });
                     }}
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   />
@@ -242,13 +232,13 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
               onClick={onClose}
               className="text-sm px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
             >
-              Cancel
+              Back
             </button>
             <button
               type="submit"
               className="text-sm px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
-              Add Student
+              Submit
             </button>
           </div>
         </form>
@@ -257,4 +247,4 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
   );
 };
 
-export default AddStudentModal;
+export default SignUpForm;

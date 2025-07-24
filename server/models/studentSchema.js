@@ -10,7 +10,11 @@ const studentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Class",
     },
-    department: { type: String, required: true },
+    department: {
+      type: mongoose.Schema.ObjectId,
+      ref: "Department",
+      required: true,
+    },
     section: { type: String, required: true },
     year: { type: String, required: true },
     leetcode: { type: String, required: true },

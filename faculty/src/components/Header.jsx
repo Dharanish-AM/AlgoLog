@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import logo from "../../../mentor/algolog.png";
+import logo from "../../../faculty/algolog.png";
 import {
   BarChart,
   Code,
@@ -38,8 +38,6 @@ export default function Header() {
   const [addLoading, setAddLoading] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
-  console.log(classUser);
-
   const handleRefreshData = async () => {
     try {
       setLoading(true);
@@ -61,18 +59,14 @@ export default function Header() {
 
   const handleAddStudent = async (newStudent) => {
     setAddLoading(true);
+    console.log("newStudent, ",newStudent)
     try {
-      const response = await addStudent(
-        newStudent,
-        classUser._id,
-        token,
-        dispatch
-      );
+      const response = await addStudent(newStudent, token, dispatch);
       if (response?.status === 200 || response?.status === 201) {
         setIsAddModalOpen(false);
         toast.success("Student added successfully!");
       } else {
-        toast.error("Failed to add student.", error);
+        toast.error("Failed to add student.");
       }
     } catch (err) {
       console.error("Error adding student:", err);
@@ -90,7 +84,7 @@ export default function Header() {
     const csv = Papa.unparse(
       sortedStudents.map((student) => {
         const department =
-          typeof student.department === "string"
+          typeof student.department.name === "string"
             ? student.department
             : student.department?.name || "N/A";
 
@@ -150,9 +144,12 @@ export default function Header() {
           <MoonLoader color="#C084FC" size={40} />
         </div>
       )}
-      <div onClick={()=>{
-        window.location.reload();
-      }} className="flex cursor-pointer items-center">
+      <div
+        onClick={() => {
+          window.location.reload();
+        }}
+        className="flex cursor-pointer items-center"
+      >
         <img
           src={logo}
           alt="AlgoLog Logo"

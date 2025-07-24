@@ -27,11 +27,11 @@ export const getStudents = async (classId, token, dispatch) => {
   }
 };
 
-export const addStudent = async (newStudent, classId, token, dispatch) => {
+export const addStudent = async (newStudent, token, dispatch) => {
   try {
     const response = await axios.post(
       `${API_URL}/api/students`,
-      { newStudent, classId },
+       newStudent ,
       {
         headers: {
           Authorization: `Bearer ${token}`,

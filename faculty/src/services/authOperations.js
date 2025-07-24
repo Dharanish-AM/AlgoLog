@@ -5,12 +5,14 @@ export const loginClass = async (formData, dispatch) => {
   try {
     const response = await axios.post(`${API_URL}/api/class/login`, formData);
     if (response.status === 200 && response.data) {
+      console.log("Login Data :", response.data)
       dispatch({
         type: "SET_USER",
         payload: {
           token: response.data.token,
           class: response.data.class,
           isAuthenticated: true,
+          role:"class"
         },
       });
       localStorage.setItem("token", response.data.token);
@@ -28,7 +30,7 @@ export const loginClass = async (formData, dispatch) => {
 
 export const checkTokenValidity = async (token) => {
   try {
-    const response = await axios.post(`${API_URL}/api/class/check-token`, {
+    const response = await axios.post(`${API_URL}/api/check-token`, {
       token,
     });
     if (response.status === 200) {
@@ -42,18 +44,17 @@ export const checkTokenValidity = async (token) => {
   }
 };
 
-export const getClass = async (token) => {
+export const handleGetUser = async (token) => {
   try {
-    const response = await axios.get(`${API_URL}/api/class/get-class`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+    const response = await axios.post(`${API_URL}/api/get-user`, {
+      token,
     });
     if (response.status === 200) {
-      return response.data.class;
-    }
+      console.log("GOt User: ", response.data)
+      return response.data;
+    } 
   } catch (error) {
-    console.error("Error fetching class data:", error);
+    console.error("Error checking token validity:", error);
     throw error;
   }
 };
@@ -65,10 +66,7 @@ export const changePassword = async (
   token
 ) => {
   try {
-    console.log(classId,
-  oldPassword,
-  newPassword,
-  token)
+    console.log(classId, oldPassword, newPassword, token);
     const response = await axios.post(
       `${API_URL}/api/class/change-password`,
       {

@@ -1,15 +1,37 @@
-import React from "react";
+import React, { useEffect } from "react";
 import logo from "/algolog.png";
 import Lottie from "lottie-react";
 import Animation from "../assets/Animation - 1747407322934.json";
+import SignUpForm from "../components/SignUpForm";
+import LoginForm from "../components/LoginForm";
 
-export default function Auth({ handleLogin }) {
+export default function Auth({
+  handleLogin,
+  handleSignup,
+  fetchDepartments,
+  departments
+}) {
   const [rollNo, setRollNo] = React.useState("");
   const [password, setPassword] = React.useState("");
+  const [isSignup, setIsSignup] = React.useState(false);
 
-  const submitLogin = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    if (isSignup) {
+      fetchDepartments();
+    }
+  }, [isSignup]);
+
+  const submitLogin = async () => {
     handleLogin(rollNo, password);
+  };
+
+  const submitSignup =async (formData) => {
+    const res = await handleSignup(formData);
+    if (res) {
+      setIsSignup(false);
+      setRollNo("");
+      setPassword("");
+    }
   };
 
   return (
@@ -24,37 +46,23 @@ export default function Auth({ handleLogin }) {
       </div>
       <div className="flex">
         <div className="w-full sm:h-full h-[35rem] sm:w-1/2 flex items-center justify-center ">
-          <div className="sm:mt-10 sm:w-[26rem] w-fit p-6 rounded-2xl border border-[#7E8391] backdrop-blur-md shadow-md">
-            <h2 className="text-2xl font-bold mb-4 text-white text-center">
-              Hey Coder! 👋
-            </h2>
-            <p className="text-sm text-gray-400 text-center mb-6">
-              Let’s help you track your coding journey and shine through your
-              progress.
-            </p>
-            <form onSubmit={submitLogin} className="flex flex-col gap-4">
-              <input
-                type="text"
-                placeholder="Enter your roll number"
-                value={rollNo}
-                onChange={(e) => setRollNo(e.target.value)}
-                className="px-4 py-3 rounded-md bg-[#1F2937] text-sm text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <input
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="px-4 py-3 rounded-md bg-[#1F2937] text-sm text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
-              />
-              <button
-                type="submit"
-                className="bg-purple-600 cursor-pointer hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded-md shadow-md"
-              >
-                Login
-              </button>
-            </form>
-          </div>
+          {isSignup ? (
+            <SignUpForm
+              onClose={() => setIsSignup(false)}
+              isOpen={isSignup}
+              onSubmit={submitSignup}
+              departments={departments}
+            />
+          ) : (
+            <LoginForm
+              submitLogin={submitLogin}
+              rollNo={rollNo}
+              setRollNo={setRollNo}
+              password={password}
+              setPassword={setPassword}
+              setIsSignup={() => setIsSignup(true)}
+            />
+          )}
         </div>
         <div className="w-1/2 hidden sm:flex items-center justify-center">
           <Lottie

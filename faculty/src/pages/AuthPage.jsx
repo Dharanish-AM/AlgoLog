@@ -4,13 +4,14 @@ import Illustration from "../assets/Coding workshop-bro.png";
 import Lottie from "lottie-react";
 import Animation from "../assets/Animation - 1747407322934.json";
 import { useState } from "react";
-import StudentLogin from "../components/StudentLogin";
-import logo from "../../../mentor/algolog.png";
+import logo from "../../../faculty/algolog.png";
 import TutorLogin from "../components/TutorLogin";
 import Animation1 from "../assets/Animation - 1747407322934.json";
+import DepartmentLogin from "../components/DepartmentLogin";
 import { Headphones, HeadphonesIcon, LucideHeadphones } from "lucide-react";
 
 export default function AuthPage() {
+  const [isDepartmentLogin, setIsDepartmentLogin] = useState(false);
   return (
     <div className="min-h-screen bg-[#141B2A] flex flex-col px-4 py-8 relative">
       <div className="absolute top-4 left-4 flex items-center">
@@ -30,7 +31,27 @@ export default function AuthPage() {
                 Track, assess, and guide student coders.
               </p>
             </h2>
-            <TutorLogin />
+            {isDepartmentLogin ? (
+              <DepartmentLogin
+                switchTutor={() => {
+                  setIsDepartmentLogin(false);
+                }}
+              />
+            ) : (
+              <TutorLogin
+                switchDept={() => {
+                  setIsDepartmentLogin(true);
+                }}
+              />
+            )}
+            <p
+              className="mt-6 text-center text-sm text-gray-400 cursor-pointer hover:underline"
+              onClick={() => setIsDepartmentLogin(!isDepartmentLogin)}
+            >
+              {isDepartmentLogin
+                ? "Login as Faculty instead?"
+                : "Login as Department instead?"}
+            </p>
           </div>
         </div>
         <div className="w-1/2 flex items-center justify-center">
@@ -42,13 +63,13 @@ export default function AuthPage() {
           />
         </div>
       </div>
-      <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-400 bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
         Made by{" "}
         <a
           href="https://github.com/Dharanish-AM"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 dark:text-purple-400 hover:underline"
+          className="text-purple-400 hover:underline"
         >
           @dharanisham
         </a>
