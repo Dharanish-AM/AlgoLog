@@ -90,6 +90,7 @@ function AppContent() {
               <Route path="/" element={<DepartmentDash />} />
               <Route path="/class/:id" element={<ClassList />} />
               <Route path="/chart" element={<DepartmentChart />} />
+              <Route path="/chart/class/:id" element={<DepartmentChart />} />
               <Route path="*" element={<DepartmentDash />} />
             </>
           ) : null}

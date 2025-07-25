@@ -37,7 +37,8 @@ export default function Header() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [addLoading, setAddLoading] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-
+  console.log(classId);
+  
   useEffect(() => {
     const currentClass = classes.find((cls) => cls._id === classId);
     setSelectedClass(currentClass);
@@ -230,14 +231,7 @@ export default function Header() {
           }}
           className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"
         >
-          {location.pathname === "/" ? (
-            <>
-              <BarChart className="w-5 h-5 text-gray-800 dark:text-gray-100" />
-              <span className="text-sm text-gray-900 dark:text-gray-100">
-                View Chart
-              </span>
-            </>
-          ) : location.pathname === "/chart" ? (
+          {location.pathname === "/chart" ? (
             <>
               <LayoutDashboard className="w-5 h-5 text-gray-800 dark:text-gray-100" />
               <span className="text-sm text-gray-900 dark:text-gray-100">
@@ -246,9 +240,9 @@ export default function Header() {
             </>
           ) : (
             <>
-              <LayoutDashboard className="w-5 h-5 text-gray-800 dark:text-gray-100" />
+              <BarChart className="w-5 h-5 text-gray-800 dark:text-gray-100" />
               <span className="text-sm text-gray-900 dark:text-gray-100">
-                View Dashboard
+                View Chart
               </span>
             </>
           )}
