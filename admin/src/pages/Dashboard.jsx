@@ -24,19 +24,19 @@ export default function Dashboard() {
     fetchClasses();
   }, []);
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch({
       type: "SET_CURRENT_DEPARTMENT",
       payload: selectedDepartment,
-    })
-  },[selectedDepartment])
+    });
+  }, [selectedDepartment]);
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch({
       type: "SET_CURRENT_CLASS",
       payload: selectedClass,
-    })
-  },[selectedClass])
+    });
+  }, [selectedClass]);
 
   const fetchClasses = async () => {
     await getClasses(token, dispatch);
@@ -86,9 +86,7 @@ export default function Dashboard() {
               {selectedDepartmentName} - {selectedClass.username}
             </p>
           </div>
-          <StudentTable
-            students={selectedClass.students}
-          />
+          <StudentTable students={selectedClass.students} />
         </div>
       )}
     </div>

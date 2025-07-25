@@ -2,7 +2,8 @@ import { X } from "lucide-react";
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { addClass } from "../services/adminOperations";
+import { addClass, getDepartments } from "../services/adminOperations";
+import { useEffect } from "react";
 
 export default function AddClass({ onClose }) {
   const [formData, setFormData] = useState({
@@ -16,6 +17,12 @@ export default function AddClass({ onClose }) {
   const dispatch = useDispatch();
 
   const departments = useSelector((state) => state.admin.departments);
+
+  useEffect(() => {
+    if (!departments || departments.length === 0) {
+      getDepartments(token, dispatch);
+    }
+  }, [departments, dispatch, token]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -130,7 +137,7 @@ export default function AddClass({ onClose }) {
               className="text-sm w-full px-3 py-3 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
             >
               <option value="">Select a department</option>
-              {departments.map((dept) => (
+              {departments?.map((dept) => (
                 <option key={dept._id} value={dept._id}>
                   {dept.name}
                 </option>

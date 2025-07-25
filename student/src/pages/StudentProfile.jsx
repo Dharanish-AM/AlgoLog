@@ -352,7 +352,7 @@ const StudentProfile = ({
                     <h4 className="text-white text-lg font-semibold">
                       Contest History
                     </h4>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 scrollbar-hide">
+                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-10 scrollbar-custom">
                       {[...student.stats.leetcode.contests]
                         .sort((a, b) => b.startTime - a.startTime)
                         .map((contest, index) => (

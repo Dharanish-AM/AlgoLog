@@ -77,7 +77,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
         />
       ) : (
         <div className="fixed inset-0 bg-black/50 bg-opacity-50 flex justify-center items-center z-50">
-          <div className="scrollbar-hide bg-gradient-radial min-w-[75vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+          <div className="scrollbar-hide bg-[#1F2937] bg-gradient-radial min-w-[75vw] h-[90vh] from-white via-white to-gray-50 dark:from-gray-800 dark:via-gray-800 dark:to-gray-900 rounded-xl shadow-lg overflow-auto transition-all duration-300 border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
             <div className="bg-gradient-to-r from-purple-800 to-secondary-600 p-6 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-purple-500/20 backdrop-blur-sm"></div>
               <div className="relative flex items-center gap-6">
@@ -100,8 +100,8 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   </p>
                   <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
                   <p className="text-blue-100 text-sm">
-                    {student.name} | {student.rollNo} | {student.department.name}-
-                    {student.section} | {student.year}
+                    {student.name} | {student.rollNo} |{" "}
+                    {student.department.name}-{student.section} | {student.year}
                   </p>
                   <p className="text-gray-400 text-xs">
                     Last Updated:{" "}
@@ -130,7 +130,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 p-8">
               <div className="space-y-6 border border-gray-700 bg-white/50 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <Code size={24} className="text-primary-500" />
+                  <Code size={24} className="text-amber-500" />
                   <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                     LeetCode
                   </h4>
@@ -140,7 +140,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-primary-500 hover:text-primary-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-4">
@@ -148,7 +148,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     <span className="text-gray-600 dark:text-gray-300">
                       Problems Solved:
                     </span>
-                    <span className="font-semibold text-primary-600 dark:text-primary-400">
+                    <span className="font-semibold text-gray-50">
                       {leetcodeTotal}
                     </span>
                   </div>
@@ -315,7 +315,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-purple-500 hover:text-purple-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-4">
@@ -396,7 +396,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
               </div>
               <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <Trophy size={24} className="text-secondary-500" />
+                  <Trophy size={24} className="text-green-500" />
                   <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                     HackerRank
                   </h4>
@@ -408,7 +408,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-secondary-500 hover:text-secondary-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-3">
@@ -416,7 +416,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     <span className="text-gray-600 dark:text-gray-300">
                       Top Badges:
                     </span>
-                    <span className="font-semibold text-secondary-600 dark:text-secondary-400">
+                    <span className="font-semibold text-gray-50">
                       {hackerrank?.badges?.length ?? "N/A"}
                     </span>
                   </div>
@@ -428,7 +428,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                           className="flex items-center justify-between bg-white dark:bg-gray-700/50 p-3 rounded-lg transform hover:scale-102 transition-transform"
                         >
                           <div className="flex items-center gap-3">
-                            <Award size={20} className="text-secondary-500" />
+                            <Award size={20} className="text-amber-500" />
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                               {badge.name}
                             </span>
@@ -465,7 +465,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-orange-500 hover:text-orange-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-4">
@@ -501,7 +501,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-blue-500 hover:text-blue-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-4">
@@ -545,7 +545,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
               </div>
               <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
                 <div className="flex items-center gap-3">
-                  <Trophy size={24} className="text-secondary-500" />
+                  <Trophy size={24} className="text-pink-500" />
                   <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                     GitHub
                   </h4>
@@ -555,7 +555,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     rel="noopener noreferrer"
                     className="ml-1 text-secondary-500 hover:text-secondary-700"
                   >
-                    <Link size={18} />
+                    <Link className="text-blue-500" size={18} />
                   </a>
                 </div>
                 <div className="space-y-3">
@@ -563,7 +563,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     <span className="text-gray-600 dark:text-gray-300">
                       Total Commits:
                     </span>
-                    <span className="font-semibold text-secondary-600 dark:text-secondary-400">
+                    <span className="font-semibold text-gray-50">
                       {github?.totalCommits ?? "N/A"}
                     </span>
                   </div>
@@ -572,7 +572,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     <span className="text-gray-600 dark:text-gray-300">
                       Public Repository:
                     </span>
-                    <span className="font-semibold text-secondary-600 dark:text-secondary-400">
+                    <span className="font-semibold text-gray-50">
                       {github?.totalRepos ?? "N/A"}
                     </span>
                   </div>
