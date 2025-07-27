@@ -4,7 +4,7 @@ const initialState = {
   students: [],
   currentDepartment: null,
   currentClass: null,
-  currentYear: null
+  currentYear: null,
 };
 
 export const adminReducer = (state = initialState, action) => {
@@ -38,6 +38,13 @@ export const adminReducer = (state = initialState, action) => {
       return {
         ...state,
         currentYear: action.payload,
+      };
+    case "UPDATE_STUDENT":
+      return {
+        ...state,
+        students: state.students.map((student) =>
+          student._id === action.payload._id ? action.payload : student
+        ),
       };
     default:
       return state;

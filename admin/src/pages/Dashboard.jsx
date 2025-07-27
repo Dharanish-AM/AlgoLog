@@ -1,12 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import Header from "../components/Header";
-import { getClasses, getDepartments } from "../services/adminOperations";
+import { getClasses, getDepartments, refetchSingleStudent } from "../services/adminOperations";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft } from "lucide-react";
 import StudentTable from "../components/StudentTable";
 import DepartmentsList from "../components/DepartmentsList";
 import ClassesList from "../components/ClassesList";
+import toast from "react-hot-toast";
 
 export default function Dashboard() {
   const departments = useSelector((state) => state.admin.departments);
@@ -37,6 +38,20 @@ export default function Dashboard() {
       payload: selectedClass,
     });
   }, [selectedClass]);
+
+    const handleRefetchSingleStudent = async (studentId) => {
+    try {
+      const reponse = await refetchSingleStudent(studentId, token, dispatch);
+      if (reponse?.status === 200 || reponse?.status === 201) {
+        toast.success("Student Refetched successfully!");
+      } else {
+        toast.error("Failed to Refetch student.");
+      }
+    } catch (error) {
+      console.error("Error fetching single student data:", error);
+    }
+  };
+
 
   const fetchClasses = async () => {
     await getClasses(token, dispatch);
@@ -86,7 +101,7 @@ export default function Dashboard() {
               {selectedDepartmentName} - {selectedClass.username}
             </p>
           </div>
-          <StudentTable students={selectedClass.students} />
+          <StudentTable handleRefetchSingleStudent={handleRefetchSingleStudent} students={selectedClass.students} />
         </div>
       )}
     </div>

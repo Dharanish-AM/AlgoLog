@@ -59,7 +59,7 @@ export default function Header() {
 
   const handleAddStudent = async (newStudent) => {
     setAddLoading(true);
-    console.log("newStudent, ",newStudent)
+    console.log("newStudent, ", newStudent);
     try {
       const response = await addStudent(newStudent, token, dispatch);
       if (response?.status === 200 || response?.status === 201) {
@@ -102,7 +102,7 @@ export default function Header() {
           name: student.name,
           email: student.email,
           rollNo: student.rollNo,
-          department:department.name,
+          department: department.name,
           year,
           section,
           leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
@@ -158,7 +158,7 @@ export default function Header() {
         <h1 className="ml-3 text-2xl font-bold text-purple-600 dark:text-purple-400">
           AlgoLog
         </h1>
-      </div>
+      </div>  
       <div className="flex items-center gap-4">
         <div className="text-sm text-gray-500 dark:text-gray-400">
           Last Updated:{" "}

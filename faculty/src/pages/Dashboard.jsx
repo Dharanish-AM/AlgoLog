@@ -4,7 +4,15 @@ import StudentTable from "../components/StudentTable.jsx";
 import StudentCard from "../components/StudentCard.jsx";
 import ThemeToggle from "../components/ThemeToggle.jsx";
 import AddStudentModal from "../components/AddStudentModal.jsx";
-import { Code, Download, Loader, Search, Upload, UserPlus, LogOut } from "lucide-react";
+import {
+  Code,
+  Download,
+  Loader,
+  Search,
+  Upload,
+  UserPlus,
+  LogOut,
+} from "lucide-react";
 import axios from "axios";
 import Papa from "papaparse";
 import toast from "react-hot-toast";
@@ -42,7 +50,7 @@ const Dashboard = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const students = await getStudents(classUser._id,token, dispatch);
+      const students = await getStudents(classUser._id, token, dispatch);
       setTotalCount(students ? students.length : 0);
       setLoading(false);
       setError(null);
@@ -185,6 +193,9 @@ const Dashboard = () => {
       <div className="mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Header />
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <span className="text-md font-semibold flex shrink-0 text-gray-50 px-4 rounded-xl py-4 mr-1 bg-purple-500">
+            {classUser.department.name} - {classUser.section}
+          </span>
           <div className="flex items-center gap-2 justify-center border dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 bg-white dark:bg-gray-800 rounded-xl shadow-sm px-10 py-4">
             <span className="dark:text-gray-100 item-center flex-shrink-0 justify-center text-sm">
               Total Students:{" "}

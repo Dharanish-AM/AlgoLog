@@ -91,3 +91,51 @@ export const editStudent = async (id, updatedData, token, dispatch) => {
     throw error;
   }
 };
+
+export const refetchSingleStudent = async (studentId, token, dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/students/refetch/single?id=${studentId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      const updatedStudent = response.data.student;
+      dispatch({
+        type: "UPDATE_STUDENT",
+        payload: updatedStudent,
+      });
+      return {
+        status: response.status,
+        student: updatedStudent,
+      };
+    }
+  } catch (error) {
+    console.error("Error fetching single student data:", error);
+    throw error;
+  }
+};
+
+export const refetchStudents = async (classId, token, dispatch) => {
+  try {
+    const response = await axios.get(
+      `${API_URL}/api/students/refetch?date=${new Date().toString()}&classId=${classId}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    if (response.status === 200) {
+      getDepartments(classId, token, dispatch);
+      getClasses(token, dispatch);
+      return response;
+    }
+  } catch (error) {
+    console.error("Error fetching students:", error);
+    throw error;
+  }
+};

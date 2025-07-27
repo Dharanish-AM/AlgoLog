@@ -3,10 +3,9 @@ import { ChevronRight, RefreshCw, X } from "lucide-react";
 import { Search } from "lucide-react";
 import StudentCard from "./StudentCard";
 
-const StudentTable = ({ students }) => {
+const StudentTable = ({ students, handleRefetchSingleStudent }) => {
   const [refreshingMap, setRefreshingMap] = useState({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [totalCount, setTotalCount] = useState(students ? students.length : 0);
   const [filteredStudents, setFilteredStudents] = useState(
     students ? students : []
   );
