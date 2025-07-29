@@ -3,10 +3,12 @@ import { useDispatch } from "react-redux";
 import toast from "react-hot-toast";
 import axios from "axios";
 import { loginDepartment } from "../services/authOperations";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function DepartmentLogin() {
   const [formData, setFormData] = useState({ departmentId: "", password: "" });
   const [departments, setDepartments] = useState([]);
+  const [showPassword, setShowPassword] = useState(false);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -75,15 +77,23 @@ export default function DepartmentLogin() {
           >
             Password
           </label>
-          <input
-            placeholder="Enter your password"
-            type="password"
-            id="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-            className="mt-1.5 text-white block w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
+          <div className="relative">
+            <input
+              placeholder="Enter your password"
+              type={showPassword ? "text" : "password"}
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className="mt-1.5 text-white block w-full px-3 py-3 bg-gray-700 border border-gray-600 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+            />
+            <div
+              className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400"
+              onClick={() => setShowPassword((prev) => !prev)}
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </div>
+          </div>
         </div>
 
         <button

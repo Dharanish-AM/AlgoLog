@@ -19,7 +19,7 @@ export default function Auth({
     if (isSignup) {
       fetchDepartments();
     }
-  }, [isSignup]);
+  }, [fetchDepartments, isSignup]);
 
   const submitLogin = async () => {
     handleLogin(rollNo, password);

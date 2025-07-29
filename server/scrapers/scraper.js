@@ -70,7 +70,7 @@ async function getLeetCodeStats(username) {
     }
   `;
   try {
-    const res = await axios.post("https://leetcode.com/graphql", {
+    const res = await axios.post("https:
       query,
       variables: { username },
     });
@@ -116,10 +116,10 @@ async function getLeetCodeStats(username) {
   }
 }
 
-// getLeetCodeStats("geethapriyans").then(console.log);
+
 
 async function getHackerRankStats(username) {
-  const url = `https://www.hackerrank.com/${username}`;
+  const url = `https:
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -174,10 +174,10 @@ async function getHackerRankStats(username) {
   }
 }
 
-//getHackerRankStats("ranajay_s2021").then(console.log);
+
 
 async function getCodeChefStats(username) {
-  const url = `https://www.codechef.com/users/${username}`;
+  const url = `https:
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -196,7 +196,7 @@ async function getCodeChefStats(username) {
         timeout: 15000,
       });
 
-      // Check for invalid profile
+      
       if (
         data.includes(
           "The username specified does not exist in our database."
@@ -216,7 +216,7 @@ async function getCodeChefStats(username) {
 
       const $ = cheerio.load(data);
 
-      // Extract rating
+      
       let rating = $("div.rating-number")
         .contents()
         .filter(function () {
@@ -226,7 +226,7 @@ async function getCodeChefStats(username) {
         .trim()
         .replace("?", "");
 
-      // Extract total problems solved
+      
       const solvedText = $("h3")
         .filter((i, el) => $(el).text().includes("Total Problems Solved"))
         .text()
@@ -284,11 +284,11 @@ async function getCodeChefStats(username) {
   }
 }
 
-// getCodeChefStats("iam_elango").then(console.log);
+
 
 async function getCodeforcesStats(username) {
-  const profileUrl = `https://codeforces.com/profile/${username}`;
-  const contestsUrl = `https://codeforces.com/contests/with/${username}`;
+  const profileUrl = `https:
+  const contestsUrl = `https:
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -370,7 +370,7 @@ async function getCodeforcesStats(username) {
   }
 }
 
-// getCodeforcesStats("guruvishal_30").then(console.log);
+
 
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
@@ -450,7 +450,7 @@ async function getSkillrackStats(resumeUrl) {
 }
 
 async function getTryHackMeStats(username) {
-  const url = `https://tryhackme.com/p/${username}`;
+  const url = `https:
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
 
@@ -481,7 +481,7 @@ async function getTryHackMeStats(username) {
   return stats;
 }
 
-//getTryHackMeStats("ben0309").then(console.log);
+
 
 async function getGithubStats(username) {
   try {
@@ -522,7 +522,7 @@ async function getGithubStats(username) {
 `;
 
     const res = await axios.post(
-      "https://api.github.com/graphql",
+      "https:
       { query },
       { headers }
     );
@@ -558,7 +558,7 @@ async function getGithubStats(username) {
   }
 }
 
-// getGithubStats("Dharanish-AM").then(console.log);
+
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 

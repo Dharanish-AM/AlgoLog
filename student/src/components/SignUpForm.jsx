@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Axis3DIcon, X } from "lucide-react";
+import { Axis3DIcon, X, Eye, EyeOff } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 
 const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
@@ -17,6 +17,8 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
     skillrack: "",
     github: "",
   });
+
+    const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -225,6 +227,27 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
               )}
             </React.Fragment>
           ))}
+
+          {/* Password input with toggle */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+              Password
+            </label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                required
+                placeholder="Enter your password"
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+              <div
+                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400"
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </div>
+            </div>
+          </div>
 
           <div className="flex justify-end gap-4 mt-6">
             <button

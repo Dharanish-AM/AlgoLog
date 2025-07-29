@@ -9,6 +9,7 @@ import TutorLogin from "../components/TutorLogin";
 import Animation1 from "../assets/Animation - 1747407322934.json";
 import DepartmentLogin from "../components/DepartmentLogin";
 import { Headphones, HeadphonesIcon, LucideHeadphones } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function AuthPage() {
   const [isDepartmentLogin, setIsDepartmentLogin] = useState(false);
