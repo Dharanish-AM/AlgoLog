@@ -38,7 +38,7 @@ export default function Header() {
   const [addLoading, setAddLoading] = useState(false);
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   console.log(classId);
-  
+
   useEffect(() => {
     const currentClass = classes.find((cls) => cls._id === classId);
     setSelectedClass(currentClass);
@@ -113,6 +113,14 @@ export default function Header() {
             ? student.year
             : String(student.year || "N/A");
 
+        // Skillrack certificates count
+        const skillrackCertCount = (student.stats.skillrack?.certificates || [])
+          .length;
+
+        // Leetcode contest count
+        const leetcodeContestCount = (student.stats.leetcode?.contests || [])
+          .length;
+
         return {
           name: student.name,
           email: student.email,
@@ -120,17 +128,25 @@ export default function Header() {
           department: department.name,
           year,
           section,
+          leetcode_total: student.stats.leetcode?.solved?.All || 0,
           leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
           leetcode_medium: student.stats.leetcode?.solved?.Medium || 0,
           leetcode_hard: student.stats.leetcode?.solved?.Hard || 0,
-          hackerrank_badges: student.stats.hackerrank?.badges?.length || 0,
+          leetcode_rating: parseFloat(
+            student.stats.leetcode?.rating || 0
+          ).toFixed(2),
+          leetcode_contest_count: leetcodeContestCount,
+          hackerrank_badge_count: student.stats.hackerrank?.badges?.length || 0,
           codechef_rating: student.stats.codechef?.rating || 0,
           codechef_solved: student.stats.codechef?.fullySolved || 0,
           codeforces_rating: student.stats.codeforces?.rating || 0,
           codeforces_rank: student.stats.codeforces?.rank || "N/A",
+          codeforces_max_rating: student.stats.codeforces?.maxRating || "N/A",
           codeforces_contests: student.stats.codeforces?.contests || 0,
+          codeforces_solved: student.stats.codeforces?.problemsSolved || 0,
           skillrack_solved: student.stats.skillrack?.programsSolved || 0,
           skillrack_rank: student.stats.skillrack?.rank || "N/A",
+          skillrack_certificates_count: skillrackCertCount,
           github_commits: student.stats.github?.totalCommits || 0,
           github_repos: student.stats.github?.totalRepos || 0,
         };

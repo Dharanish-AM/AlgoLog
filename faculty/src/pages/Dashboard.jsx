@@ -14,7 +14,6 @@ import {
   LogOut,
 } from "lucide-react";
 import axios from "axios";
-import Papa from "papaparse";
 import toast from "react-hot-toast";
 import { GridLoader, MoonLoader } from "react-spinners";
 import logo from "../../../faculty/algolog.png";

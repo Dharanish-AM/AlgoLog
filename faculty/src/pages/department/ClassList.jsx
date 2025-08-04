@@ -100,32 +100,115 @@ export default function ClassList() {
     if (department) fetchData();
   }, [department]);
 
-  useEffect(() => {
-    if (selectedClass) {
-      const searchFiltered = selectedClass.students
-        .filter(
-          (student) =>
-            student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.rollNo.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.email.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-        .sort((a, b) => a.rollNo.localeCompare(b.rollNo));
-      setFilteredStudents(searchFiltered);
-      setTotalCount(searchFiltered.length);
+useEffect(() => {
+    const getScore = (student) => {
+      const platform = selectedPlatform?.toLowerCase() || "";
+      const stats = student?.stats?.[platform];
+      if (!stats) return -1;
+
+      switch (platform) {
+        case "leetcode":
+          return stats.solved?.All || 0;
+        case "hackerrank":
+          return stats.badges?.length || 0;
+        case "codechef":
+          return stats.fullySolved || 0;
+        case "codeforces":
+          return stats.problemsSolved || 0;
+        case "skillrack":
+          return stats.programsSolved || 0;
+        case "github":
+          return stats.totalCommits || 0;
+        default:
+          return 0;
+      }
+    };
+
+    const getTotalScore = (student) => {
+      const platforms = [
+        "leetcode",
+        "hackerrank",
+        "codechef",
+        "codeforces",
+        "skillrack",
+        "github",
+      ];
+      return platforms.reduce((total, platform) => {
+        const stats = student.stats?.[platform];
+        switch (platform) {
+          case "leetcode":
+            return total + (stats?.solved?.All || 0);
+          case "hackerrank":
+            return total + (stats?.badges?.length || 0);
+          case "codechef":
+            return total + (stats?.fullySolved || 0);
+          case "codeforces":
+            return total + (stats?.problemsSolved || 0);
+          case "skillrack":
+            return total + (stats?.programsSolved || 0);
+          case "github":
+            return total + (stats?.totalCommits || 0);
+          default:
+            return total;
+        }
+      }, 0);
+    };
+
+    let result = selectedClass?.students ? [...selectedClass.students] : [];
+
+    if (searchTerm) {
+      const term = searchTerm?.toLowerCase();
+      result = result.filter(
+        (student) =>
+          student.name?.toLowerCase()?.includes(term) ||
+          student.rollNo?.toLowerCase()?.includes(term)
+      );
     }
-  }, [searchTerm, selectedClass]);
+
+    if (showTopPerformer) {
+      result = result
+        .filter((student) => getTotalScore(student) > 0)
+        .sort((a, b) => {
+          const scoreDiff = getTotalScore(b) - getTotalScore(a);
+          if (scoreDiff !== 0) return scoreDiff;
+          const nameA = a.name?.toLowerCase() || "";
+          const nameB = b.name?.toLowerCase() || "";
+          return nameA.localeCompare(nameB);
+        });
+    } else {
+      result.sort((a, b) => {
+        if (selectedPlatform !== "all") {
+          const scoreDiff = getScore(b) - getScore(a);
+          if (scoreDiff !== 0) return scoreDiff;
+        }
+        return a.rollNo?.localeCompare(b.rollNo || "");
+      });
+    }
+
+    setFilteredStudents(result);
+
+    if (selectedStudent && !result.find((s) => s._id === selectedStudent._id)) {
+      setSelectedStudent(null);
+    }
+  }, [
+    selectedClass,
+    searchTerm,
+    selectedStudent,
+    selectedPlatform,
+    showTopPerformer,
+  ]);
 
   return (
     <div className="min-h-screen scrollbar-hide bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       <div className="mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <Header />
-          <div
-            onClick={() => window.history.back()}
-            className="mb-4 cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-xl font-medium text-white  focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <ArrowLeft size={"1.5rem"} />
-             Back to Classes
-          </div>
+        <div
+          onClick={() => window.history.back()}
+          className="mb-4 cursor-pointer inline-flex gap-2 items-center px-4 py-2 text-xl font-medium text-white  focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <ArrowLeft size={"1.5rem"} />
+          Back to Classes
+        </div>
         <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
           <div className="flex items-center gap-2 mr-2 justify-center border dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border-gray-200 bg-white dark:bg-gray-800 rounded-xl shadow-sm px-10 py-4">
             <span className="dark:text-gray-100 item-center flex-shrink-0 justify-center text-sm">
