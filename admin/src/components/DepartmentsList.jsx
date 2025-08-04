@@ -8,6 +8,7 @@ import itIcon from "../assets/dept/it.png";
 import aimlIcon from "../assets/dept/aiml.png";
 import aidsIcon from "../assets/dept/aids.png";
 import cceIcon from "../assets/dept/cce.png";
+import cysIcon from "../assets/dept/cys.png";
 
 
 const deptIcons = {
@@ -20,6 +21,7 @@ const deptIcons = {
   aiml: aimlIcon,
   aids: aidsIcon,
   cce: cceIcon,
+  cys:cysIcon,
 };
 
 export default function DepartmentsList({ departments, handleDepartmentClick }) {

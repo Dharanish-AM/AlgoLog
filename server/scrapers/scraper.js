@@ -70,10 +70,19 @@ async function getLeetCodeStats(username) {
     }
   `;
   try {
-    const res = await axios.post("https:
-      query,
-      variables: { username },
-    });
+const res = await axios.post(
+  "https://leetcode.com/graphql/",
+  {
+    query,
+    variables: { username },
+  },
+  {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    httpsAgent: agent,
+  }
+);
     const stats = res.data.data.matchedUser.submitStats.acSubmissionNum;
     const contestInfo = res.data.data.userContestRanking;
     const contestHistory = res.data.data.userContestRankingHistory;
@@ -119,7 +128,7 @@ async function getLeetCodeStats(username) {
 
 
 async function getHackerRankStats(username) {
-  const url = `https:
+  const url = `https://www.hackerrank.com/${username}`;
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -177,7 +186,7 @@ async function getHackerRankStats(username) {
 
 
 async function getCodeChefStats(username) {
-  const url = `https:
+  const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -287,8 +296,8 @@ async function getCodeChefStats(username) {
 
 
 async function getCodeforcesStats(username) {
-  const profileUrl = `https:
-  const contestsUrl = `https:
+  const profileUrl = `https://codeforces.com/profile/${username}`;
+  const contestsUrl = `https://codeforces.com/contests/with/${username}`;
   const maxAttempts = 5;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -450,7 +459,7 @@ async function getSkillrackStats(resumeUrl) {
 }
 
 async function getTryHackMeStats(username) {
-  const url = `https:
+  const url = `https://tryhackme.com/p/${username}`;
   const browser = await puppeteer.launch({ headless: "new" });
   const page = await browser.newPage();
 
@@ -522,7 +531,7 @@ async function getGithubStats(username) {
 `;
 
     const res = await axios.post(
-      "https:
+      "https://api.github.com/graphql",
       { query },
       { headers }
     );

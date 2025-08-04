@@ -41,9 +41,9 @@ export default function Dashboard() {
 
     const handleRefetchSingleStudent = async (studentId) => {
     try {
-      const reponse = await refetchSingleStudent(studentId, token, dispatch);
-      if (reponse?.status === 200 || reponse?.status === 201) {
-        toast.success("Student Refetched successfully!");
+      const response = await refetchSingleStudent(studentId, token, dispatch);
+      if (response?.status === 200 || response?.status === 201) {
+        toast.success("Student Refetch successfully!");
       } else {
         toast.error("Failed to Refetch student.");
       }
