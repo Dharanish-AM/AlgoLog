@@ -67,7 +67,7 @@ const SignUpForm = ({onClose}) => {
 
   if (loading) {
     return (
-      <div className="bg-[#161F2D] w-screen flex justify-center items-center h-screen">
+      <div className="bg-[#161F2D] absolute inset-0 z-50 w-screen flex justify-center items-center h-screen">
         <GridLoader color="#C084FC" size={20} />
       </div>
     );
