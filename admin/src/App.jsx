@@ -47,7 +47,7 @@ function App() {
       </div>
     );
   }
- 
+
   return (
     <BrowserRouter>
       <Routes>
@@ -63,6 +63,17 @@ function App() {
           <Route path="/" element={<Auth />} />
         )}
       </Routes>
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+        Made by{" "}
+        <a
+          href="https://github.com/Dharanish-AM"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-purple-400 hover:underline"
+        >
+          @dharanisham
+        </a>
+      </footer>
     </BrowserRouter>
   );
 }
