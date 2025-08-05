@@ -419,11 +419,9 @@ app.post("/api/students", async (req, res) => {
     // 🔍 Step 1: Validate department
     const departmentData = await Department.findById(department);
     if (!departmentData) {
-      return res
-        .status(404)
-        .json({
-          error: "Department not found. Cannot proceed with class lookup.",
-        });
+      return res.status(404).json({
+        error: "Department not found. Cannot proceed with class lookup.",
+      });
     }
 
     // 🔍 Step 2: Find class only if department is valid
@@ -434,11 +432,9 @@ app.post("/api/students", async (req, res) => {
     });
 
     if (!classData) {
-      return res
-        .status(404)
-        .json({
-          error: "Class not found for the given section/year/department.",
-        });
+      return res.status(404).json({
+        error: "Class not found for the given section/year/department.",
+      });
     }
 
     // 🔒 Step 3: Hash default password
@@ -478,6 +474,12 @@ app.post("/api/students", async (req, res) => {
     });
 
     const savedStudent = await newStudent.save();
+
+    // 📌 Step 7: Add student ID to class document
+    await Class.findByIdAndUpdate(classData._id, {
+      $addToSet: { students: savedStudent._id }, // prevents duplicates
+    });
+
     return res.status(201).json(savedStudent);
   } catch (error) {
     console.error("Error adding student:", error);
@@ -505,17 +507,25 @@ app.put("/api/students/:id", async (req, res) => {
 
     console.log(`🛠️ Updating student with ID: ${id}`);
 
+    // 🔍 Step 1: Check if student exists
     const existingStudent = await Student.findById(id);
     if (!existingStudent) {
       return res.status(404).json({ error: "Student not found" });
     }
 
+    // 🔍 Step 2: Validate department
     const departmentData = await Department.findById(department);
     if (!departmentData) {
       return res.status(404).json({ error: "Department not found" });
     }
 
-    const classData = await Class.findOne({ section, year, department });
+    // 🔍 Step 3: Validate class
+    const classData = await Class.findOne({
+      section,
+      year,
+      department: departmentData._id,
+    });
+
     if (!classData) {
       return res.status(404).json({
         error: "Class not found for given section, year, and department",
@@ -538,11 +548,13 @@ app.put("/api/students/:id", async (req, res) => {
       classId: classData._id,
     };
 
+    // 📊 Step 4: Update stats
     const updatedStats = await getStatsForStudent(
       { _id: existingStudent._id, ...updatedData },
       existingStudent.stats || {}
     );
 
+    // 🔁 Step 5: Update student document
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       {
@@ -551,6 +563,21 @@ app.put("/api/students/:id", async (req, res) => {
       },
       { new: true }
     );
+
+    // 🔄 Step 6: If class has changed, update class arrays
+    if (existingStudent.classId?.toString() !== classData._id.toString()) {
+      // Remove from old class
+      if (existingStudent.classId) {
+        await Class.findByIdAndUpdate(existingStudent.classId, {
+          $pull: { students: existingStudent._id },
+        });
+      }
+
+      // Add to new class
+      await Class.findByIdAndUpdate(classData._id, {
+        $addToSet: { students: existingStudent._id },
+      });
+    }
 
     console.log(`✅ Student updated: ${updatedStudent.name}`);
     res.status(200).json({ student: updatedStudent });
