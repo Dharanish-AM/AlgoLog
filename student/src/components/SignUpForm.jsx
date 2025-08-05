@@ -7,7 +7,7 @@ import { X } from "lucide-react";
 const API_URL = import.meta.env.VITE_API_URL;
 console.log(API_URL);
 
-const SignUpForm = ({onClose}) => {
+const SignUpForm = ({ onClose }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -63,6 +63,8 @@ const SignUpForm = ({onClose}) => {
       setFormData({
         name: "",
         email: "",
+        rollNo: "",
+        year: "",
         department: "",
         leetcode: "",
         hackerrank: "",
@@ -70,7 +72,8 @@ const SignUpForm = ({onClose}) => {
         codeforces: "",
         skillrack: "",
         github: "",
-        });
+      });
+      onClose();
     } else {
       toast.error("Erro while adding student");
     }

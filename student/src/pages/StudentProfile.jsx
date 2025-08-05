@@ -35,6 +35,7 @@ const StudentProfile = ({
 }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShowModalOptions, setIsShowModalOptions] = useState(false);
+  const [loading, setIsLoading] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
@@ -96,7 +97,7 @@ const StudentProfile = ({
     });
   }
 
-  if (!student) {
+  if (!student || loading) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
         <GridLoader color="#C084FC" size={20} />
@@ -678,6 +679,9 @@ const StudentProfile = ({
         <ProfileModal
           onClose={() => setIsProfileModalOpen(false)}
           student={student}
+          setLoading={(loading) => {
+            setIsLoading(loading);
+          }}
           handleUpdate={handleUpdate}
           handleChangePassword={() => {
             setIsProfileModalOpen(false);

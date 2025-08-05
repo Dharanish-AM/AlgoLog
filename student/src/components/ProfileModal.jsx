@@ -1,16 +1,35 @@
+import axios from "axios";
 import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import { GridLoader } from "react-spinners";
 
-const departments = [
-  { _id: "cse", name: "CSE" },
-  { _id: "ece", name: "ECE" },
-  { _id: "eee", name: "EEE" },
-  { _id: "it", name: "IT" },
-];
+const API_URL = import.meta.env.VITE_API_URL;
 
-export default function ProfileModal({ student, onClose, handleUpdate,handleChangePassword }) {
+export default function ProfileModal({
+  student,
+  onClose,
+  handleUpdate,
+  handleChangePassword,
+  setLoading
+}) {
   const [data, setData] = useState(student);
+  const [departments, setDepartments] = useState([]);
+
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/get-form-details`);
+        if (res.status == 200) {
+          setDepartments(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    fetchDepartments();
+  }, []);
+
+  console.log(departments);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -20,24 +39,34 @@ export default function ProfileModal({ student, onClose, handleUpdate,handleChan
     };
   }, []);
 
+  useEffect(() => {
+    if (departments.length > 0 && data.department) {
+      const currentDept = departments.find((d) => d._id === data.department);
+      if (currentDept && !currentDept.sections.includes(data.section)) {
+        setData((prev) => ({
+          ...prev,
+          section: "",
+        }));
+      }
+    }
+  }, [departments, data.department]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setData((prev) => ({ ...prev, [name]: value }));
+    if (name === "department") {
+      setData((prev) => ({ ...prev, [name]: value, section: "" }));
+    } else {
+      setData((prev) => ({ ...prev, [name]: value }));
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    handleUpdate(data);
+    setLoading(true);
+    await handleUpdate(data);
+    setLoading(false);
     onClose();
   };
-
-  if (!student) {
-    return (
-      <div className="bg-[#161F2D] flex justify-center items-center h-screen">
-        <GridLoader color="#C084FC" size={20} />
-      </div>
-    );
-  }
 
   return (
     <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50">
@@ -51,8 +80,8 @@ export default function ProfileModal({ student, onClose, handleUpdate,handleChan
             className="text-gray-400 cursor-pointer"
           />
         </div>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {[
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {[
             "name",
             "email",
             "rollNo",
@@ -104,7 +133,8 @@ export default function ProfileModal({ student, onClose, handleUpdate,handleChan
               className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
             >
               <option value="" disabled>
-                Select department
+                {departments.find((dpt) => dpt._id === data.department)?.name ||
+                  "Select department"}
               </option>
               {departments.map((dpt) => (
                 <option key={dpt._id} value={dpt._id}>
@@ -145,7 +175,7 @@ export default function ProfileModal({ student, onClose, handleUpdate,handleChan
               className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
             >
               <option value="" disabled>
-                Select section
+                {data.section || "Select section"}
               </option>
               {["A", "B", "C", "D"].map((sec) => (
                 <option key={sec} value={sec}>

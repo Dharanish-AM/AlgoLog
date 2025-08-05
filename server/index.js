@@ -492,7 +492,6 @@ app.put("/api/students/:id", async (req, res) => {
       codeforces,
       skillrack,
       github,
-      classId,
     } = req.body;
 
     console.log(`🛠️ Updating student with ID: ${id}`);
@@ -502,12 +501,26 @@ app.put("/api/students/:id", async (req, res) => {
       return res.status(404).json({ error: "Student not found" });
     }
 
+    const departmentData = await Department.findById(department);
+    if (!departmentData) {
+      return res.status(404).json({ error: "Department not found" });
+    }
+
+    const classData = await Class.findOne({ section, year, department });
+    if (!classData) {
+      return res
+        .status(404)
+        .json({
+          error: "Class not found for given section, year, and department",
+        });
+    }
+
     const updatedData = {
       name,
       email,
       rollNo,
       year,
-      department,
+      department: departmentData._id,
       section,
       leetcode,
       hackerrank,
@@ -515,33 +528,25 @@ app.put("/api/students/:id", async (req, res) => {
       codeforces,
       skillrack,
       github,
-      classId,
+      classId: classData._id,
     };
 
     const updatedStats = await getStatsForStudent(
-      {
-        _id: existingStudent._id,
-        ...updatedData,
-      },
+      { _id: existingStudent._id, ...updatedData },
       existingStudent.stats || {}
     );
-
-    const stats = updatedStats?.stats || existingStudent.stats;
 
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       {
         ...updatedData,
-        stats,
+        stats: updatedStats?.stats || existingStudent.stats,
       },
       { new: true }
     );
 
     console.log(`✅ Student updated: ${updatedStudent.name}`);
-
-    res.status(200).json({
-      student: updatedStudent,
-    });
+    res.status(200).json({ student: updatedStudent });
   } catch (error) {
     console.error("🔥 Error updating student:", error);
     res.status(500).json({ error: "Failed to update student" });
