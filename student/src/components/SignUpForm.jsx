@@ -60,6 +60,17 @@ const SignUpForm = ({onClose}) => {
     const res = await axios.post(`${API_URL}/api/students`, trimmedData);
     if (res.status == 200 || res.status == 201) {
       toast.success("Student Added Successfully");
+      setFormData({
+        name: "",
+        email: "",
+        department: "",
+        leetcode: "",
+        hackerrank: "",
+        codechef: "",
+        codeforces: "",
+        skillrack: "",
+        github: "",
+        });
     } else {
       toast.error("Erro while adding student");
     }
