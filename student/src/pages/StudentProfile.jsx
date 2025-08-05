@@ -305,7 +305,8 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="space-y-2">
-              {Object.entries(student.stats.leetcode.solved)
+              {
+                 student && Object.entries(student.stats.leetcode.solved)
                 .slice(1)
                 .map(([difficulty, count]) => (
                   <div
@@ -321,7 +322,8 @@ const StudentProfile = ({
                     </span>
                     <span className="text-white font-medium">{count}</span>
                   </div>
-                ))}
+                ))
+              }
             </div>
 
             {student.stats.leetcode.rating && (
@@ -587,14 +589,18 @@ const StudentProfile = ({
             </div>
             <div className="space-y-2 mb-4">
               <h4 className="font-semibold text-white">Top Languages</h4>
-              {Object.entries(student?.stats?.skillrack?.languages || {})
-                .slice(0, 3)
-                .map(([lang, count]) => (
-                  <div key={lang} className="flex justify-between items-center">
-                    <span className="text-gray-200 text-sm">{lang}</span>
-                    <span className="text-white font-medium">{count}</span>
-                  </div>
-                ))}
+              {student &&
+                Object.entries(student?.stats?.skillrack?.languages || {})
+                  .slice(0, 3)
+                  .map(([lang, count]) => (
+                    <div
+                      key={lang}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="text-gray-200 text-sm">{lang}</span>
+                      <span className="text-white font-medium">{count}</span>
+                    </div>
+                  ))}
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-white">Certificates</h4>
