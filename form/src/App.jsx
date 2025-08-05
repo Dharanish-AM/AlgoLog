@@ -3,8 +3,8 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { GridLoader } from "react-spinners";
 
-const API_URL = import.meta.env.VITE_API_URL
-console.log(API_URL)
+const API_URL = import.meta.env.VITE_API_URL;
+console.log(API_URL);
 
 const App = () => {
   const [formData, setFormData] = useState({
@@ -27,9 +27,7 @@ const App = () => {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get(
-          `${API_URL}/api/get-form-details`
-        );
+        const res = await axios.get(`${API_URL}/api/get-form-details`);
         if (res.status == 200) {
           setDepartments(Array.isArray(res.data) ? res.data : []);
         }
@@ -58,17 +56,13 @@ const App = () => {
       github: formData.github.trim(),
     };
     console.log(trimmedData);
-    const res = await axios.post(
-      `${API_URL}/api/students`,
-      trimmedData
-    );
+    const res = await axios.post(`${API_URL}/api/students`, trimmedData);
     if (res.status == 200 || res.status == 201) {
       toast.success("Student Added Successfully");
     } else {
       toast.error("Erro while adding student");
     }
   };
-
 
   if (loading) {
     return (

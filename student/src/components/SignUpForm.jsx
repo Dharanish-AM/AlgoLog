@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from "react";
-import { Axis3DIcon, X, Eye, EyeOff } from "lucide-react";
-import { useDispatch, useSelector } from "react-redux";
+import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { GridLoader } from "react-spinners";
+import { X } from "lucide-react";
 
-const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
+const API_URL = import.meta.env.VITE_API_URL;
+console.log(API_URL);
+
+const SignUpForm = ({onClose}) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     rollNo: "",
     year: "",
-    department: "",
     section: "",
+    department: "",
     leetcode: "",
     hackerrank: "",
     codechef: "",
@@ -17,10 +22,30 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
     skillrack: "",
     github: "",
   });
+  const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-    const [showPassword, setShowPassword] = useState(false);
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        const res = await axios.get(`${API_URL}/api/get-form-details`);
+        if (res.status == 200) {
+          setDepartments(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDepartments();
+  }, []);
 
-  const handleSubmit = (e) => {
+  const selectedDept = Array.isArray(departments)
+    ? departments.find((d) => d._id === formData.department)
+    : null;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedData = {
       ...formData,
@@ -31,26 +56,31 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
       skillrack: formData.skillrack.trim(),
       github: formData.github.trim(),
     };
-    console.log("Submitting form data:", trimmedData);
-    onClose();
-    onSubmit(trimmedData);
+    console.log(trimmedData);
+    const res = await axios.post(`${API_URL}/api/students`, trimmedData);
+    if (res.status == 200 || res.status == 201) {
+      toast.success("Student Added Successfully");
+    } else {
+      toast.error("Erro while adding student");
+    }
   };
 
-  if (!isOpen) return null;
+  if (loading) {
+    return (
+      <div className="bg-[#161F2D] w-screen flex justify-center items-center h-screen">
+        <GridLoader color="#C084FC" size={20} />
+      </div>
+    );
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="scrollbar-hide bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-[50vw] max-h-[90vh] overflow-y-auto">
+    <div className="bg-black/40 absolute inset-0 z-50 bg-opacity-50 flex flex-col items-center py-8 justify-center min-h-screen w-full">
+      <div className="bg-white dark:bg-gray-800 overflow-auto scrollbar-hide rounded-lg p-6 h-[90vh] sm:w-[55vw] w-[85vw]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Register
+            Enter Student Details
           </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-          >
-            <X size={24} />
-          </button>
+          <X onClick={onClose} className="text-gray-400 cursor-pointer" />
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -106,29 +136,6 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
                 <>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Section
-                    </label>
-                    <select
-                      value={formData.section}
-                      required
-                      onChange={(e) =>
-                        setFormData({ ...formData, section: e.target.value })
-                      }
-                      className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="" disabled>
-                        Select section
-                      </option>
-                      {["A", "B", "C", "D"].map((sec) => (
-                        <option key={sec} value={sec}>
-                          {sec}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                       Department
                     </label>
                     <select
@@ -142,9 +149,37 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
                       <option value="" disabled>
                         Select department
                       </option>
-                      {departments?.map((dpt) => (
-                        <option key={dpt._id} value={dpt._id}>
-                          {dpt.name}
+                      {departments &&
+                        departments.map((dpt) => (
+                          <option key={dpt._id} value={dpt._id}>
+                            {dpt.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Section
+                    </label>
+                    <select
+                      value={formData.section}
+                      required
+                      disabled={
+                        !selectedDept || selectedDept.sections.length === 0
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, section: e.target.value })
+                      }
+                      className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="" disabled>
+                        {selectedDept?.sections?.length
+                          ? "Select section"
+                          : "No sections available"}
+                      </option>
+                      {selectedDept?.sections.map((sec) => (
+                        <option key={sec} value={sec}>
+                          {sec}
                         </option>
                       ))}
                     </select>
@@ -175,7 +210,7 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
                         : `Enter ${label.toLowerCase()}`
                     }
                     onChange={(e) => {
-                      let value = key === "rollNo" ? e.target.value.toUpperCase() : e.target.value;
+                      let value = e.target.value;
                       if (
                         key === "leetcode" ||
                         key === "hackerrank" ||
@@ -192,7 +227,10 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
                           value = "https://" + value.slice(7); // Enforce https for skillrack
                         }
                       }
-                      setFormData({ ...formData, [key]: value });
+                      setFormData({
+                        ...formData,
+                        [key]: key === "rollNo" ? value.toUpperCase() : value,
+                      });
                     }}
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   />
@@ -228,44 +266,28 @@ const SignUpForm = ({ isOpen, onClose, onSubmit, departments }) => {
             </React.Fragment>
           ))}
 
-          {/* Password input with toggle */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-              Password
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                placeholder="Enter your password"
-                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-              />
-              <div
-                className="absolute inset-y-0 right-3 flex items-center cursor-pointer text-gray-400"
-                onClick={() => setShowPassword((prev) => !prev)}
-              >
-                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-              </div>
-            </div>
-          </div>
-
           <div className="flex justify-end gap-4 mt-6">
             <button
-              type="button"
-              onClick={onClose}
-              className="text-sm px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
-            >
-              Back
-            </button>
-            <button
               type="submit"
-              className="text-sm px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              className="text-sm font-semibold w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               Submit
             </button>
           </div>
         </form>
       </div>
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+        Made by{" "}
+        <a
+          href="https://github.com/Dharanish-AM"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-purple-400 hover:underline"
+        >
+          @dharanisham
+        </a>
+      </footer>
+      <Toaster position="bottom-right" />
     </div>
   );
 };
