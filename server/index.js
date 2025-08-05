@@ -1050,6 +1050,33 @@ app.post("/api/student/change-password", async (req, res) => {
   }
 });
 
+app.get("/api/get-form-details", async (req, res) => {
+  try {
+    const departments = await Department.find();
+
+    const departmentDetails = await Promise.all(
+      departments.map(async (dept) => {
+        const classes = await Class.find({
+          _id: { $in: dept.classes },
+        });
+
+        const uniqueSections = [...new Set(classes.map((cls) => cls.section))];
+
+        return {
+          _id: dept._id,
+          name: dept.name,
+          sections: uniqueSections,
+        };
+      })
+    );
+
+    res.status(200).json(departmentDetails);
+  } catch (err) {
+    console.error("Error fetching form details:", err);
+    res.status(500).json({ error: "Failed to fetch department details" });
+  }
+});
+
 // cron.schedule("0 0 * * *", async () => {
 //   console.log("Running cron job to fetch stats...");
 //   const students = await Student.find();

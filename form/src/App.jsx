@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Axis3DIcon, X } from "lucide-react";
+import toast, { Toaster } from "react-hot-toast";
+import axios from "axios";
+import { GridLoader } from "react-spinners";
 
-const AddStudentModal = () => {
+const App = () => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -17,17 +19,31 @@ const AddStudentModal = () => {
     github: "",
   });
   const [departments, setDepartments] = useState([]);
-  const [sections, setSections] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchDepartments = async () => {
-      const res = axios
-      setDepartments(dpt);
+      try {
+        const res = await axios.get(
+          `${import.meta.VITE_API_URL}/api/get-form-details`
+        );
+        if (res.status == 200) {
+          setDepartments(Array.isArray(res.data) ? res.data : []);
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
     };
     fetchDepartments();
-  });
+  }, []);
 
-  const handleSubmit = (e) => {
+  const selectedDept = Array.isArray(departments)
+    ? departments.find((d) => d._id === formData.department)
+    : null;
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedData = {
       ...formData,
@@ -38,7 +54,26 @@ const AddStudentModal = () => {
       skillrack: formData.skillrack.trim(),
       github: formData.github.trim(),
     };
+    console.log(trimmedData);
+    const res = await axios.post(
+      `${import.meta.VITE_API_URL}/api/students`,
+      trimmedData
+    );
+    if (res.status == 200 || res.status == 201) {
+      toast.success("Student Added Successfully");
+    } else {
+      toast.error("Erro while adding student");
+    }
   };
+
+
+  if (loading) {
+    return (
+      <div className="bg-[#161F2D] w-screen flex justify-center items-center h-screen">
+        <GridLoader color="#C084FC" size={20} />
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#141B2A] bg-opacity-50 flex flex-col items-center py-8 justify-center min-h-screen w-full">
@@ -111,32 +146,10 @@ const AddStudentModal = () => {
               type: "text",
               required: false,
             },
-          ].map(({ label, key, type = "text", required }, index) => (
+          ].map(({ label, key, type = "text", required }) => (
             <React.Fragment key={key}>
               {key === "section" ? (
                 <>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
-                      Section
-                    </label>
-                    <select
-                      value={formData.section}
-                      required
-                      onChange={(e) =>
-                        setFormData({ ...formData, section: e.target.value })
-                      }
-                      className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
-                    >
-                      <option value="" disabled>
-                        Select section
-                      </option>
-                      {["A", "B", "C", "D"].map((sec) => (
-                        <option key={sec} value={sec}>
-                          {sec}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
                       Department
@@ -152,9 +165,37 @@ const AddStudentModal = () => {
                       <option value="" disabled>
                         Select department
                       </option>
-                      {departments?.map((dpt) => (
-                        <option key={dpt._id} value={dpt._id}>
-                          {dpt.name}
+                      {departments &&
+                        departments.map((dpt) => (
+                          <option key={dpt._id} value={dpt._id}>
+                            {dpt.name}
+                          </option>
+                        ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                      Section
+                    </label>
+                    <select
+                      value={formData.section}
+                      required
+                      disabled={
+                        !selectedDept || selectedDept.sections.length === 0
+                      }
+                      onChange={(e) =>
+                        setFormData({ ...formData, section: e.target.value })
+                      }
+                      className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                    >
+                      <option value="" disabled>
+                        {selectedDept?.sections?.length
+                          ? "Select section"
+                          : "No sections available"}
+                      </option>
+                      {selectedDept?.sections.map((sec) => (
+                        <option key={sec} value={sec}>
+                          {sec}
                         </option>
                       ))}
                     </select>
@@ -262,8 +303,9 @@ const AddStudentModal = () => {
           @dharanisham
         </a>
       </footer>
+      <Toaster position="bottom-right" />
     </div>
   );
 };
 
-export default AddStudentModal;
+export default App;
