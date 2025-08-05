@@ -408,10 +408,7 @@ app.post("/api/students", async (req, res) => {
       codeforces,
       skillrack,
       github,
-      classId,
     } = req.body;
-
-    console.log(req.body);
 
     if (!name || !email || !rollNo) {
       return res
@@ -419,12 +416,42 @@ app.post("/api/students", async (req, res) => {
         .json({ error: "Name, email, and roll number are required" });
     }
 
+    // 🔍 Step 1: Validate department
+    const departmentData = await Department.findById(department);
+    if (!departmentData) {
+      return res
+        .status(404)
+        .json({
+          error: "Department not found. Cannot proceed with class lookup.",
+        });
+    }
+
+    // 🔍 Step 2: Find class only if department is valid
+    const classData = await Class.findOne({
+      section,
+      year,
+      department: departmentData._id,
+    });
+
+    if (!classData) {
+      return res
+        .status(404)
+        .json({
+          error: "Class not found for the given section/year/department.",
+        });
+    }
+
+    // 🔒 Step 3: Hash default password
+    const password = "sece@123";
+    const hashPass = await bcrypt.hash(password, 10);
+
+    // 🧠 Step 4: Prepare student object
     const studentInfo = {
       name,
       email,
       rollNo,
       year,
-      department,
+      department: departmentData._id,
       section,
       leetcode,
       hackerrank,
@@ -432,30 +459,11 @@ app.post("/api/students", async (req, res) => {
       codeforces,
       skillrack,
       github,
-      classId,
+      classId: classData._id,
+      password: hashPass,
     };
 
-    const departmentData = await Department.findById(department);
-    if (!departmentData) {
-      return res
-        .status(404)
-        .json({ error: "Department not found with given details" });
-    }
-
-    studentInfo.department = departmentData._id;
-
-    const classData = await Class.findOne({ section, year, department });
-    if (!classData) {
-      return res
-        .status(404)
-        .json({ error: "Class not found with given details" });
-    }
-    studentInfo.classId = classData._id;
-
-    const password = "sece@123";
-    const hashPass = await bcrypt.hash(password, 10);
-    studentInfo.password = hashPass;
-
+    // 📊 Step 5: Fetch stats (with fallback)
     let statsResult = { stats: {} };
     try {
       statsResult = await getStatsForStudent(studentInfo, studentInfo.stats);
@@ -463,16 +471,17 @@ app.post("/api/students", async (req, res) => {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
 
+    // 🧾 Step 6: Save student
     const newStudent = new Student({
       ...studentInfo,
       stats: statsResult.stats,
     });
 
     const savedStudent = await newStudent.save();
-    res.status(201).json(savedStudent);
+    return res.status(201).json(savedStudent);
   } catch (error) {
     console.error("Error adding student:", error);
-    res.status(500).json({ error: "Failed to add student" });
+    return res.status(500).json({ error: "Failed to add student" });
   }
 });
 
@@ -1187,7 +1196,7 @@ const cleanUpClassStudents = async () => {
     console.error("❌ Error during class cleanup:", error);
   }
 };
- 
+
 // cleanUpClassStudents();
 
 app.listen(PORT, () => {
