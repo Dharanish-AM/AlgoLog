@@ -3,6 +3,9 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { GridLoader } from "react-spinners";
 
+const API_URL = import.meta.env.VITE_API_URL
+console.log(API_URL)
+
 const App = () => {
   const [formData, setFormData] = useState({
     name: "",
@@ -25,7 +28,7 @@ const App = () => {
     const fetchDepartments = async () => {
       try {
         const res = await axios.get(
-          `${import.meta.VITE_API_URL}/api/get-form-details`
+          `${API_URL}/api/get-form-details`
         );
         if (res.status == 200) {
           setDepartments(Array.isArray(res.data) ? res.data : []);
@@ -56,7 +59,7 @@ const App = () => {
     };
     console.log(trimmedData);
     const res = await axios.post(
-      `${import.meta.VITE_API_URL}/api/students`,
+      `${API_URL}/api/students`,
       trimmedData
     );
     if (res.status == 200 || res.status == 201) {
