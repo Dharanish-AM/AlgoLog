@@ -24,6 +24,7 @@ const SignUpForm = ({ onClose }) => {
   });
   const [departments, setDepartments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchDepartments = async () => {
@@ -47,35 +48,43 @@ const SignUpForm = ({ onClose }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const trimmedData = {
-      ...formData,
-      leetcode: formData.leetcode.trim(),
-      hackerrank: formData.hackerrank.trim(),
-      codechef: formData.codechef.trim(),
-      codeforces: formData.codeforces.trim(),
-      skillrack: formData.skillrack.trim(),
-      github: formData.github.trim(),
-    };
-    console.log(trimmedData);
-    const res = await axios.post(`${API_URL}/api/students`, trimmedData);
-    if (res.status == 200 || res.status == 201) {
-      toast.success("Student Added Successfully");
-      setFormData({
-        name: "",
-        email: "",
-        rollNo: "",
-        year: "",
-        department: "",
-        leetcode: "",
-        hackerrank: "",
-        codechef: "",
-        codeforces: "",
-        skillrack: "",
-        github: "",
-      });
-      onClose();
-    } else {
-      toast.error("Erro while adding student");
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const trimmedData = {
+        ...formData,
+        leetcode: formData.leetcode.trim(),
+        hackerrank: formData.hackerrank.trim(),
+        codechef: formData.codechef.trim(),
+        codeforces: formData.codeforces.trim(),
+        skillrack: formData.skillrack.trim(),
+        github: formData.github.trim(),
+      };
+      console.log(trimmedData);
+      const res = await axios.post(`${API_URL}/api/students`, trimmedData);
+      if (res.status == 200 || res.status == 201) {
+        toast.success("Student Added Successfully");
+        setFormData({
+          name: "",
+          email: "",
+          rollNo: "",
+          year: "",
+          department: "",
+          leetcode: "",
+          hackerrank: "",
+          codechef: "",
+          codeforces: "",
+          skillrack: "",
+          github: "",
+        });
+        onClose();
+      } else {
+        toast.error("Erro while adding student");
+      }
+    } catch (err) {
+      toast.error("Error while adding student");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -283,9 +292,10 @@ const SignUpForm = ({ onClose }) => {
           <div className="flex justify-end gap-4 mt-6">
             <button
               type="submit"
-              className="text-sm font-semibold w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              disabled={isSubmitting}
+              className="text-sm font-semibold w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Submit
+              {isSubmitting ? "Submitting..." : "Submit"}
             </button>
           </div>
         </form>

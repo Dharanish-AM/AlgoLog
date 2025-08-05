@@ -508,11 +508,9 @@ app.put("/api/students/:id", async (req, res) => {
 
     const classData = await Class.findOne({ section, year, department });
     if (!classData) {
-      return res
-        .status(404)
-        .json({
-          error: "Class not found for given section, year, and department",
-        });
+      return res.status(404).json({
+        error: "Class not found for given section, year, and department",
+      });
     }
 
     const updatedData = {
@@ -1131,6 +1129,66 @@ app.get("/api/get-form-details", async (req, res) => {
 //   })
 //   console.log("END")
 // }
+
+const cleanUpClassStudents = async () => {
+  try {
+    // Fetch all students with their classId
+    const allStudents = await Student.find({}, "_id classId");
+    const validStudentIds = new Set(allStudents.map((s) => s._id.toString()));
+
+    // Group student IDs by classId
+    const classIdToStudentIds = {};
+    allStudents.forEach((student) => {
+      const classId = student.classId ? student.classId.toString() : null;
+      if (!classId) return;
+
+      if (!classIdToStudentIds[classId]) {
+        classIdToStudentIds[classId] = [];
+      }
+      classIdToStudentIds[classId].push(student._id.toString());
+    });
+
+    const classes = await Class.find();
+
+    for (const cls of classes) {
+      const currentIds = new Set(cls.students.map((id) => id.toString()));
+      const expectedIds = new Set(
+        classIdToStudentIds[cls._id.toString()] || []
+      );
+
+      // Remove invalid students
+      const cleaned = Array.from(currentIds).filter((id) =>
+        expectedIds.has(id)
+      );
+
+      // Add missing students
+      const missing = Array.from(expectedIds).filter(
+        (id) => !currentIds.has(id)
+      );
+
+      // Merge final list and convert to ObjectId
+      const updatedIds = [...new Set([...cleaned, ...missing])].map(
+        (id) => new mongoose.Types.ObjectId(id)
+      );
+
+      if (updatedIds.length !== cls.students.length) {
+        cls.students = updatedIds;
+        await cls.save();
+        console.log(
+          `🔄 Synced class "${cls.name || cls._id}": ${cleaned.length} kept, ${
+            missing.length
+          } added`
+        );
+      }
+    }
+
+    console.log("✅ All classes updated to match student-class mappings.");
+  } catch (error) {
+    console.error("❌ Error during class cleanup:", error);
+  }
+};
+ 
+// cleanUpClassStudents();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
