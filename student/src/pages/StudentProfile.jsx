@@ -12,6 +12,7 @@ import {
   Code,
   Trophy,
   Star,
+  X,
   Award,
   TrendingUp,
   GitCommit,
@@ -34,6 +35,7 @@ const StudentProfile = ({
 }) => {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isShowModalOptions, setIsShowModalOptions] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
   const modalOptionsRed = useRef();
@@ -347,56 +349,90 @@ const StudentProfile = ({
                     <div className="text-sm text-gray-400">Top Percentage</div>
                   </div>
                 </div>
+
                 {student.stats.leetcode.contests.length > 0 && (
-                  <div className="mt-6 space-y-4">
-                    <h4 className="text-white text-lg font-semibold">
-                      Contest History
-                    </h4>
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-10 scrollbar-custom">
-                      {[...student.stats.leetcode.contests]
-                        .sort((a, b) => b.startTime - a.startTime)
-                        .map((contest, index) => (
-                          <div
-                            key={index}
-                            className="p-3 bg-gray-700 rounded-lg hover:bg-gray-600"
-                          >
-                            <div className="flex justify-between text-white font-medium">
-                              <span>{contest.title}</span>
-                              <span className="text-sm text-gray-400">
-                                {new Date(
-                                  contest.startTime * 1000
-                                ).toLocaleDateString("en-US", {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                })}
-                              </span>
-                            </div>
-                            <div className="text-sm text-gray-300 mt-1 space-y-1">
-                              <div>📈 Rating: {contest.rating}</div>
-                              <div>🏅 Rank: {contest.ranking}</div>
-                              <div>
-                                ✅ Problems Solved: {contest.problemsSolved}/
-                                {contest.totalProblems}
-                              </div>
-                              <div>
-                                ⏱️ Finish Time:{" "}
-                                {contest.finishTimeInSeconds >= 3600
-                                  ? `${Math.floor(
-                                      contest.finishTimeInSeconds / 3600
-                                    )}h ${Math.floor(
-                                      (contest.finishTimeInSeconds % 3600) / 60
-                                    )}m ${contest.finishTimeInSeconds % 60}s`
-                                  : contest.finishTimeInSeconds >= 60
-                                  ? `${Math.floor(
-                                      contest.finishTimeInSeconds / 60
-                                    )}m ${contest.finishTimeInSeconds % 60}s`
-                                  : `${contest.finishTimeInSeconds}s`}
-                              </div>
-                            </div>
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setShowHistory(!showHistory)}
+                      className="w-full bg-purple-600 text-sm hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all"
+                    >
+                      {showHistory ? "Hide" : "Show"} Contest History
+                    </button>
+
+                    {showHistory && (
+                      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4 sm:px-0">
+                        <div className="bg-gray-800 rounded-lg shadow-xl p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] scrollbar-hide overflow-y-auto relative">
+                          {/* Header */}
+                          <div className="w-full flex items-center justify-between mb-4">
+                            <p className="text-white text-lg sm:text-xl font-semibold">
+                              Contest History
+                            </p>
+                            <button
+                              onClick={() => setShowHistory(false)}
+                              className="text-gray-300 hover:text-white text-2xl font-bold"
+                              aria-label="Close Modal"
+                            >
+                              <X />
+                            </button>
                           </div>
-                        ))}
-                    </div>
+
+                          {/* Contest History List */}
+                          <div className="space-y-3 pr-1 sm:pr-4 scrollbar-custom">
+                            {[...student.stats.leetcode.contests]
+                              .sort((a, b) => b.startTime - a.startTime)
+                              .map((contest, index) => (
+                                <div
+                                  key={index}
+                                  className="p-3 sm:p-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition"
+                                >
+                                  <div className="flex flex-col sm:flex-row sm:justify-between text-white font-medium gap-1">
+                                    <span>{contest.title}</span>
+                                    <span className="text-sm text-gray-400">
+                                      {new Date(
+                                        contest.startTime * 1000
+                                      ).toLocaleDateString("en-US", {
+                                        year: "numeric",
+                                        month: "short",
+                                        day: "numeric",
+                                      })}
+                                    </span>
+                                  </div>
+
+                                  <div className="text-sm text-gray-300 mt-2 space-y-1">
+                                    <div>📈 Rating: {contest.rating}</div>
+                                    <div>🏅 Rank: {contest.ranking}</div>
+                                    <div>
+                                      ✅ Problems Solved:{" "}
+                                      {contest.problemsSolved}/
+                                      {contest.totalProblems}
+                                    </div>
+                                    <div>
+                                      ⏱️ Finish Time:{" "}
+                                      {contest.finishTimeInSeconds >= 3600
+                                        ? `${Math.floor(
+                                            contest.finishTimeInSeconds / 3600
+                                          )}h ${Math.floor(
+                                            (contest.finishTimeInSeconds %
+                                              3600) /
+                                              60
+                                          )}m ${
+                                            contest.finishTimeInSeconds % 60
+                                          }s`
+                                        : contest.finishTimeInSeconds >= 60
+                                        ? `${Math.floor(
+                                            contest.finishTimeInSeconds / 60
+                                          )}m ${
+                                            contest.finishTimeInSeconds % 60
+                                          }s`
+                                        : `${contest.finishTimeInSeconds}s`}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
