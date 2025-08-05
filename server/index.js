@@ -985,7 +985,15 @@ app.get("/api/admin/get-departments", async (req, res) => {
 
 app.get("/api/admin/get-classes", async (req, res) => {
   try {
-    const classes = await Class.find().populate("students");
+    const classes = await Class.find()
+      .populate({
+        path: "students",
+        populate: {
+          path: "department",
+          select: "_id name", 
+        },
+      });
+
     res.status(200).json({ classes });
   } catch (err) {
     console.error("Error fetching classes:", err);
