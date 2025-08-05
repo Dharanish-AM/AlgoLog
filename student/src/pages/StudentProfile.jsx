@@ -191,7 +191,7 @@ const StudentProfile = ({
                 <button
                   disabled
                   onClick={handleRefresh}
-                  className="flex justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg"
+                  className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg"
                 >
                   <RefreshCwIcon className="w-5 h-5 animate-spin" />
                   <span>Refreshing...</span>
@@ -199,7 +199,7 @@ const StudentProfile = ({
               ) : (
                 <button
                   onClick={handleRefresh}
-                  className="flex justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
+                  className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
                 >
                   <RefreshCwIcon className="w-5 h-5" />
                   <span>Refresh</span>
@@ -357,7 +357,7 @@ const StudentProfile = ({
                   <div className="mt-4">
                     <button
                       onClick={() => setShowHistory(!showHistory)}
-                      className="w-full bg-purple-600 text-sm hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all"
+                      className="w-full cursor-pointer bg-purple-600 text-sm hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all"
                     >
                       {showHistory ? "Hide" : "Show"} Contest History
                     </button>
