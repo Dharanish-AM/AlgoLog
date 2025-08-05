@@ -305,25 +305,24 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="space-y-2">
-              {
-                 student && Object.entries(student.stats.leetcode.solved)
-                .slice(1)
-                .map(([difficulty, count]) => (
-                  <div
-                    key={difficulty}
-                    className="flex py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-600 justify-between items-center"
-                  >
-                    <span
-                      className={`rounded-full text-sm font-medium ${getDifficultyColor(
-                        difficulty
-                      )}`}
+              {student &&
+                Object.entries(student.stats.leetcode.solved)
+                  .slice(1)
+                  .map(([difficulty, count]) => (
+                    <div
+                      key={difficulty}
+                      className="flex py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-600 justify-between items-center"
                     >
-                      {difficulty}
-                    </span>
-                    <span className="text-white font-medium">{count}</span>
-                  </div>
-                ))
-              }
+                      <span
+                        className={`rounded-full text-sm font-medium ${getDifficultyColor(
+                          difficulty
+                        )}`}
+                      >
+                        {difficulty}
+                      </span>
+                      <span className="text-white font-medium">{count}</span>
+                    </div>
+                  ))}
             </div>
 
             {student.stats.leetcode.rating && (
@@ -461,20 +460,27 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.hackerrank}</p>
               </div>
             </div>
+
             <div className="space-y-3">
-              {student.stats.hackerrank.badges.map((badge, index) => (
-                <div
-                  key={index}
-                  className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600"
-                >
-                  <span className="text-gray-200 font-medium">
-                    {badge.name}
-                  </span>
-                  <div className="flex items-center space-x-1">
-                    {renderStars(badge.stars)}
+              {student.stats?.hackerrank?.badges?.length > 0 ? (
+                student.stats.hackerrank.badges.map((badge, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600"
+                  >
+                    <span className="text-gray-200 font-medium">
+                      {badge.name}
+                    </span>
+                    <div className="flex items-center space-x-1">
+                      {renderStars(badge.stars)}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="text-gray-400 text-sm italic text-center py-4">
+                  Not yet started
                 </div>
-              ))}
+              )}
             </div>
           </div>
 

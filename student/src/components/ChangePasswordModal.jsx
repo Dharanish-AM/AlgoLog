@@ -18,7 +18,6 @@ export default function ChangePasswordModal({
 
   return (
     <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50">
-      <Toaster position="top-right" />
       <div className="bg-white scrollbar-hide dark:bg-gray-800 p-6 rounded-lg shadow-lg sm:w-full max-w-xl sm:max-h-[90h] w-[90%] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
