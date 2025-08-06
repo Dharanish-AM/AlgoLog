@@ -38,8 +38,14 @@ const studentSchema = new mongoose.Schema(
         topPercentage: Number,
         badges: [
           {
+            id: String,
             name: String,
-            stars: Number,
+            shortName: String,
+            displayName: String,
+            icon: String,
+            hoverText: String,
+            category: String,
+            creationDate: String,
           },
         ],
         contests: [
@@ -54,6 +60,21 @@ const studentSchema = new mongoose.Schema(
             finishTimeInSeconds: Number,
           },
         ],
+        topicStats: [
+          {
+            tagName: { type: String },
+            problemsSolved: { type: Number, default: 0 },
+          },
+        ],
+        languageStats: [
+          {
+            languageName: String,
+            problemsSolved: Number,
+          },
+        ],
+        streak: { type: Number, default: 0 },
+        totalActiveDays: { type: Number, default: 0 },
+        activeYears: [String],
       },
       hackerrank: {
         platform: String,

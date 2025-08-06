@@ -144,7 +144,7 @@ export default function Header() {
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex justify-center items-center h-screen">
+      <div className="bg-gradient-to-br z-50 absolute inset-0 from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex justify-center items-center h-screen">
         <GridLoader color="#C084FC" size={20} />
       </div>
     );

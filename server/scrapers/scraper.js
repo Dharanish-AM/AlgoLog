@@ -33,6 +33,68 @@ const {
 
 const agent = new https.Agent({ family: 4 });
 
+async function getLeetCodeQuestionOfToday() {
+  const query = `
+    query questionOfToday {
+      activeDailyCodingChallengeQuestion {
+        date
+        userStatus
+        link
+        question {
+          acRate
+          difficulty
+          freqBar
+          questionFrontendId
+          isFavor
+          isPaidOnly
+          status
+          title
+          titleSlug
+          hasVideoSolution
+          hasSolution
+          topicTags {
+            name
+            id
+            slug
+          }
+        }
+      }
+    }
+  `;
+  try {
+    const res = await axios.post(
+      "https://leetcode.com/graphql/",
+      { query },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        httpsAgent: agent,
+      }
+    );
+
+    const daily = res.data.data.activeDailyCodingChallengeQuestion;
+    let statusText = "🔴 Not Started";
+
+    if (daily.userStatus === "Finished") statusText = "✅ Solved";
+    else if (daily.userStatus === "Started") statusText = "🟡 In Progress";
+
+    return {
+      ...daily,
+      statusText,
+      fullLink: `https://leetcode.com${daily.link}`,
+    };
+  } catch (error) {
+    console.error(
+      "Error fetching LeetCode question of today:",
+      error.response?.data || error.message
+    );
+    return null;
+  }
+}
+
+// getLeetCodeQuestionOfToday().then((e) => console.log(e));
+
 async function getLeetCodeStats(username) {
   const query = `
     query userContestRankingInfo($username: String!) {
@@ -42,6 +104,45 @@ async function getLeetCodeStats(username) {
             difficulty
             count
           }
+        }
+        tagProblemCounts {
+          advanced {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+          intermediate {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+          fundamental {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+        }
+        badges {
+          id
+          name
+          shortName
+          displayName
+          icon
+          hoverText
+          medal {
+            slug
+            config {
+              iconGif
+              iconGifBackground
+            }
+          }
+          creationDate
+          category
+        }
+        upcomingBadges {
+          name
+          icon
+          progress
         }
       }
       userContestRanking(username: $username) {
@@ -67,35 +168,109 @@ async function getLeetCodeStats(username) {
           startTime
         }
       }
+      languageStats: matchedUser(username: $username) {
+        languageProblemCount {
+          languageName
+          problemsSolved
+        }
+      }
+      skillStats: matchedUser(username: $username) {
+        tagProblemCounts {
+          advanced {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+          intermediate {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+          fundamental {
+            tagName
+            tagSlug
+            problemsSolved
+          }
+        }
+      }
+      userProfileCalendar: matchedUser(username: $username) {
+        userCalendar(year: ${new Date().getFullYear()}) {
+          activeYears
+          streak
+          totalActiveDays
+          submissionCalendar
+        }
+      }
     }
   `;
+
   try {
-const res = await axios.post(
-  "https://leetcode.com/graphql/",
-  {
-    query,
-    variables: { username },
-  },
-  {
-    headers: {
-      "Content-Type": "application/json",
-    },
-    httpsAgent: agent,
-  }
-);
-    const stats = res.data.data.matchedUser.submitStats.acSubmissionNum;
-    const contestInfo = res.data.data.userContestRanking;
-    const contestHistory = res.data.data.userContestRankingHistory;
+    const res = await axios.post(
+      "https://leetcode.com/graphql/",
+      {
+        query,
+        variables: { username },
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+        httpsAgent: agent,
+      }
+    );
+
+    const userData = res.data.data;
+    const stats = userData.matchedUser?.submitStats?.acSubmissionNum || [];
+    // Extract new fields
+    const languageStats = userData.languageStats?.languageProblemCount || [];
+    const skillStats = userData.skillStats?.tagProblemCounts || {};
+    const calendar = userData.userProfileCalendar?.userCalendar || {};
+    // Merge tag data from fundamental, intermediate, advanced
+    const allTags = [
+      ...(skillStats.fundamental || []),
+      ...(skillStats.intermediate || []),
+      ...(skillStats.advanced || []),
+    ];
+    const tagMap = new Map();
+    for (const tag of allTags) {
+      if (!tagMap.has(tag.tagName)) {
+        tagMap.set(tag.tagName, tag.problemsSolved);
+      } else {
+        tagMap.set(tag.tagName, tagMap.get(tag.tagName) + tag.problemsSolved);
+      }
+    }
+    const mergedTopicStats = Array.from(
+      tagMap,
+      ([tagName, problemsSolved]) => ({
+        tagName,
+        problemsSolved,
+      })
+    );
+    const contestInfo = userData.userContestRanking;
+    const contestHistory = userData.userContestRankingHistory || [];
+
+    const allBadges = userData.matchedUser?.badges || [];
+    const processedBadges = allBadges.map((b) => ({
+      id: b.id,
+      name: b.name,
+      shortName: b.shortName,
+      displayName: b.displayName,
+      icon: b.icon,
+      hoverText: b.hoverText,
+      category: b.category,
+      creationDate: b.creationDate,
+    }));
 
     return {
       platform: "LeetCode",
       username,
       solved: {
-        All: stats.find((i) => i.difficulty === "All").count,
-        Easy: stats.find((i) => i.difficulty === "Easy").count,
-        Medium: stats.find((i) => i.difficulty === "Medium").count,
-        Hard: stats.find((i) => i.difficulty === "Hard").count,
+        All: stats.find((i) => i.difficulty === "All")?.count || 0,
+        Easy: stats.find((i) => i.difficulty === "Easy")?.count || 0,
+        Medium: stats.find((i) => i.difficulty === "Medium")?.count || 0,
+        Hard: stats.find((i) => i.difficulty === "Hard")?.count || 0,
       },
+      topicStats: mergedTopicStats,
       rating: isNaN(contestInfo?.rating) ? 0 : contestInfo.rating,
       globalRanking: isNaN(contestInfo?.globalRanking)
         ? 0
@@ -118,14 +293,20 @@ const res = await axios.post(
           trendDirection: contest.trendDirection,
           finishTimeInSeconds: contest.finishTimeInSeconds,
         })),
-      badges: contestInfo?.badge ? [contestInfo.badge.name] : [],
+      badges: processedBadges,
+      languageStats,
+      streak: calendar.streak || 0,
+      totalActiveDays: calendar.totalActiveDays || 0,
+      activeYears: calendar.activeYears || [],
+      // submissionCalendar: calendar.submissionCalendar || "",
     };
-  } catch {
+  } catch (error) {
+    console.error("LeetCode fetch error:", error.message);
     return { platform: "LeetCode", username, error: "Failed to fetch data" };
   }
 }
 
-
+// getLeetCodeStats("sabarimcse6369").then((e) => console.log(e));
 
 async function getHackerRankStats(username) {
   const url = `https://www.hackerrank.com/${username}`;
@@ -183,8 +364,6 @@ async function getHackerRankStats(username) {
   }
 }
 
-
-
 async function getCodeChefStats(username) {
   const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 5;
@@ -205,7 +384,6 @@ async function getCodeChefStats(username) {
         timeout: 15000,
       });
 
-      
       if (
         data.includes(
           "The username specified does not exist in our database."
@@ -225,7 +403,6 @@ async function getCodeChefStats(username) {
 
       const $ = cheerio.load(data);
 
-      
       let rating = $("div.rating-number")
         .contents()
         .filter(function () {
@@ -235,7 +412,6 @@ async function getCodeChefStats(username) {
         .trim()
         .replace("?", "");
 
-      
       const solvedText = $("h3")
         .filter((i, el) => $(el).text().includes("Total Problems Solved"))
         .text()
@@ -292,8 +468,6 @@ async function getCodeChefStats(username) {
     }
   }
 }
-
-
 
 async function getCodeforcesStats(username) {
   const profileUrl = `https://codeforces.com/profile/${username}`;
@@ -378,8 +552,6 @@ async function getCodeforcesStats(username) {
     }
   }
 }
-
-
 
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
@@ -490,8 +662,6 @@ async function getTryHackMeStats(username) {
   return stats;
 }
 
-
-
 async function getGithubStats(username) {
   try {
     const token = process.env.GITHUB_TOKEN;
@@ -567,8 +737,6 @@ async function getGithubStats(username) {
   }
 }
 
-
-
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
 const limitedGetLeetCodeStats = leetcodeLimiter.wrap(getLeetCodeStats);
@@ -585,4 +753,5 @@ module.exports = {
   getSkillrackStats: limitedGetSkillrackStats,
   getCodeforcesStats: limitedGetCodeforcesStats,
   getTryHackMeStats,
+  getLeetCodeQuestionOfToday,
 };

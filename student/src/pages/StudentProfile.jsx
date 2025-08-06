@@ -352,6 +352,75 @@ const StudentProfile = ({
                   </div>
                 </div>
 
+                {/* Topic-wise Problem Stats */}
+                {student?.stats?.leetcode?.topicStats?.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-white text-lg font-semibold mb-3">
+                      Problem Tags
+                    </h4>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[200px] overflow-y-auto scrollbar-hide pr-2">
+                      {[...student.stats.leetcode.topicStats]
+                        .sort((a, b) => b.problemsSolved - a.problemsSolved)
+                        .map((topic, index) => (
+                          <div
+                            key={index}
+                            className="bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 flex justify-between items-center"
+                          >
+                            <span className="text-sm text-white font-medium">
+                              {topic.tagName}
+                            </span>
+                            <span className="text-sm text-blue-400 font-bold">
+                              {topic.problemsSolved}
+                            </span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+                {student?.stats?.leetcode?.badges?.length > 0 && (
+                  <div className="mt-6">
+                    <h4 className="text-white text-lg font-semibold mb-3">
+                      Badges
+                    </h4>
+                    <div className="flex flex-wrap gap-3">
+                      {student.stats.leetcode.badges.map((badge, index) => (
+                        <div
+                          key={index}
+                          className="bg-gray-700 hover:bg-gray-600 rounded-xl px-4 py-2 flex items-center gap-2"
+                        >
+                          <img
+                            src={badge.icon}
+                            alt={badge.name}
+                            className="w-6 h-6 object-contain"
+                          />
+                          <span className="text-sm text-white font-medium">
+                            {badge.displayName}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {student?.stats?.leetcode?.streak && (
+                  <div className="mt-6 grid grid-cols-2 gap-4">
+                    <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
+                      <div className="text-xl font-bold text-orange-400">
+                        🔥 {student.stats.leetcode.streak}
+                      </div>
+                      <div className="text-sm text-gray-400">
+                        Current Streak
+                      </div>
+                    </div>
+                    <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
+                      <div className="text-xl font-bold text-green-400">
+                        🏁 {student.stats.leetcode.totalActiveDays}
+                      </div>
+                      <div className="text-sm text-gray-400">Active Days</div>
+                    </div>
+                  </div>
+                )}
+
                 {student.stats.leetcode.contests.length > 0 && (
                   <div className="mt-4">
                     <button

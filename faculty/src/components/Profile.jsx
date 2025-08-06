@@ -1,5 +1,5 @@
 import { Edit, Eye, LogOutIcon, X } from "lucide-react";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { changePassword } from "../services/authOperations";
 import toast from "react-hot-toast";
@@ -10,16 +10,27 @@ export default function Profile({ onClose }) {
   const [editing, setEditing] = useState(false);
   const token = localStorage.getItem("token");
   const [formData, setFormData] = useState({
-    username: classUser.username,
-    email: classUser.email,
-    department: classUser.department.name || "N/A",
-    section: classUser.section,
+    username: "",
+    email: "",
+    department: "",
+    section: "",
   });
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [isChangePassword, setIsChangePassword] = useState();
+
+  useEffect(() => {
+    if (classUser && classUser.department?.name) {
+      setFormData({
+        username: classUser.username,
+        email: classUser.email,
+        department: classUser.department.name,
+        section: classUser.section,
+      });
+    }
+  }, [classUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

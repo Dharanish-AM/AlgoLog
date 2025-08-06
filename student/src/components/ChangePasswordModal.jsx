@@ -2,10 +2,7 @@ import { X, Eye, EyeOff } from "lucide-react";
 import React from "react";
 import toast, { Toaster } from "react-hot-toast";
 
-export default function ChangePasswordModal({
-  onClose,
-  handleUpdatePassword,
-}) {
+export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
   const [showPasswords, setShowPasswords] = React.useState({
     old: false,
     new: false,
