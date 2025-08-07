@@ -514,7 +514,9 @@ app.put("/api/students/:id", async (req, res) => {
     }
 
     // 🔍 Step 2: Validate department
-    const departmentData = await Department.findById(department);
+    const departmentData = mongoose.Types.ObjectId.isValid(department)
+      ? await Department.findById(department)
+      : await Department.findOne({ name: department });
     if (!departmentData) {
       return res.status(404).json({ error: "Department not found" });
     }
@@ -985,14 +987,13 @@ app.get("/api/admin/get-departments", async (req, res) => {
 
 app.get("/api/admin/get-classes", async (req, res) => {
   try {
-    const classes = await Class.find()
-      .populate({
-        path: "students",
-        populate: {
-          path: "department",
-          select: "_id name", 
-        },
-      });
+    const classes = await Class.find().populate({
+      path: "students",
+      populate: {
+        path: "department",
+        select: "_id name",
+      },
+    });
 
     res.status(200).json({ classes });
   } catch (err) {
