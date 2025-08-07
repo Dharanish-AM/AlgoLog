@@ -63,6 +63,25 @@ export default function ProfileModal({
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
+    // Validation block
+    const invalidPlatforms = ["leetcode", "hackerrank", "codechef", "codeforces", "github"];
+    for (let field of invalidPlatforms) {
+      if (data[field]?.includes("http") || data[field]?.includes("https")) {
+        alert(`${field} should only contain a username, not a URL.`);
+        setLoading(false);
+        return;
+      }
+    }
+    if (!data.skillrack?.startsWith("http://") && !data.skillrack?.startsWith("https://")) {
+      alert("Skillrack must be a valid URL (starting with http:// or https://).");
+      setLoading(false);
+      return;
+    }
+    if (!data.email?.endsWith("@sece.ac.in")) {
+      alert("Email must be a valid SECE college email (@sece.ac.in).");
+      setLoading(false);
+      return;
+    }
     await handleUpdate(data);
     setLoading(false);
     onClose();

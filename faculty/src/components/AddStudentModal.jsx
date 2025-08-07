@@ -32,6 +32,31 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    const invalidPlatforms = ["leetcode", "hackerrank", "codechef", "codeforces", "github"];
+    for (let field of invalidPlatforms) {
+      if (
+        formData[field]?.includes("http") ||
+        formData[field]?.includes("https")
+      ) {
+        alert(`${field} should only contain a username, not a URL.`);
+        return;
+      }
+    }
+
+    if (
+      !formData.skillrack?.startsWith("http://") &&
+      !formData.skillrack?.startsWith("https://")
+    ) {
+      alert("Skillrack must be a valid URL (starting with http:// or https://).");
+      return;
+    }
+
+    if (!formData.email?.endsWith("@sece.ac.in")) {
+      alert("Email must be a valid SECE college email (@sece.ac.in).");
+      return;
+    }
+
     const trimmedData = {
       ...formData,
       leetcode: formData.leetcode.trim(),
