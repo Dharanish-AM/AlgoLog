@@ -99,7 +99,11 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                 </p>
                 <h3 className="text-2xl font-bold text-white mb-1">{name}</h3>
                 <p className="text-blue-100 text-sm">
-                  {student.name} | {student.rollNo} | {student.department.name}-{student.section} |{" "}
+                  {student.name} | {student.rollNo} |{" "}
+                  {typeof student.department === "object"
+                    ? student.department.name
+                    : student.department}
+                  -{student.section} |{" "}
                   {student.year}
                 </p>
                 <p className="text-gray-400 text-xs">

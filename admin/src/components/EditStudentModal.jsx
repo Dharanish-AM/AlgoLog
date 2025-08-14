@@ -29,13 +29,16 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
     fetchDepartments();
   });
 
-  useEffect(() => {
+    useEffect(() => {
     if (student) {
       setFormData({
         name: student.name || "",
         email: student.email || "",
         rollNo: student.rollNo || "",
-        department: student.departmen.name || "",
+        department:
+          typeof student.department === "object"
+            ? student.department._id
+            : student.department || "",
         year: student.year || "",
         section: student.section || "",
         leetcode: student?.leetcode || "",

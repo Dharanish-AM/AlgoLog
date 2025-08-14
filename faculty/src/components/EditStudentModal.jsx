@@ -35,7 +35,10 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         name: student.name || "",
         email: student.email || "",
         rollNo: student.rollNo || "",
-        department: student.department.name || "",
+        department:
+          typeof student.department === "object"
+            ? student.department._id
+            : student.department || "",
         year: student.year || "",
         section: student.section || "",
         leetcode: student?.leetcode || "",
@@ -179,7 +182,9 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             required
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
           >
-            <option value="" disabled>Select section</option>
+            <option value="" disabled>
+              Select section
+            </option>
             {["A", "B", "C", "D"].map((sec) => (
               <option key={sec} value={sec}>
                 {sec}

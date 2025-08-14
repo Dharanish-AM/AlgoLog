@@ -556,7 +556,7 @@ app.put("/api/students/:id", async (req, res) => {
       existingStudent.stats || {}
     );
 
-    // 🔁 Step 5: Update student document
+    // 🔁 Step 5: Update student document and populate department
     const updatedStudent = await Student.findByIdAndUpdate(
       id,
       {
@@ -564,7 +564,7 @@ app.put("/api/students/:id", async (req, res) => {
         stats: updatedStats?.stats || existingStudent.stats,
       },
       { new: true }
-    );
+    ).populate("department");
 
     // 🔄 Step 6: If class has changed, update class arrays
     if (existingStudent.classId?.toString() !== classData._id.toString()) {
