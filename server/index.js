@@ -302,6 +302,7 @@ app.get("/api/students/refetch", async (req, res) => {
 
 app.get("/api/students/refetch/single", async (req, res) => {
   try {
+    const startTime = Date.now();
     const { id } = req.query;
     if (!id) {
       console.warn("[WARN] Student ID missing in query.");
@@ -380,7 +381,10 @@ app.get("/api/students/refetch/single", async (req, res) => {
 
     const newStudentData = await Student.findById(id).populate("department");
 
-    console.log(`[DONE] Stats updated for ${student.name} (${student.rollNo})`);
+    const endTime = Date.now();
+    const durationMs = endTime - startTime;
+    const durationSec = (durationMs / 1000).toFixed(2);
+    console.log(`[TIMER] Refetch for student ${student.name} took ${durationMs} ms (~${durationSec} s)`);
 
     return res.status(200).json({
       student: newStudentData,
@@ -1134,106 +1138,67 @@ app.get("/api/get-form-details", async (req, res) => {
 //   }
 // });
 
-// const tmp = async () => {
+
+// const cleanUpClassStudents = async () => {
 //   try {
-//     console.log("Starting . . .");
-//     const students = await Student.find();
-//     const pass = "sece@123";
-//     for (const student of students) {
-//       const hashpass = await bcrypt.hash(pass, 10);
-//       student.password = hashpass;
-//       await student.save();
+//     // Fetch all students with their classId
+//     const allStudents = await Student.find({}, "_id classId");
+//     const validStudentIds = new Set(allStudents.map((s) => s._id.toString()));
+
+//     // Group student IDs by classId
+//     const classIdToStudentIds = {};
+//     allStudents.forEach((student) => {
+//       const classId = student.classId ? student.classId.toString() : null;
+//       if (!classId) return;
+
+//       if (!classIdToStudentIds[classId]) {
+//         classIdToStudentIds[classId] = [];
+//       }
+//       classIdToStudentIds[classId].push(student._id.toString());
+//     });
+
+//     const classes = await Class.find();
+
+//     for (const cls of classes) {
+//       const currentIds = new Set(cls.students.map((id) => id.toString()));
+//       const expectedIds = new Set(
+//         classIdToStudentIds[cls._id.toString()] || []
+//       );
+
+//       // Remove invalid students
+//       const cleaned = Array.from(currentIds).filter((id) =>
+//         expectedIds.has(id)
+//       );
+
+//       // Add missing students
+//       const missing = Array.from(expectedIds).filter(
+//         (id) => !currentIds.has(id)
+//       );
+
+//       // Merge final list and convert to ObjectId
+//       const updatedIds = [...new Set([...cleaned, ...missing])].map(
+//         (id) => new mongoose.Types.ObjectId(id)
+//       );
+
+//       if (updatedIds.length !== cls.students.length) {
+//         cls.students = updatedIds;
+//         await cls.save();
+//         console.log(
+//           `🔄 Synced class "${cls.name || cls._id}": ${cleaned.length} kept, ${
+//             missing.length
+//           } added`
+//         );
+//       }
 //     }
-//     console.log("Done . . .");
-//   } catch (err) {
-//     console.log(err);
+
+//     console.log("✅ All classes updated to match student-class mappings.");
+//   } catch (error) {
+//     console.error("❌ Error during class cleanup:", error);
 //   }
 // };
 
-// const tmp = async () => {
-//   console.log("Start");
-//   const students = await Student.find();
-//   for (const s of students) {
-//     s.department = "6827032ce9f5d67cac7685e9";
-//     await s.save();
-//   }
-//   console.log("End");
-// };
+//  cleanUpClassStudents();
 
-// tmp();
-
-// const temp = async()=>{
-//   console.log("START")
-//   const departments = await Department.find()
-//   const pass = "cse@123"
-//   const hashPass = await bcrypt.hash(pass,10)
-
-//   departments.forEach(async(d)=>{
-//     d.password = hashPass
-//     await d.save()
-//   })
-//   console.log("END")
-// }
-
-const cleanUpClassStudents = async () => {
-  try {
-    // Fetch all students with their classId
-    const allStudents = await Student.find({}, "_id classId");
-    const validStudentIds = new Set(allStudents.map((s) => s._id.toString()));
-
-    // Group student IDs by classId
-    const classIdToStudentIds = {};
-    allStudents.forEach((student) => {
-      const classId = student.classId ? student.classId.toString() : null;
-      if (!classId) return;
-
-      if (!classIdToStudentIds[classId]) {
-        classIdToStudentIds[classId] = [];
-      }
-      classIdToStudentIds[classId].push(student._id.toString());
-    });
-
-    const classes = await Class.find();
-
-    for (const cls of classes) {
-      const currentIds = new Set(cls.students.map((id) => id.toString()));
-      const expectedIds = new Set(
-        classIdToStudentIds[cls._id.toString()] || []
-      );
-
-      // Remove invalid students
-      const cleaned = Array.from(currentIds).filter((id) =>
-        expectedIds.has(id)
-      );
-
-      // Add missing students
-      const missing = Array.from(expectedIds).filter(
-        (id) => !currentIds.has(id)
-      );
-
-      // Merge final list and convert to ObjectId
-      const updatedIds = [...new Set([...cleaned, ...missing])].map(
-        (id) => new mongoose.Types.ObjectId(id)
-      );
-
-      if (updatedIds.length !== cls.students.length) {
-        cls.students = updatedIds;
-        await cls.save();
-        console.log(
-          `🔄 Synced class "${cls.name || cls._id}": ${cleaned.length} kept, ${
-            missing.length
-          } added`
-        );
-      }
-    }
-
-    console.log("✅ All classes updated to match student-class mappings.");
-  } catch (error) {
-    console.error("❌ Error during class cleanup:", error);
-  }
-};
-
-// cleanUpClassStudents();
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
