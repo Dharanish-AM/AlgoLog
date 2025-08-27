@@ -46,6 +46,13 @@ export const adminReducer = (state = initialState, action) => {
           student._id === action.payload._id ? action.payload : student
         ),
       };
+    case "DELETE_STUDENT":
+      return {
+        ...state,
+        students: state.students.filter(
+          (student) => student._id !== action.payload
+        ),
+      };
     default:
       return state;
   }

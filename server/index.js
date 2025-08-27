@@ -384,7 +384,9 @@ app.get("/api/students/refetch/single", async (req, res) => {
     const endTime = Date.now();
     const durationMs = endTime - startTime;
     const durationSec = (durationMs / 1000).toFixed(2);
-    console.log(`[TIMER] Refetch for student ${student.name} took ${durationMs} ms (~${durationSec} s)`);
+    console.log(
+      `[TIMER] Refetch for student ${student.name} took ${durationMs} ms (~${durationSec} s)`
+    );
 
     return res.status(200).json({
       student: newStudentData,
@@ -1050,6 +1052,34 @@ app.post("/api/student/login", async (req, res) => {
   }
 });
 
+app.delete("/api/students/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const student = await Student.findById(id);
+    if (!student) {
+      return res.status(404).json({ message: "Student not found" });
+    }
+
+    const classId = student.classId;
+
+    await Class.findByIdAndUpdate(
+      classId,
+      { $pull: { students: id } },
+      { new: true }
+    );
+
+    await Student.findByIdAndDelete(id);
+
+    res.json({
+      message: "Student deleted and removed from class successfully",
+    });
+  } catch (err) {
+    console.error("Error deleting student:", err);
+    res.status(500).json({ message: "Failed to delete student" });
+  }
+});
+
 app.get("/api/student/get-student", async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
@@ -1138,7 +1168,6 @@ app.get("/api/get-form-details", async (req, res) => {
 //   }
 // });
 
-
 // const cleanUpClassStudents = async () => {
 //   try {
 //     // Fetch all students with their classId
@@ -1198,7 +1227,6 @@ app.get("/api/get-form-details", async (req, res) => {
 // };
 
 //  cleanUpClassStudents();
-
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

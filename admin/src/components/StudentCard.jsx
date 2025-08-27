@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import EditStudentModal from "./EditStudentModal";
-import axios from "axios";
 import toast from "react-hot-toast";
-import { editStudent } from "../services/adminOperations";
+import { editStudent,handleDeleteStudent } from "../services/adminOperations";
 import { useDispatch } from "react-redux";
 
 const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
@@ -29,8 +28,21 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
     setIsEditOpen(false);
   };
 
-  const handleDelete = () => {
-    console.log("Delete student:", student);
+  
+  const handleDelete = async () => {
+    setIsEditOpen(false);
+    setEditLoading(true);
+    try {
+      const response = await handleDeleteStudent(student._id, token, dispatch);
+      if (response?.status === 200) {
+        toast.success("Student deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Failed to delete student");
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleEditStudent = async (updatedData) => {

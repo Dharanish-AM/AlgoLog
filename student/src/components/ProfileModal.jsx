@@ -1,6 +1,7 @@
 import axios from "axios";
 import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { GridLoader } from "react-spinners";
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -53,10 +54,70 @@ export default function ProfileModal({
 
   const handleChange = (e) => {
     const { name, value } = e.target;
+    let newValue = value;
+
+    // Normalize usernames from URLs for specific platforms
+    if (["leetcode", "hackerrank", "codechef", "codeforces", "github"].includes(name)) {
+      try {
+        const url = new URL(value.trim());
+        switch (name) {
+          case "leetcode":
+            // https://leetcode.com/u/<username>
+            if (url.hostname === "leetcode.com") {
+              const parts = url.pathname.split("/");
+              if (parts.length >= 3 && parts[1] === "u") {
+                newValue = parts[2];
+              }
+            }
+            break;
+          case "hackerrank":
+            // https://www.hackerrank.com/profile/<username>
+            if (url.hostname === "www.hackerrank.com" || url.hostname === "hackerrank.com") {
+              const parts = url.pathname.split("/");
+              if (parts.length >= 3 && parts[1] === "profile") {
+                newValue = parts[2];
+              }
+            }
+            break;
+          case "codechef":
+            // https://www.codechef.com/users/<username>
+            if (url.hostname === "www.codechef.com" || url.hostname === "codechef.com") {
+              const parts = url.pathname.split("/");
+              if (parts.length >= 3 && parts[1] === "users") {
+                newValue = parts[2];
+              }
+            }
+            break;
+          case "codeforces":
+            // https://codeforces.com/profile/<username>
+            if (url.hostname === "codeforces.com") {
+              const parts = url.pathname.split("/");
+              if (parts.length >= 3 && parts[1] === "profile") {
+                newValue = parts[2];
+              }
+            }
+            break;
+          case "github":
+            // https://github.com/<username>
+            if (url.hostname === "github.com") {
+              const parts = url.pathname.split("/");
+              if (parts.length >= 2 && parts[1] !== "") {
+                newValue = parts[1];
+              }
+            }
+            break;
+          default:
+            break;
+        }
+      } catch {
+        // If not a valid URL, keep the original value
+      }
+    }
+
     if (name === "department") {
-      setData((prev) => ({ ...prev, [name]: value, section: "" }));
+      setData((prev) => ({ ...prev, [name]: newValue, section: "" }));
     } else {
-      setData((prev) => ({ ...prev, [name]: value }));
+      setData((prev) => ({ ...prev, [name]: newValue }));
     }
   };
 
@@ -72,13 +133,13 @@ export default function ProfileModal({
         return;
       }
     }
-    if (!data.skillrack?.startsWith("http://") && !data.skillrack?.startsWith("https://")) {
-      alert("Skillrack must be a valid URL (starting with http:// or https://).");
+    if (!data.email.endsWith("@sece.ac.in")) {
+      toast.error("Email must end with @sece.ac.in.");
       setLoading(false);
       return;
     }
-    if (!data.email?.endsWith("@sece.ac.in")) {
-      alert("Email must be a valid SECE college email (@sece.ac.in).");
+    if (!data.skillrack?.startsWith("http://") && !data.skillrack?.startsWith("https://")) {
+      toast.error("Skillrack must be a valid URL (starting with http:// or https://).");
       setLoading(false);
       return;
     }

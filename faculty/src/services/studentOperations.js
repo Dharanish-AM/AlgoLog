@@ -29,15 +29,11 @@ export const getStudents = async (classId, token, dispatch) => {
 
 export const addStudent = async (newStudent, token, dispatch) => {
   try {
-    const response = await axios.post(
-      `${API_URL}/api/students`,
-       newStudent ,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
+    const response = await axios.post(`${API_URL}/api/students`, newStudent, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     if (response.status === 200 || response.status === 201) {
       const addedStudent = response.data.student;
       dispatch({
@@ -127,6 +123,26 @@ export const editStudent = async (id, updatedData, token, dispatch) => {
     }
   } catch (error) {
     console.error("Error updating student:", error);
+    throw error;
+  }
+};
+
+export const handleDeleteStudent = async (id, token, dispatch) => {
+  try {
+    const response = await axios.delete(`${API_URL}/api/students/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.status === 200) {
+      dispatch({
+        type: "DELETE_STUDENT",
+        payload: id,
+      });
+      return response;
+    }
+  } catch (error) {
+    console.error("Error deleting student:", error);
     throw error;
   }
 };

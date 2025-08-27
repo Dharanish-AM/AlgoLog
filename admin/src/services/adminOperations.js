@@ -92,6 +92,26 @@ export const editStudent = async (id, updatedData, token, dispatch) => {
   }
 };
 
+export const handleDeleteStudent = async (id, token, dispatch) => {
+  try {
+    const response = await axios.delete(`${API_URL}/api/students/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.status === 200) {
+      dispatch({
+        type: "DELETE_STUDENT",
+        payload: id,
+      });
+      return response;
+    }
+  } catch (error) {
+    console.error("Error deleting student:", error);
+    throw error;
+  }
+};
+
 export const refetchSingleStudent = async (studentId, token, dispatch) => {
   try {
     const response = await axios.get(

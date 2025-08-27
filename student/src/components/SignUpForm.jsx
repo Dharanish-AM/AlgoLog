@@ -50,6 +50,13 @@ const SignUpForm = ({ onClose }) => {
     e.preventDefault();
     if (isSubmitting) return;
     setIsSubmitting(true);
+
+    if (!formData.email.endsWith("@sece.ac.in")) {
+      toast.error("Email must end with @sece.ac.in");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const trimmedData = {
         ...formData,
@@ -83,6 +90,7 @@ const SignUpForm = ({ onClose }) => {
       }
     } catch (err) {
       toast.error("Error while adding student");
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
@@ -248,6 +256,26 @@ const SignUpForm = ({ onClose }) => {
                           value.startsWith("http://")
                         ) {
                           value = "https://" + value.slice(7); // Enforce https for skillrack
+                        }
+                        try {
+                          if (value.startsWith("http")) {
+                            const url = new URL(value);
+
+                            if (key === "leetcode" && url.pathname.startsWith("/u/")) {
+                              value = url.pathname.split("/u/")[1].replace(/\/$/, "");
+                            } else if (key === "hackerrank" && url.pathname.startsWith("/profile/")) {
+                              value = url.pathname.split("/profile/")[1].replace(/\/$/, "");
+                            } else if (key === "codechef" && url.pathname.startsWith("/users/")) {
+                              value = url.pathname.split("/users/")[1].replace(/\/$/, "");
+                            } else if (key === "codeforces" && url.pathname.startsWith("/profile/")) {
+                              value = url.pathname.split("/profile/")[1].replace(/\/$/, "");
+                            } else if (key === "github") {
+                              value = url.pathname.split("/")[1].replace(/\/$/, "") || value;
+                            }
+                          }
+                        } catch (e) {
+                          console.warn("Invalid URL format entered for", key, value);
+                          console.error(e);
                         }
                       }
                       setFormData({

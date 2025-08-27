@@ -3,8 +3,9 @@ import { Award, Code, Trophy, Star, X, Link } from "lucide-react";
 import EditStudentModal from "./EditStudentModal";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { editStudent } from "../services/studentOperations";
+import { editStudent,handleDeleteStudent } from "../services/studentOperations";
 import { useDispatch } from "react-redux";
+
 
 const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
   const {
@@ -29,8 +30,20 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
     setIsEditOpen(false);
   };
 
-  const handleDelete = () => {
-    console.log("Delete student:", student);
+  const handleDelete = async () => {
+    setIsEditOpen(false);
+    setEditLoading(true);
+    try {
+      const response = await handleDeleteStudent(student._id, token, dispatch);
+      if (response?.status === 200) {
+        toast.success("Student deleted successfully");
+      }
+    } catch (error) {
+      console.error("Error deleting student:", error);
+      toast.error("Failed to delete student");
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleEditStudent = async (updatedData) => {
@@ -103,8 +116,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   {typeof student.department === "object"
                     ? student.department.name
                     : student.department}
-                  -{student.section} |{" "}
-                  {student.year}
+                  -{student.section} | {student.year}
                 </p>
                 <p className="text-gray-400 text-xs">
                   Last Updated:{" "}
@@ -198,7 +210,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                     <div className="text-sm text-gray-400">Global Rank</div>
                   </div>
                 )}
-                {student.stats.leetcode.rating ?  (
+                {student.stats.leetcode.rating ? (
                   <div className="mt-8 space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
@@ -297,7 +309,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                       </div>
                     )}
                   </div>
-                ):null}
+                ) : null}
               </div>
             </div>
             <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
