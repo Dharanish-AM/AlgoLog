@@ -18,7 +18,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          key: ${{ secrets.EC2_KEY }}   # updated secret name
           source: "."
           target: "/home/ubuntu/app"   # change this to your app directory
 
@@ -27,7 +27,7 @@ jobs:
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_KEY }}
+          key: ${{ secrets.EC2_KEY }}   # updated secret name
           script: |
             cd /home/ubuntu/app
             npm install --production   # if Node.js
