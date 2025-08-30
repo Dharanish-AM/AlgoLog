@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
-          source: "."
+          source: "server/*"
           target: "/home/ubuntu/app"   # change this to your app directory
 
       - name: Run commands on EC2
@@ -29,6 +29,12 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            cd /home/ubuntu/app
-            npm install --production   # if Node.js
-            pm2 restart app || pm2 start index.js --name app
+            cd /home/ubuntu/app/backend
+            npm ci --omit=dev
+            pm2 describe app > /dev/null
+            if [ $? -eq 0 ]; then
+              pm2 restart app
+            else
+              pm2 start server.js --name app
+              pm2 save
+            fi
