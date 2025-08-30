@@ -511,18 +511,22 @@ app.put("/api/students/:id", async (req, res) => {
       github,
     } = req.body;
 
-    console.log(`🛠️ Updating student with ID: ${id}`);
+    console.log(`🛠️ Updating student:`, req.body);
 
     // 🔍 Step 1: Check if student exists
     const existingStudent = await Student.findById(id);
     if (!existingStudent) {
       return res.status(404).json({ error: "Student not found" });
     }
+    // Determine department ID from object or string
+    const departmentId =
+      typeof department === "string" ? department : department?._id;
 
-    // 🔍 Step 2: Validate department
-    const departmentData = mongoose.Types.ObjectId.isValid(department)
-      ? await Department.findById(department)
-      : await Department.findOne({ name: department });
+    if (!departmentId || !mongoose.Types.ObjectId.isValid(departmentId)) {
+      return res.status(400).json({ error: "Invalid department ID" });
+    }
+
+    const departmentData = await Department.findById(departmentId);
     if (!departmentData) {
       return res.status(404).json({ error: "Department not found" });
     }
