@@ -44,11 +44,9 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
       }
     }
 
-    if (
-      !formData.skillrack?.startsWith("http://") &&
-      !formData.skillrack?.startsWith("https://")
-    ) {
-      alert("Skillrack must be a valid URL (starting with http:// or https://).");
+    const skillrackPattern = /^https:\/\/www\.skillrack\.com\/faces\/resume\.xhtml\?id=\d+&key=[a-fA-F0-9]+$/;
+    if (!skillrackPattern.test(formData.skillrack)) {
+      alert("Skillrack must be a valid URL in the format: https://www.skillrack.com/faces/resume.xhtml?id=<digits>&key=<hex>.");
       return;
     }
 

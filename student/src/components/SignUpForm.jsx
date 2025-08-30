@@ -57,6 +57,14 @@ const SignUpForm = ({ onClose }) => {
       return;
     }
 
+    const skillrackUrl = formData.skillrack.trim();
+    const skillrackRegex = /^https:\/\/www\.skillrack\.com\/faces\/resume\.xhtml\?id=\d+&key=[a-fA-F0-9]+$/;
+    if (!skillrackRegex.test(skillrackUrl)) {
+      toast.error("SkillRack URL must be in the format: https://www.skillrack.com/faces/resume.xhtml?id=<digits>&key=<hex>");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
       const trimmedData = {
         ...formData,
@@ -64,7 +72,7 @@ const SignUpForm = ({ onClose }) => {
         hackerrank: formData.hackerrank.trim(),
         codechef: formData.codechef.trim(),
         codeforces: formData.codeforces.trim(),
-        skillrack: formData.skillrack.trim(),
+        skillrack: skillrackUrl,
         github: formData.github.trim(),
       };
       console.log(trimmedData);
