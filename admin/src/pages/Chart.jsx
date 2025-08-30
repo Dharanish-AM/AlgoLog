@@ -117,8 +117,8 @@ export default function Chart() {
     }, 0);
   };
 
-  // Chart data: Classes
-  const classPerformance = classes.map((cls) => {
+  // Chart data: Classes (percentage values)
+  const classPerformanceRaw = classes.map((cls) => {
     const total = cls.students?.reduce((acc, student) => {
       return (
         acc +
@@ -132,22 +132,30 @@ export default function Chart() {
       totalSolved: total,
     };
   });
+  // Find the highest totalSolved for percentage scaling
+  const maxClassTotal = Math.max(...classPerformanceRaw.map(c => c.totalSolved || 0), 1);
+  const classPerformance = classPerformanceRaw.map(c => ({
+    ...c,
+    percent: ((c.totalSolved / maxClassTotal) * 100)
+  }));
 
-  const classChartData = {
-    labels: classPerformance.map((c) => c.name),
-    datasets: [
-      {
-        label: `Score by Class (${selectedPlatform})`,
-        data: classPerformance.map((c) => c.totalSolved),
-        backgroundColor: "rgba(54, 162, 235, 0.6)",
-      },
-    ],
-  };
+  const barColors = [
+  "#3B82F6", // Blue
+  "#EF4444", // Red
+  "#10B981", // Green
+  "#F59E0B", // Orange
+  "#8B5CF6", // Purple
+  "#EC4899", // Pink
+  "#FACC15", // Yellow
+  "#6366F1", // Indigo
+  "#14B8A6", // Teal
+  "#F472B6", // Rose
+];
 
-  const departmentPerformance = departments?.map((dept) => {
+  // Department performance as average (percentage)
+  const departmentPerformanceRaw = departments?.map((dept) => {
     let total = 0;
     let studentCount = 0;
-
     classes.forEach((cls) => {
       if (cls.department === dept._id) {
         cls.students?.forEach((student) => {
@@ -159,20 +167,51 @@ export default function Chart() {
         });
       }
     });
-
     return {
       name: dept.name,
       avgSolved: studentCount ? Math.round(total / studentCount) : 0,
     };
   });
+  // Find the highest avgSolved for percentage scaling
+  const maxDeptAvg = Math.max(...(departmentPerformanceRaw?.map(d => d.avgSolved || 0) ?? [1]), 1);
+  const departmentPerformance = departmentPerformanceRaw?.map(d => ({
+    ...d,
+    percent: ((d.avgSolved / maxDeptAvg) * 100)
+  }));
+  const classChartData = {
+    labels: classPerformance.map((c) => c.name),
+    datasets: [
+      {
+        label: `Class Performance (% of Top Class)`,
+        data: classPerformance.map((c) => c.percent),
+        backgroundColor: classPerformance.map(
+          (_, idx) => barColors[idx % barColors.length]
+        ),
+        borderColor: classPerformance.map(
+          (_, idx) => barColors[idx % barColors.length]
+        ),
+        borderWidth: 1,
+        borderRadius: 6,
+        barPercentage: 0.7,
+      },
+    ],
+  };
 
   const departmentChartData = {
     labels: departmentPerformance?.map((d) => d.name),
     datasets: [
       {
-        label: `Average Score by Department (${selectedPlatform})`,
-        data: departmentPerformance?.map((d) => d.avgSolved),
-        backgroundColor: "rgba(255, 99, 132, 0.6)",
+        label: `Department Performance (% of Top Dept Avg)`,
+        data: departmentPerformance?.map((d) => d.percent),
+        backgroundColor: departmentPerformance?.map(
+          (_, idx) => barColors[idx % barColors.length]
+        ),
+        borderColor: departmentPerformance?.map(
+          (_, idx) => barColors[idx % barColors.length]
+        ),
+        borderWidth: 1,
+        borderRadius: 6,
+        barPercentage: 0.7,
       },
     ],
   };
@@ -318,27 +357,49 @@ export default function Chart() {
                       legend: { position: "top" },
                       tooltip: {
                         callbacks: {
+                          label: (context) => {
+                            // Show percent in tooltip
+                            const percent = context.parsed.y;
+                            const cIdx = context.dataIndex;
+                            const totalSolved = classPerformance[cIdx]?.totalSolved ?? 0;
+                            return [
+                              `Percentage: ${percent.toFixed(1)}%`,
+                              `Total Score: ${totalSolved}`
+                            ];
+                          },
                           afterBody: (context) => {
                             const label = context[0].label;
-                            const breakdown =
-                              selectedChart === "class"
-                                ? getPlatformBreakdownForClass(
-                                    classes.find(
-                                      (cls) =>
-                                        (cls.username || cls.name) === label
-                                    )
-                                  )
-                                : getPlatformBreakdownForDepartment(
-                                    departments.find((d) => d.name === label)
-                                      ?._id
-                                  );
-                            return breakdown.map(
-                              (line) => `${line.platform}: ${line.value}`
+                            const breakdown = getPlatformBreakdownForClass(
+                              classes.find(
+                                (cls) =>
+                                  (cls.username || cls.name) === label
+                              )
                             );
+                            return [
+                              "Platform Breakdown:",
+                              ...breakdown.map(
+                                (line) => `${line.platform}: ${line.value}`
+                              ),
+                            ];
                           },
                         },
                       },
                     },
+                    scales: {
+                      y: {
+                        min: 0,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: "Percentage (%)"
+                        },
+                        ticks: {
+                          callback: function(value) {
+                            return value + "%";
+                          }
+                        }
+                      }
+                    }
                   }}
                 />
               </div>
@@ -358,27 +419,46 @@ export default function Chart() {
                       legend: { position: "top" },
                       tooltip: {
                         callbacks: {
+                          label: (context) => {
+                            const percent = context.parsed.y;
+                            const dIdx = context.dataIndex;
+                            const avgSolved = departmentPerformance[dIdx]?.avgSolved ?? 0;
+                            return [
+                              `Percentage: ${percent.toFixed(1)}%`,
+                              `Avg Score: ${avgSolved}`
+                            ];
+                          },
                           afterBody: (context) => {
                             const label = context[0].label;
-                            const breakdown =
-                              selectedChart === "class"
-                                ? getPlatformBreakdownForClass(
-                                    classes.find(
-                                      (cls) =>
-                                        (cls.username || cls.name) === label
-                                    )
-                                  )
-                                : getPlatformBreakdownForDepartment(
-                                    departments.find((d) => d.name === label)
-                                      ?._id
-                                  );
-                            return breakdown.map(
-                              (line) => `${line.platform}: ${line.value}`
+                            const deptObj = departments.find((d) => d.name === label);
+                            const breakdown = getPlatformBreakdownForDepartment(
+                              deptObj?._id
                             );
+                            return [
+                              "Platform Breakdown:",
+                              ...breakdown.map(
+                                (line) => `${line.platform}: ${line.value}`
+                              ),
+                            ];
                           },
                         },
                       },
                     },
+                    scales: {
+                      y: {
+                        min: 0,
+                        max: 100,
+                        title: {
+                          display: true,
+                          text: "Percentage (%)"
+                        },
+                        ticks: {
+                          callback: function(value) {
+                            return value + "%";
+                          }
+                        }
+                      }
+                    }
                   }}
                 />
               </div>
@@ -457,11 +537,14 @@ export default function Chart() {
           </div>
         </div>
       )}
-      {
-        selectedStudent && <StudentCard onClose={()=>{
-            setSelectedStudent(null)
-        }} student={selectedStudent} />
-      }
+      {selectedStudent && (
+        <StudentCard
+          onClose={() => {
+            setSelectedStudent(null);
+          }}
+          student={selectedStudent}
+        />
+      )}
     </div>
   );
 }

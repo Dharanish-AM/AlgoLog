@@ -1,5 +1,5 @@
 const initialState = {
-  departmensts: [],
+  departments: [],
   classes: [],
   students: [],
   currentDepartment: null,

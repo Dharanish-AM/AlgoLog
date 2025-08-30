@@ -69,6 +69,13 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    const skillrackRegex = /^https:\/\/www\.skillrack\.com\/faces\/resume\.xhtml\?id=\d+&key=[a-fA-F0-9]+$/;
+    if (formData.skillrack && !skillrackRegex.test(formData.skillrack)) {
+      alert(
+        "Invalid SkillRack URL. Please enter a valid URL in the format: https://www.skillrack.com/faces/resume.xhtml?id=123456&key=abcdef1234567890"
+      );
+      return;
+    }
     const trimmedData = {
       ...formData,
       leetcode: formData.leetcode.trim(),

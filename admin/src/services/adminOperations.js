@@ -4,10 +4,12 @@ const API_URL = import.meta.env.VITE_API_URL;
 export const getDepartments = async (token, dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/api/admin/get-departments`);
+    console.log(response)
     dispatch({
       type: "SET_DEPARTMENTS",
       payload: response.data.departments,
     });
+    return response.data.departments;
   } catch (error) {
     throw error.response.data;
   }
