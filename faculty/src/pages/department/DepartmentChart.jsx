@@ -89,12 +89,23 @@ export default function DepartmentChart() {
         codechef: student.stats?.codechef?.fullySolved || 0,
         skillrack: student.stats?.skillrack?.programsSolved || 0,
         github: student.stats?.github?.totalCommits || 0,
+        hackerrank: student.stats?.hackerrank?.badges?.length || 0,
       }))
       .sort((a, b) => {
         const totalA =
-          a.leetcode + a.codeforces + a.codechef + a.skillrack + a.github;
+          a.leetcode +
+          a.codeforces +
+          a.codechef +
+          a.skillrack +
+          a.github +
+          a.hackerrank;
         const totalB =
-          b.leetcode + b.codeforces + b.codechef + b.skillrack + b.github;
+          b.leetcode +
+          b.codeforces +
+          b.codechef +
+          b.skillrack +
+          b.github +
+          b.hackerrank;
         return totalB - totalA;
       })
       .slice(0, 10);
@@ -126,6 +137,10 @@ export default function DepartmentChart() {
       (sum, s) => sum + (s.stats?.github?.totalCommits || 0),
       0
     ),
+    hackerrank: filteredStudents.reduce(
+      (sum, s) => sum + (s.stats?.hackerrank?.badges?.length || 0),
+      0
+    ),
   };
 
   const classes = department?.classes || [];
@@ -139,7 +154,8 @@ export default function DepartmentChart() {
         (student.stats?.codeforces?.problemsSolved || 0) +
         (student.stats?.codechef?.fullySolved || 0) +
         (student.stats?.skillrack?.programsSolved || 0) +
-        (student.stats?.github?.totalCommits || 0)
+        (student.stats?.github?.totalCommits || 0) +
+        (student.stats?.hackerrank?.badges?.length || 0)
       );
     }, 0);
     return { section: cls.section, totalStats };
@@ -168,12 +184,23 @@ export default function DepartmentChart() {
       codechef: student.stats?.codechef?.fullySolved || 0,
       skillrack: student.stats?.skillrack?.programsSolved || 0,
       github: student.stats?.github?.totalCommits || 0,
+      hackerrank: student.stats?.hackerrank?.badges?.length || 0,
     }))
     .sort((a, b) => {
       const totalA =
-        a.leetcode + a.codeforces + a.codechef + a.skillrack + a.github;
+        a.leetcode +
+        a.codeforces +
+        a.codechef +
+        a.skillrack +
+        a.github +
+        a.hackerrank;
       const totalB =
-        b.leetcode + b.codeforces + b.codechef + b.skillrack + b.github;
+        b.leetcode +
+        b.codeforces +
+        b.codechef +
+        b.skillrack +
+        b.github +
+        b.hackerrank;
       return totalB - totalA;
     })
     .slice(0, 10);
@@ -184,6 +211,7 @@ export default function DepartmentChart() {
     codechef: "#FF9800",
     skillrack: "#57B4BA",
     github: "#FFAAAA",
+    hackerrank: "#6E48AA",
   };
 
   const CATEGORY_COLORS = {
@@ -200,7 +228,8 @@ export default function DepartmentChart() {
         (s.stats?.codeforces?.problemsSolved || 0) +
         (s.stats?.codechef?.fullySolved || 0) +
         (s.stats?.skillrack?.programsSolved || 0) +
-        (s.stats?.github?.totalCommits || 0)
+        (s.stats?.github?.totalCommits || 0) +
+        (s.stats?.hackerrank?.badges?.length || 0)
     )
     .sort((a, b) => a - b);
 
@@ -213,7 +242,8 @@ export default function DepartmentChart() {
       (student.stats?.codeforces?.problemsSolved || 0) +
       (student.stats?.codechef?.fullySolved || 0) +
       (student.stats?.skillrack?.programsSolved || 0) +
-      (student.stats?.github?.totalCommits || 0);
+      (student.stats?.github?.totalCommits || 0) +
+      (student.stats?.hackerrank?.badges?.length || 0);
 
     // Fallback if percentiles are not computable
     if (!Number.isFinite(p33) || !Number.isFinite(p66)) {
