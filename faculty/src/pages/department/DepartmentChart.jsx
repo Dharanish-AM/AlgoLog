@@ -481,26 +481,11 @@ export default function DepartmentChart() {
                   />
                   <YAxis />
                   <Tooltip />
-                  {Object.entries(platformColors).map(([key]) => (
-                    <Bar key={key} dataKey={key} stackId="a">
-                      {topFilteredStudents.map((entry, index) => {
-                        const colors = [
-                          "#E55050",
-                          "#D2DE32",
-                          "#FF9800",
-                          "#57B4BA",
-                          "#FFAAAA",
-                          "#4F46E5",
-                          "#34D399",
-                          "#F59E0B",
-                          "#8B5CF6",
-                          "#EC4899",
-                        ];
-                        const color = colors[index % colors.length];
-                        return (
-                          <Cell key={`cell-${key}-${index}`} fill={color} />
-                        );
-                      })}
+                  {Object.entries(platformColors).map(([key, color]) => (
+                    <Bar key={key} dataKey={key} stackId="a" fill={color}>
+                      {topFilteredStudents.map((entry, index) => (
+                        <Cell key={`cell-${key}-${index}`} fill={color} />
+                      ))}
                     </Bar>
                   ))}
                 </BarChart>
