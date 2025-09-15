@@ -547,6 +547,75 @@ const StudentProfile = ({
             ) : null}
           </div>
 
+          <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
+            <a
+              href={student.skillrack}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <ExternalLink className="w-5 h-5" />
+            </a>
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <FileText className="w-6 h-6 text-purple-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-white">Skillrack</h3>
+                <p className="text-sm text-gray-400">
+                  Rank #{student.stats.skillrack.rank}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center justify-center flex-col mb-4 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+              <div className="text-2xl font-bold text-purple-400 mb-1">
+                {student.stats.skillrack.programsSolved}
+              </div>
+              <div className="text-sm text-gray-400">Programs Solved</div>
+            </div>
+            <div className="space-y-2 mb-4">
+              <h4 className="font-semibold text-white">Top Languages</h4>
+              {student &&
+                Object.entries(student?.stats?.skillrack?.languages || {})
+                  .slice(0, 3)
+                  .map(([lang, count]) => (
+                    <div
+                      key={lang}
+                      className="flex justify-between items-center"
+                    >
+                      <span className="text-gray-200 text-sm">{lang}</span>
+                      <span className="text-white font-medium">{count}</span>
+                    </div>
+                  ))}
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-semibold text-white">Certificates</h4>
+              {student.stats.skillrack.certificates.map((cert, index) => (
+                <div
+                  key={index}
+                  className="p-2 bg-gray-700 py-4 px-6 rounded-lg hover:bg-gray-600"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="text-gray-200 text-sm font-medium">
+                      {cert.title}
+                    </span>
+                    <a
+                      href={cert.link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    {formatDate(cert.date)}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* HackerRank */}
           <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
             <a
@@ -673,74 +742,7 @@ const StudentProfile = ({
           </div>
 
           {/* Skillrack */}
-          <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
-            <a
-              href={student.skillrack}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <ExternalLink className="w-5 h-5" />
-            </a>
-            <div className="flex items-center space-x-3 mb-6">
-              <div className="w-10 h-10 bg-purple-900/30 rounded-lg flex items-center justify-center">
-                <FileText className="w-6 h-6 text-purple-400" />
-              </div>
-              <div>
-                <h3 className="text-xl font-bold text-white">Skillrack</h3>
-                <p className="text-sm text-gray-400">
-                  Rank #{student.stats.skillrack.rank}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-center flex-col mb-4 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-              <div className="text-2xl font-bold text-purple-400 mb-1">
-                {student.stats.skillrack.programsSolved}
-              </div>
-              <div className="text-sm text-gray-400">Programs Solved</div>
-            </div>
-            <div className="space-y-2 mb-4">
-              <h4 className="font-semibold text-white">Top Languages</h4>
-              {student &&
-                Object.entries(student?.stats?.skillrack?.languages || {})
-                  .slice(0, 3)
-                  .map(([lang, count]) => (
-                    <div
-                      key={lang}
-                      className="flex justify-between items-center"
-                    >
-                      <span className="text-gray-200 text-sm">{lang}</span>
-                      <span className="text-white font-medium">{count}</span>
-                    </div>
-                  ))}
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-semibold text-white">Certificates</h4>
-              {student.stats.skillrack.certificates.map((cert, index) => (
-                <div
-                  key={index}
-                  className="p-2 bg-gray-700 py-4 px-6 rounded-lg hover:bg-gray-600"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-gray-200 text-sm font-medium">
-                      {cert.title}
-                    </span>
-                    <a
-                      href={cert.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300"
-                    >
-                      <ExternalLink className="w-4 h-4" />
-                    </a>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    {formatDate(cert.date)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          
 
           {/* GitHub */}
           <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
