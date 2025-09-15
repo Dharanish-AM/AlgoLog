@@ -93,7 +93,7 @@ async function getLeetCodeQuestionOfToday() {
   }
 }
 
-// getLeetCodeQuestionOfToday().then((e) => console.log(e));
+getLeetCodeQuestionOfToday().then((e) => console.log(e));
 
 async function getLeetCodeStats(username) {
   const query = `

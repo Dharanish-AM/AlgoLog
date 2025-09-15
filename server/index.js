@@ -17,6 +17,7 @@ const {
   getGithubStats,
   getSkillrackStats,
   getCodeforcesStats,
+  getLeetCodeQuestionOfToday,
 } = require("./scrapers/scraper");
 const { generateToken } = require("./utils/jwt");
 const Department = require("./models/departmentSchema");
@@ -1160,6 +1161,16 @@ app.get("/api/get-form-details", async (req, res) => {
   } catch (err) {
     console.error("Error fetching form details:", err);
     res.status(500).json({ error: "Failed to fetch department details" });
+  }
+});
+
+app.get("/api/get-daily-leetcode-problem", async (req, res) => {
+  try {
+    const problem = await getLeetCodeQuestionOfToday();
+    res.status(200).json({ problem });
+  } catch (err) {
+    console.error("Error fetching daily problem:", err);
+    res.status(500).json({ error: "Failed to fetch daily problem" });
   }
 });
 

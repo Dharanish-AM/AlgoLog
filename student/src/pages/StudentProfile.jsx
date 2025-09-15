@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import axios from "axios";
 import {
   Edit2,
   Save,
@@ -19,12 +20,14 @@ import {
   FileText,
   ExternalLink,
   RefreshCwIcon,
+  Lightbulb,
 } from "lucide-react";
 import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
 import { GridLoader } from "react-spinners";
 import ChangePasswordModal from "../components/ChangePasswordModal";
 import LeetCodeLogo from "../../public/icons8-leetcode-100.png";
+import { use } from "react";
 
 const StudentProfile = ({
   student,
@@ -41,8 +44,27 @@ const StudentProfile = ({
   const [isChangePasswordModalOpen, setIsChangePasswordModalOpen] =
     useState(false);
   const modalOptionsRed = useRef();
+  const [leetcodeDailyProblem, setLeetcodeDailyProblem] = useState(null);
+  const [showDailyProblemModal, setShowDailyProblemModal] = useState(false)
 
   console.log(student);
+
+  useEffect(() => {
+    const fetchDailyLeetCodeProblem = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_API_URL}/api/get-daily-leetcode-problem`
+        );
+        if (response.status === 200) {
+          setLeetcodeDailyProblem(response.data);
+        }
+      } catch (error) {
+        console.error("Error fetching daily LeetCode problem:", error);
+      }
+    };
+
+    fetchDailyLeetCodeProblem();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -208,6 +230,12 @@ const StudentProfile = ({
                   <span>Refresh</span>
                 </button>
               )}
+              <button onClick={()=>[
+                setShowDailyProblemModal(true)
+              ]} className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
+                <Lightbulb />
+                <span> View Daily Problem</span>
+              </button>
             </div>
           </div>
 
@@ -369,11 +397,7 @@ const StudentProfile = ({
                         className="bg-gray-700 hover:bg-gray-600 rounded-xl px-4 py-2 flex items-center gap-2"
                       >
                         <img
-                          src={
-                            isValidURL
-                              ? badge.icon
-                              : LeetCodeLogo
-                          }
+                          src={isValidURL ? badge.icon : LeetCodeLogo}
                           alt={badge.name}
                           className="w-6 h-6 object-contain"
                           onError={(e) => {
@@ -790,6 +814,27 @@ const StudentProfile = ({
           handleUpdatePassword={handleUpdatePassword}
         />
       )}
+      {showDailyProblemModal && leetcodeDailyProblem && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg relative">
+            <button onClick={() => setShowDailyProblemModal(false)} className="absolute top-2 right-2 text-gray-300 hover:text-white"><X /></button>
+            <h2 className="text-2xl font-bold text-white mb-2">{leetcodeDailyProblem.problem.question.title}</h2>
+            <p className={`mb-2 ${getDifficultyColor(leetcodeDailyProblem.problem.question.difficulty)}`}>
+              Difficulty: {leetcodeDailyProblem.problem.question.difficulty}
+            </p>
+            <p className="text-gray-400 mb-4">Acceptance: {leetcodeDailyProblem.problem.question.acRate.toFixed(2)}%</p>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {leetcodeDailyProblem.problem.question.topicTags.map((tag, idx) => (
+                <span key={idx} className="px-3 py-1 bg-gray-700 text-gray-200 text-xs rounded-full">{tag.name}</span>
+              ))}
+            </div>
+            <a href={leetcodeDailyProblem.problem.fullLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-semibold">
+              Solve on LeetCode
+            </a>
+          </div>
+        </div>
+      )}
+      
     </div>
   );
 };
