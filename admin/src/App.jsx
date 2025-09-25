@@ -7,6 +7,7 @@ import Dashboard from "./pages/Dashboard";
 import { getAdminUser } from "./services/authOperations";
 import { GridLoader } from "react-spinners";
 import Chart from "./pages/Chart";
+import Contest from "./pages/Contest";
 
 function App() {
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
@@ -57,6 +58,7 @@ function App() {
             <Route path="/dept/:deptId" element={<Dashboard />} />
             <Route path="/dept/:deptId/class/:id" element={<Dashboard />} />
             <Route path="/chart" element={<Chart />} />
+            <Route path="/contest" element={<Contest />} />
             <Route path="*" element={<Dashboard />} />
           </>
         ) : (

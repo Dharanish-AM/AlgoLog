@@ -1174,6 +1174,61 @@ app.get("/api/get-daily-leetcode-problem", async (req, res) => {
   }
 });
 
+app.get("/api/students/all", async (req, res) => {
+  try {
+    const students = await Student.find({})
+      .lean()
+      .select("-password")
+      .populate("department", "-password -classes");
+    if (!students || students.length === 0) {
+      return res.status(200).json({ students: [] });
+    }
+
+    const results = students.map((student) => {
+      const { stats, ...studentWithoutStats } = student;
+      return { ...studentWithoutStats, stats };
+    });
+
+    res.status(200).json({
+      students: results,
+    });
+  } catch (error) {
+    console.error("Error fetching students and stats:", error);
+    res.status(500).json({ error: "Failed to fetch students and stats" });
+  }
+});
+
+app.get("/api/contests/all", async (req, res) => {
+  try {
+    const axios = require("axios");
+    const query = `
+      query {
+        allContests {
+          title
+          titleSlug
+          startTime
+          duration
+          isVirtual
+        }
+      }
+    `;
+    const response = await axios.post(
+      "https://leetcode.com/graphql",
+      { query },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // Return only response.data.data.allContests as JSON
+    res.status(200).json({ contests: response.data.data.allContests });
+  } catch (err) {
+    console.error("Error fetching contests:", err);
+    res.status(500).json({ error: "Failed to fetch contests" });
+  }
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
