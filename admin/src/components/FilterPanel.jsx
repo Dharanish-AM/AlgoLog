@@ -1,15 +1,25 @@
-import React from 'react';
-import { Search } from 'lucide-react';
-// import { FilterState } from '../types';
-import { departments, classes, years } from '../utils/mockData';
+import React from "react";
+import { Search } from "lucide-react";
+import { useSelector } from "react-redux";
 
 const FilterPanel = ({
   filters,
   searchTerm,
   onFilterChange,
   onSearchChange,
-  placeholder = "Search students..."
+  placeholder = "Search students...",
 }) => {
+  const allStudents = useSelector((state) => state.admin.allStudents);
+
+  // Extract unique departments, classes, and years
+  const departments = Array.from(
+    new Map(allStudents.map((s) => [s.department._id, s.department])).values()
+  ).sort((a, b) => a.name.localeCompare(b.name));
+
+  const classes = Array.from(new Set(allStudents.map((s) => s.section))).sort();
+
+  const years = Array.from(new Set(allStudents.map((s) => s.year))).sort();
+
   return (
     <div className="bg-slate-800 p-4 sm:p-6 rounded-lg mb-4 sm:mb-6 border border-slate-700">
       <div className="flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center">
@@ -26,47 +36,53 @@ const FilterPanel = ({
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
-        {/* Department Filter */}
-        <div className="min-w-0 sm:min-w-48">
-          <select
-            value={filters.department}
-            onChange={(e) => onFilterChange('department', e.target.value)}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="">All Departments</option>
-            {departments.map(dept => (
-              <option key={dept} value={dept}>{dept}</option>
-            ))}
-          </select>
-        </div>
+          {/* Department Filter */}
+          <div className="min-w-0 sm:min-w-48">
+            <select
+              value={filters.department}
+              onChange={(e) => onFilterChange("department", e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept._id} value={dept.name}>
+                  {dept.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Class Filter */}
-        <div className="min-w-0 sm:min-w-32">
-          <select
-            value={filters.class}
-            onChange={(e) => onFilterChange('class', e.target.value)}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="">All Classes</option>
-            {classes.map(cls => (
-              <option key={cls} value={cls}>Class {cls}</option>
-            ))}
-          </select>
-        </div>
+          {/* Class Filter */}
+          <div className="min-w-0 sm:min-w-32">
+            <select
+              value={filters.class}
+              onChange={(e) => onFilterChange("class", e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="">All Classes</option>
+              {classes.map((cls) => (
+                <option key={cls} value={cls}>
+                  Class {cls}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        {/* Year Filter */}
-        <div className="min-w-0 sm:min-w-36">
-          <select
-            value={filters.year}
-            onChange={(e) => onFilterChange('year', e.target.value)}
-            className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-          >
-            <option value="">All Years</option>
-            {years.map(year => (
-              <option key={year} value={year.toString()}>{year}</option>
-            ))}
-          </select>
-        </div>
+          {/* Year Filter */}
+          <div className="min-w-0 sm:min-w-36">
+            <select
+              value={filters.year}
+              onChange={(e) => onFilterChange("year", e.target.value)}
+              className="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 sm:px-4 py-2.5 text-sm sm:text-base text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            >
+              <option value="">All Years</option>
+              {years.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
     </div>

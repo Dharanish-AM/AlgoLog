@@ -5,6 +5,8 @@ const initialState = {
   currentDepartment: null,
   currentClass: null,
   currentYear: null,
+  allStudents: [],
+  allContests: [],
 };
 
 export const adminReducer = (state = initialState, action) => {
@@ -52,6 +54,16 @@ export const adminReducer = (state = initialState, action) => {
         students: state.students.filter(
           (student) => student._id !== action.payload
         ),
+      };
+    case "SET_ALL_STUDENTS":
+      return {
+        ...state,
+        allStudents: action.payload,
+      };
+    case "SET_ALL_CONTESTS":
+      return {
+        ...state,
+        allContests: action.payload,
       };
     default:
       return state;

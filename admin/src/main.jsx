@@ -7,20 +7,21 @@ import { Provider } from "react-redux";
 import { Toaster } from "react-hot-toast";
 import { ThemeProvider } from "../context/ThemeContext.jsx";
 
-if (import.meta.env.MODE === 'production') {
-    console.log = () => {};
-    console.info = () => {};
-    console.warn = () => {};
-    console.error = () => {};
+if (import.meta.env.MODE === "production") {
+  console.log = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+  console.error = () => {};
 }
 
 createRoot(document.getElementById("root")).render(
-  <StrictMode>
-    <Provider store={store}>
-      <Toaster position="bottom-right" toastOptions={{ style: { zIndex: 9999 } }} />
-      <ThemeProvider toastOptions={{ duration: 9000 }}>
-        <App />
-      </ThemeProvider>
-    </Provider>
-  </StrictMode>
+  <Provider store={store}>
+    <Toaster
+      position="bottom-right"
+      toastOptions={{ style: { zIndex: 9999 } }}
+    />
+    <ThemeProvider toastOptions={{ duration: 9000 }}>
+      <App />
+    </ThemeProvider>
+  </Provider>
 );

@@ -170,10 +170,10 @@ export const getAllStudents = async (token, dispatch) => {
       },
     });
     if (response.status === 200) {
-      // dispatch({
-      //   type: "SET_ALL_STUDENTS",
-      //   payload: response.data.students,
-      // });
+      dispatch({
+        type: "SET_ALL_STUDENTS",
+        payload: response.data.students,
+      });
       console.log(response.data.students);
       return response.data.students;
     }
@@ -191,11 +191,11 @@ export const getAllContests = async (token, dispatch) => {
       },
     });
     if (response.status === 200) {
-      // dispatch({
-      //   type: "SET_ALL_CONTESTS",
-      //   payload: response.data.contests,
-      // });
-      // console.log(response.data.contests);
+      dispatch({
+        type: "SET_ALL_CONTESTS",
+        payload: response.data.contests,
+      });
+      console.log(response.data.contests);
       return response.data.contests;
     }
   } catch (error) {

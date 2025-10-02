@@ -1,7 +1,13 @@
 /* eslint-disable react-hooks/exhaustive-deps */
 import React, { useEffect } from "react";
 import Header from "../components/Header";
-import { getClasses, getDepartments, refetchSingleStudent } from "../services/adminOperations";
+import {
+  getAllContests,
+  getAllStudents,
+  getClasses,
+  getDepartments,
+  refetchSingleStudent,
+} from "../services/adminOperations";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft } from "lucide-react";
 import StudentTable from "../components/StudentTable";
@@ -39,7 +45,20 @@ export default function Dashboard() {
     });
   }, [selectedClass]);
 
-    const handleRefetchSingleStudent = async (studentId) => {
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await getAllStudents(token, dispatch);
+
+        await getAllContests(token, dispatch);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+    fetchData();
+  }, [token]);
+
+  const handleRefetchSingleStudent = async (studentId) => {
     try {
       const response = await refetchSingleStudent(studentId, token, dispatch);
       if (response?.status === 200 || response?.status === 201) {
@@ -51,7 +70,6 @@ export default function Dashboard() {
       console.error("Error fetching single student data:", error);
     }
   };
-
 
   const fetchClasses = async () => {
     await getClasses(token, dispatch);
@@ -101,7 +119,10 @@ export default function Dashboard() {
               {selectedDepartmentName} - {selectedClass.username}
             </p>
           </div>
-          <StudentTable handleRefetchSingleStudent={handleRefetchSingleStudent} students={selectedClass.students} />
+          <StudentTable
+            handleRefetchSingleStudent={handleRefetchSingleStudent}
+            students={selectedClass.students}
+          />
         </div>
       )}
     </div>

@@ -1,10 +1,31 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Users, Trophy, Code, BarChart3 } from "lucide-react";
 import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllContests, getAllStudents } from "../services/adminOperations";
 
 function Contest() {
   const [activeView, setActiveView] = useState("students");
+  const allStudents = useSelector((state) => state.admin.allStudents);
+  const allContests = useSelector((state) => state.admin.allContests);
+  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        await getAllStudents(token, dispatch);
+
+        await getAllContests(token, dispatch);
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      }
+    };
+    if (allStudents.length === 0 || allContests.length === 0) {
+      fetchData();
+    }
+  }, [allContests.length, allStudents.length, dispatch, token]);
 
   const navigationItems = [
     {
@@ -82,8 +103,7 @@ function Contest() {
         <div className="w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="text-center text-slate-400 text-sm">
             <p className="text-xs sm:text-sm">
-              © 2024 LeetCode Dashboard. Built for academic analytics and
-              performance tracking.
+              © 2025 AlgoLog. All rights reserved.
             </p>
           </div>
         </div>
