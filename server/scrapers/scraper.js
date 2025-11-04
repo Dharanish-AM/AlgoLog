@@ -5,6 +5,7 @@ const https = require("https");
 const dotenv = require("dotenv");
 dotenv.config();
 const Bottleneck = require("bottleneck");
+const crypto = require("crypto");
 
 const platformLimits = {
   codechef: { minTime: 7000, maxConcurrent: 1 },
@@ -469,89 +470,74 @@ async function getCodeChefStats(username) {
   }
 }
 
+const CF_KEY = "bc101866ff73f1c52d47a140da274741148a91cd";
+const CF_SECRET = "82a89e594a95dc4d4ce2d20954cace11de5e990a";
+
+function generateCFSignature(method, params) {
+  const rand = Math.random().toString(36).slice(2, 8);
+  const sorted = Object.keys(params)
+    .sort()
+    .map((key) => `${key}=${params[key]}`)
+    .join("&");
+
+  const base = `${rand}/${method}?${sorted}#${CF_SECRET}`;
+  const hash = crypto.createHash("sha512").update(base).digest("hex");
+
+  return { apiSig: `${rand}${hash}` };
+}
+
+async function callCF(method, params) {
+  params.apiKey = CF_KEY;
+  params.time = Math.floor(Date.now() / 1000);
+
+  const { apiSig } = generateCFSignature(method, params);
+
+  const url = `https://codeforces.com/api/${method}?${new URLSearchParams({
+    ...params,
+    apiSig,
+  }).toString()}`;
+
+  const res = await axios.get(url);
+  if (res.data.status !== "OK") throw new Error(res.data.comment);
+  return res.data.result;
+}
+
 async function getCodeforcesStats(username) {
-  const profileUrl = `https://codeforces.com/profile/${username}`;
-  const contestsUrl = `https://codeforces.com/contests/with/${username}`;
-  const maxAttempts = 5;
-  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+  try {
+    const info = await callCF("user.info", { handles: username });
+    const ratingData = await callCF("user.rating", { handle: username });
+    const submissions = await callCF("user.status", { handle: username });
 
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    try {
-      const [profileRes, contestsRes] = await Promise.all([
-        axios.get(profileUrl, { headers: { "User-Agent": "Mozilla/5.0" } }),
-        axios.get(contestsUrl, { headers: { "User-Agent": "Mozilla/5.0" } }),
-      ]);
+    const user = info[0];
+    const contests = ratingData.length;
 
-      if (
-        profileRes.data.includes(
-          `Codeforces.showMessage("Can't find such user"`
-        ) ||
-        profileRes.data.includes(`showMessage("Can't find such user"`)
-      ) {
-        console.warn(`User ${username} not found on Codeforces.`);
-        return {
-          platform: "Codeforces",
-          username,
-          rating: null,
-          rank: null,
-          maxRating: null,
-          contests: 0,
-          problemsSolved: 0,
-        };
+    const solved = new Set();
+    submissions.forEach((s) => {
+      if (s.verdict === "OK" && s.problem) {
+        solved.add(`${s.problem.contestId}-${s.problem.index}`);
       }
+    });
 
-      const $ = cheerio.load(profileRes.data);
-
-      const rating =
-        $('span[style="font-weight:bold;"].user-gray').first().text().trim() ||
-        "Unrated";
-      const rank = $("div.user-rank > span").text().trim() || "Unranked";
-      const maxRank =
-        $("span.smaller")
-          .text()
-          .match(/max\. (.*),/i)?.[1]
-          ?.trim() || "N/A";
-      const maxRating =
-        $("span.smaller")
-          .text()
-          .match(/,\s*(\d+)/)?.[1] || "N/A";
-
-      const problemsSolved = parseInt(
-        $("._UserActivityFrame_counterValue")
-          .filter((i, el) => $(el).text().includes("problems"))
-          .text()
-          .match(/\d+/)?.[0] || "0"
-      );
-
-      const $$ = cheerio.load(contestsRes.data);
-      const contests = $$(".user-contests-table tbody tr").length;
-
-      return {
-        platform: "Codeforces",
-        username,
-        rating,
-        rank,
-        maxRating,
-        contests,
-        problemsSolved,
-      };
-    } catch (error) {
-      console.error(
-        `Attempt ${attempt} failed to fetch Codeforces data for ${username}:`,
-        error.message
-      );
-      if (attempt < maxAttempts) {
-        await delay(2000 * attempt);
-      } else {
-        return {
-          platform: "Codeforces",
-          username,
-          error: "Failed to fetch data after multiple attempts",
-        };
-      }
-    }
+    return {
+      platform: "Codeforces",
+      username,
+      rating: user.rating || "Unrated",
+      maxRating: user.maxRating || "N/A",
+      rank: user.rank || "Unranked",
+      maxRank: user.maxRank || "N/A",
+      contests,
+      problemsSolved: solved.size,
+    };
+  } catch (err) {
+    return {
+      platform: "Codeforces",
+      username,
+      error: err.message,
+    };
   }
 }
+
+// getCodeforcesStats("tourist").then(console.log);
 
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
