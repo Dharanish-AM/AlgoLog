@@ -21,6 +21,8 @@ const {
 } = require("./scrapers/scraper");
 const { generateToken } = require("./utils/jwt");
 const Department = require("./models/departmentSchema");
+const BatchProcessor = require("./utils/batchProcessor");
+const DataValidator = require("./utils/dataValidator");
 
 dotenv.config();
 
@@ -219,15 +221,14 @@ app.get("/api/students", async (req, res) => {
 });
 
 app.get("/api/students/refetch", async (req, res) => {
-  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
-  const now = new Date();
   const start = Date.now();
+  const now = new Date();
 
   try {
     const { classId } = req.query;
 
     console.log(
-      `\n🚀 Starting stats refetch for Class ID: ${classId} at ${now.toLocaleString()}`
+      `\n🚀 Starting OPTIMIZED stats refetch for Class ID: ${classId} at ${now.toLocaleString()}`
     );
 
     if (!classId) {
@@ -240,71 +241,194 @@ app.get("/api/students/refetch", async (req, res) => {
       return res.status(200).json({ students: [], count: 0 });
     }
 
-    let updatedCount = 0;
-    const failedStudents = [];
+    const validator = new DataValidator();
+    const processor = new BatchProcessor({
+      concurrency: 3, // Process 3 students at a time
+      batchSize: 10,  // 10 students per batch
+      retryAttempts: 1,
+      timeout: 45000, // 45 seconds per student
+    });
 
-    for (let i = 0; i < students.length; i++) {
-      const student = students[i];
+    let progressUpdate = null;
 
+    // Set up progress tracking
+    processor.onProgress((stats) => {
+      progressUpdate = stats;
       console.log(
-        `\n🔄 [${i + 1}/${students.length}] Fetching stats for ${
-          student.name
-        } (${student.rollNo})`
+        `📊 Progress: ${stats.processed}/${stats.total} (${stats.percentage.toFixed(1)}%) - ` +
+        `✅ ${stats.succeeded} succeeded, ❌ ${stats.failed} failed, ⏭️  ${stats.skipped} skipped`
       );
+    });
 
-      try {
-        const updatedStats = await getStatsForStudent(student, student.stats);
+    processor.onBatchComplete((info) => {
+      console.log(
+        `✨ Batch ${info.batchIndex + 1}/${info.totalBatches} done - ` +
+        `${info.batchSize} students in ${(info.duration / 1000).toFixed(2)}s`
+      );
+    });
 
-        // Only overwrite platforms whose stats did not have an error
-        const mergedStats = { ...student.stats };
-        for (const [platform, platformStats] of Object.entries(
-          updatedStats.stats
-        )) {
-          if (!platformStats.error) {
-            mergedStats[platform] = platformStats;
+    // Process all students in batches
+    const { results, stats, errors } = await processor.processBatch(
+      students,
+      async (student, index) => {
+        console.log(`\n🔄 [${index + 1}/${students.length}] Processing ${student.name} (${student.rollNo})`);
+
+        try {
+          // Fetch new stats
+          const updatedStats = await getStatsForStudent(student, student.stats);
+
+          // Validate the new stats
+          const validation = validator.validateAll(updatedStats.stats);
+          
+          if (!validation.valid) {
+            console.warn(
+              `⚠️  Validation issues for ${student.name}:`,
+              validation.errors
+            );
           }
-        }
 
-        await Student.findByIdAndUpdate(student._id, {
-          stats: mergedStats,
-        });
-        console.log(`✅ Updated: ${student.name}`);
-        updatedCount++;
-      } catch (err) {
-        console.error(`🔥 Failed: ${student.name} – ${err.message}`);
-        failedStudents.push({ name: student.name, rollNo: student.rollNo });
+          if (validation.warnings.length > 0) {
+            console.warn(
+              `⚡ Warnings for ${student.name}:`,
+              validation.warnings
+            );
+          }
+
+          // Detect anomalies by comparing with old stats
+          const anomalies = {};
+          for (const platform of Object.keys(updatedStats.stats)) {
+            const platformAnomalies = validator.detectAnomalies(
+              student.stats?.[platform],
+              updatedStats.stats[platform],
+              platform
+            );
+            if (platformAnomalies.length > 0) {
+              anomalies[platform] = platformAnomalies;
+              console.warn(
+                `🔍 Anomalies detected for ${student.name} on ${platform}:`,
+                platformAnomalies
+              );
+            }
+          }
+
+          // Merge stats - only update platforms without errors
+          const mergedStats = { ...student.stats };
+          for (const [platform, platformStats] of Object.entries(
+            updatedStats.stats
+          )) {
+            if (!platformStats.error) {
+              mergedStats[platform] = platformStats;
+            } else {
+              console.warn(
+                `⚠️  Keeping old ${platform} stats for ${student.name} due to error`
+              );
+            }
+          }
+
+          // Update student in database
+          await Student.findByIdAndUpdate(student._id, {
+            stats: mergedStats,
+            updatedAt: now,
+          });
+
+          console.log(
+            `✅ Updated ${student.name} - Validation score: ${
+              Object.values(validation.platforms)
+                .reduce((sum, p) => sum + (p.score || 0), 0) / 
+              Object.keys(validation.platforms).length
+            }%`
+          );
+
+          return {
+            student: student.name,
+            rollNo: student.rollNo,
+            validation,
+            anomalies,
+          };
+        } catch (error) {
+          console.error(
+            `❌ Failed to process ${student.name}: ${error.message}`
+          );
+          throw error;
+        }
       }
-    }
-    const currentClass = await Class.findByIdAndUpdate(classId, {
+    );
+
+    // Update class metadata
+    await Class.findByIdAndUpdate(classId, {
       studentsUpdatedAt: now,
     });
 
-    console.log(`\n🎯 Update Summary`);
-    console.log(`- ✅ Total Updated: ${updatedCount}`);
-    console.log(`- ❌ Skipped: ${failedStudents.length}`);
-    console.log(
-      `- ⌛ Duration: ${((Date.now() - start) / 60000).toFixed(2)} mins`
-    );
+    const duration = Date.now() - start;
+
+    // Generate detailed report
+    const failedStudents = errors.map((e) => ({
+      name: e.item.name,
+      rollNo: e.item.rollNo,
+      error: e.error,
+    }));
+
+    const successfulResults = results.filter((r) => r.success);
+    const validationIssues = successfulResults
+      .filter((r) => r.data?.validation && !r.data.validation.valid)
+      .map((r) => ({
+        student: r.data.student,
+        rollNo: r.data.rollNo,
+        errors: r.data.validation.errors,
+      }));
+
+    const anomalyReports = successfulResults
+      .filter((r) => r.data?.anomalies && Object.keys(r.data.anomalies).length > 0)
+      .map((r) => ({
+        student: r.data.student,
+        rollNo: r.data.rollNo,
+        anomalies: r.data.anomalies,
+      }));
+
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`🎯 BATCH REFETCH COMPLETE`);
+    console.log(`${'='.repeat(60)}`);
+    console.log(`📊 Total Students: ${stats.total}`);
+    console.log(`✅ Successfully Updated: ${stats.succeeded}`);
+    console.log(`❌ Failed: ${stats.failed}`);
+    console.log(`⏭️  Skipped: ${stats.skipped}`);
+    console.log(`⏱️  Total Duration: ${(duration / 1000).toFixed(2)}s`);
+    console.log(`⚡ Average per Student: ${(duration / stats.total).toFixed(0)}ms`);
+    console.log(`🔍 Validation Issues: ${validationIssues.length}`);
+    console.log(`⚠️  Anomalies Detected: ${anomalyReports.length}`);
     console.log(`📆 Completed at: ${new Date().toLocaleString()}`);
+    console.log(`${'='.repeat(60)}\n`);
 
     res.status(200).json({
-      count: updatedCount,
-      skipped: failedStudents.length,
+      success: true,
+      stats: {
+        total: stats.total,
+        succeeded: stats.succeeded,
+        failed: stats.failed,
+        skipped: stats.skipped,
+        duration: duration,
+        averagePerStudent: Math.round(duration / stats.total),
+      },
       failedStudents,
+      validationIssues,
+      anomalyReports,
       updatedAt: now,
     });
   } catch (error) {
-    console.error("❌ Fatal error during refetch:", error);
-    res
-      .status(500)
-      .json({ error: "Failed to refetch stats for all students." });
+    console.error("❌ Fatal error during batch refetch:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to refetch stats for all students",
+      message: error.message,
+    });
   }
 });
 
 app.get("/api/students/refetch/single", async (req, res) => {
+  const startTime = Date.now();
+  const { id } = req.query;
+
   try {
-    const startTime = Date.now();
-    const { id } = req.query;
     if (!id) {
       console.warn("[WARN] Student ID missing in query.");
       return res.status(400).json({ error: "Student ID is required" });
@@ -320,42 +444,67 @@ app.get("/api/students/refetch/single", async (req, res) => {
 
     console.log(`[INFO] Student: ${student.name} (${student.rollNo})`);
 
+    // Initialize validator
+    const validator = new DataValidator();
+
+    // Fetch new stats
     const updatedStats = await getStatsForStudent(student, student.stats);
     const { stats } = updatedStats;
 
+    // Validate new stats
+    const validation = validator.validateAll(stats);
+    
+    console.log(`[VALIDATION] Overall valid: ${validation.valid}`);
+    if (!validation.valid) {
+      console.warn(`[VALIDATION] Errors:`, validation.errors);
+    }
+    if (validation.warnings.length > 0) {
+      console.warn(`[VALIDATION] Warnings:`, validation.warnings);
+    }
+
+    // Detect anomalies
+    const anomalies = {};
+    for (const platform of Object.keys(stats)) {
+      const platformAnomalies = validator.detectAnomalies(
+        student.stats?.[platform],
+        stats[platform],
+        platform
+      );
+      if (platformAnomalies.length > 0) {
+        anomalies[platform] = platformAnomalies;
+        console.warn(
+          `[ANOMALY] ${platform}:`,
+          platformAnomalies
+        );
+      }
+    }
+
+    // Check for failed platforms
     const failedPlatforms = [];
+    const platformChecks = {
+      leetcode: () => student.leetcode && !stats.leetcode?.solved?.All,
+      hackerrank: () => 
+        student.hackerrank &&
+        (!Array.isArray(stats.hackerrank?.badges) ||
+          stats.hackerrank.badges.length === 0),
+      codechef: () => student.codechef && !stats.codechef?.fullySolved,
+      github: () =>
+        student.github &&
+        (typeof stats.github !== "object" || stats.github.totalCommits == null),
+      codeforces: () =>
+        student.codeforces &&
+        !stats.codeforces?.contests &&
+        !stats.codeforces?.problemsSolved,
+      skillrack: () =>
+        student.skillrack &&
+        (!stats.skillrack?.programsSolved || stats.skillrack.programsSolved < 1),
+    };
 
-    if (student.leetcode && !stats.leetcode?.solved?.All)
-      failedPlatforms.push("leetcode");
-
-    if (
-      student.hackerrank &&
-      (!Array.isArray(stats.hackerrank?.badges) ||
-        stats.hackerrank.badges.length === 0)
-    )
-      failedPlatforms.push("hackerrank");
-
-    if (student.codechef && !stats.codechef?.fullySolved)
-      failedPlatforms.push("codechef");
-
-    if (
-      student.github &&
-      (typeof stats.github !== "object" || stats.github.totalCommits == null)
-    )
-      failedPlatforms.push("github");
-
-    if (
-      student.codeforces &&
-      !stats.codeforces?.contests &&
-      !stats.codeforces?.problemsSolved
-    )
-      failedPlatforms.push("codeforces");
-
-    if (
-      student.skillrack &&
-      (!stats.skillrack?.programsSolved || stats.skillrack.programsSolved < 1)
-    )
-      failedPlatforms.push("skillrack");
+    for (const [platform, checkFn] of Object.entries(platformChecks)) {
+      if (checkFn()) {
+        failedPlatforms.push(platform);
+      }
+    }
 
     if (failedPlatforms.length > 0) {
       console.warn(
@@ -367,36 +516,77 @@ app.get("/api/students/refetch/single", async (req, res) => {
       console.log(`[SUCCESS] All stats valid for ${student.name}`);
     }
 
+    // Merge stats - only update successful platforms
     const mergedStats = { ...student.stats };
     for (const [platform, platformStats] of Object.entries(stats)) {
       if (!platformStats.error) {
         mergedStats[platform] = platformStats;
+      } else {
+        console.warn(
+          `[WARN] Keeping old ${platform} stats due to error: ${platformStats.error}`
+        );
       }
     }
 
-    const updatedStudent = await Student.findByIdAndUpdate(
+    // Update student
+    await Student.findByIdAndUpdate(
       id,
-      { stats: mergedStats },
+      { 
+        stats: mergedStats,
+        updatedAt: new Date()
+      },
       { new: true }
     );
 
+    // Fetch updated student data
     const newStudentData = await Student.findById(id).populate("department");
 
     const endTime = Date.now();
     const durationMs = endTime - startTime;
     const durationSec = (durationMs / 1000).toFixed(2);
+
+    // Calculate average validation score
+    const avgScore = Object.values(validation.platforms)
+      .reduce((sum, p) => sum + (p.score || 0), 0) / 
+      Object.keys(validation.platforms).length;
+
     console.log(
-      `[TIMER] Refetch for student ${student.name} took ${durationMs} ms (~${durationSec} s)`
+      `[TIMER] Refetch for ${student.name} completed in ${durationMs}ms (~${durationSec}s)`
+    );
+    console.log(
+      `[QUALITY] Validation score: ${avgScore.toFixed(1)}%`
     );
 
     return res.status(200).json({
+      success: true,
       student: newStudentData,
+      validation: {
+        valid: validation.valid,
+        errors: validation.errors,
+        warnings: validation.warnings,
+        score: avgScore,
+        platforms: validation.platforms,
+      },
+      anomalies,
       failedPlatforms,
+      performance: {
+        duration: durationMs,
+        durationSec: parseFloat(durationSec),
+      },
       updatedAt: new Date(),
     });
   } catch (error) {
-    console.error("[ERROR] Failed to refetch student stats:", error.message);
-    res.status(500).json({ error: "Failed to refetch student stats" });
+    const durationMs = Date.now() - startTime;
+    console.error(
+      `[ERROR] Failed to refetch student stats after ${durationMs}ms:`,
+      error.message
+    );
+    res.status(500).json({
+      success: false,
+      error: "Failed to refetch student stats",
+      message: error.message,
+      duration: durationMs,
+    });
   }
 });
 

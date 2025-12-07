@@ -3,17 +3,38 @@ const cheerio = require("cheerio");
 const puppeteer = require("puppeteer");
 const https = require("https");
 const dotenv = require("dotenv");
-dotenv.config();
+const path = require("path");
+
+// Load .env from server directory (parent of scrapers)
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
+
 const Bottleneck = require("bottleneck");
 const crypto = require("crypto");
 
+// In-memory cache with TTL
+const cache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+function getCached(key) {
+  const item = cache.get(key);
+  if (item && Date.now() - item.timestamp < CACHE_TTL) {
+    return item.data;
+  }
+  cache.delete(key);
+  return null;
+}
+
+function setCache(key, data) {
+  cache.set(key, { data, timestamp: Date.now() });
+}
+
 const platformLimits = {
-  codechef: { minTime: 7000, maxConcurrent: 1 },
-  leetcode: { minTime: 2000 },
-  hackerrank: { minTime: 3000 },
-  github: { minTime: 1000 },
-  skillrack: { minTime: 3000 },
-  codeforces: { minTime: 2000 },
+  codechef: { minTime: 4000, maxConcurrent: 1 }, // Increased for batch processing
+  leetcode: { minTime: 500, maxConcurrent: 5 },
+  hackerrank: { minTime: 1000, maxConcurrent: 3 },
+  github: { minTime: 200, maxConcurrent: 10 },
+  skillrack: { minTime: 1000, maxConcurrent: 3 },
+  codeforces: { minTime: 500, maxConcurrent: 3 },
 };
 
 const limiters = Object.fromEntries(
@@ -32,9 +53,21 @@ const {
   codeforces: codeforcesLimiter,
 } = limiters;
 
-const agent = new https.Agent({ family: 4 });
+const agent = new https.Agent({ 
+  family: 4,
+  keepAlive: true,
+  keepAliveMsecs: 1000,
+  maxSockets: 50,
+  maxFreeSockets: 10,
+  timeout: 30000,
+  scheduling: 'lifo'
+});
 
 async function getLeetCodeQuestionOfToday() {
+  const cacheKey = `leetcode:qotd:${new Date().toDateString()}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query questionOfToday {
       activeDailyCodingChallengeQuestion {
@@ -80,11 +113,13 @@ async function getLeetCodeQuestionOfToday() {
     if (daily.userStatus === "Finished") statusText = "✅ Solved";
     else if (daily.userStatus === "Started") statusText = "🟡 In Progress";
 
-    return {
+    const result = {
       ...daily,
       statusText,
       fullLink: `https://leetcode.com${daily.link}`,
     };
+    setCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error(
       "Error fetching LeetCode question of today:",
@@ -97,6 +132,10 @@ async function getLeetCodeQuestionOfToday() {
 // getLeetCodeQuestionOfToday().then((e) => console.log(e));
 
 async function getLeetCodeStats(username) {
+  const cacheKey = `leetcode:stats:${username}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query userContestRankingInfo($username: String!) {
       matchedUser(username: $username) {
@@ -129,21 +168,8 @@ async function getLeetCodeStats(username) {
           shortName
           displayName
           icon
-          hoverText
-          medal {
-            slug
-            config {
-              iconGif
-              iconGifBackground
-            }
-          }
-          creationDate
           category
-        }
-        upcomingBadges {
-          name
-          icon
-          progress
+          creationDate
         }
       }
       userContestRanking(username: $username) {
@@ -257,12 +283,11 @@ async function getLeetCodeStats(username) {
       shortName: b.shortName,
       displayName: b.displayName,
       icon: b.icon,
-      hoverText: b.hoverText,
       category: b.category,
       creationDate: b.creationDate,
     }));
 
-    return {
+    const result = {
       platform: "LeetCode",
       username,
       solved: {
@@ -301,6 +326,8 @@ async function getLeetCodeStats(username) {
       activeYears: calendar.activeYears || [],
       // submissionCalendar: calendar.submissionCalendar || "",
     };
+    setCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("LeetCode fetch error:", error.message);
     return { platform: "LeetCode", username, error: "Failed to fetch data" };
@@ -310,8 +337,12 @@ async function getLeetCodeStats(username) {
 // getLeetCodeStats("sabarimcse6369").then((e) => console.log(e));
 
 async function getHackerRankStats(username) {
+  const cacheKey = `hackerrank:stats:${username}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   const url = `https://www.hackerrank.com/${username}`;
-  const maxAttempts = 5;
+  const maxAttempts = 2;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -322,7 +353,7 @@ async function getHackerRankStats(username) {
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 20000,
+        timeout: 12000,
       });
 
       const $ = cheerio.load(data);
@@ -335,25 +366,19 @@ async function getHackerRankStats(username) {
           return { name: badgeName || "", stars };
         });
 
-      if (badges.length === 0) {
-        return {
-          platform: "HackerRank",
-          username,
-          badges: [],
-        };
-      }
-
-      return {
+      const result = {
         platform: "HackerRank",
         username,
-        badges,
+        badges: badges.length > 0 ? badges : [],
       };
+      setCache(cacheKey, result);
+      return result;
     } catch (error) {
       console.warn(
         `Attempt ${attempt} failed to fetch HackerRank data for ${username}:`,
         error.message
       );
-      if (attempt < maxAttempts) await delay(2000 * attempt);
+      if (attempt < maxAttempts) await delay(500 * attempt);
       else {
         return {
           platform: "HackerRank",
@@ -366,8 +391,12 @@ async function getHackerRankStats(username) {
 }
 
 async function getCodeChefStats(username) {
+  const cacheKey = `codechef:stats:${username}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   const url = `https://www.codechef.com/users/${username}`;
-  const maxAttempts = 5;
+  const maxAttempts = 2;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -382,7 +411,7 @@ async function getCodeChefStats(username) {
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 15000,
+        timeout: 10000,
       });
 
       if (
@@ -427,12 +456,14 @@ async function getCodeChefStats(username) {
         `[CodeChef] ✅ Success for ${username} on attempt ${attempt}`
       );
 
-      return {
+      const result = {
         platform: "CodeChef",
         username,
         rating,
         fullySolved,
       };
+      setCache(cacheKey, result);
+      return result;
     } catch (error) {
       const isEmptyProfile =
         error.message &&
@@ -444,12 +475,14 @@ async function getCodeChefStats(username) {
         console.warn(
           `Skipped CodeChef fetch for ${username}: ${error.message}`
         );
-        return {
+        const result = {
           platform: "CodeChef",
           username,
           rating: null,
           fullySolved: null,
         };
+        setCache(cacheKey, result);
+        return result;
       }
 
       console.warn(
@@ -458,7 +491,14 @@ async function getCodeChefStats(username) {
       );
 
       if (attempt < maxAttempts) {
-        await delay(3000 * attempt);
+        // Exponential backoff for rate limiting (429 errors)
+        if (error.response?.status === 429) {
+          const waitTime = Math.min(5000 * Math.pow(2, attempt - 1), 20000); // 5s, 10s, 20s max
+          console.warn(`⏳ Rate limited. Waiting ${waitTime / 1000}s before retry...`);
+          await delay(waitTime);
+        } else {
+          await delay(1000 * attempt);
+        }
       } else {
         return {
           platform: "CodeChef",
@@ -503,10 +543,19 @@ async function callCF(method, params) {
 }
 
 async function getCodeforcesStats(username) {
+  const cacheKey = `codeforces:stats:${username}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   try {
-    const info = await callCF("user.info", { handles: username });
-    const ratingData = await callCF("user.rating", { handle: username });
-    const submissions = await callCF("user.status", { handle: username });
+    // Fetch info and rating in parallel, submissions separately with limit
+    const [info, ratingData] = await Promise.all([
+      callCF("user.info", { handles: username }),
+      callCF("user.rating", { handle: username })
+    ]);
+    
+    // Fetch only recent 1000 submissions for faster response
+    const submissions = await callCF("user.status", { handle: username, from: 1, count: 1000 });
 
     const user = info[0];
     const contests = ratingData.length;
@@ -518,7 +567,7 @@ async function getCodeforcesStats(username) {
       }
     });
 
-    return {
+    const result = {
       platform: "Codeforces",
       username,
       rating: user.rating || "Unrated",
@@ -528,6 +577,8 @@ async function getCodeforcesStats(username) {
       contests,
       problemsSolved: solved.size,
     };
+    setCache(cacheKey, result);
+    return result;
   } catch (err) {
     return {
       platform: "Codeforces",
@@ -546,7 +597,11 @@ async function getSkillrackStats(resumeUrl) {
       error: "Skipped: Invalid or missing URL",
     };
   }
-  const maxAttempts = 5;
+  const cacheKey = `skillrack:stats:${resumeUrl}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
+  const maxAttempts = 2;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -555,7 +610,7 @@ async function getSkillrackStats(resumeUrl) {
           "User-Agent": "Mozilla/5.0",
           "Accept-Language": "en-US,en;q=0.9",
         },
-        timeout: 5000,
+        timeout: 4000,
         httpsAgent: agent,
       });
       const $ = cheerio.load(data);
@@ -590,22 +645,24 @@ async function getSkillrackStats(resumeUrl) {
       });
 
       if (rank === 0 && programsSolved === 0 && certificates.length === 0) {
-        throw new Error("Inavalid Skillrack URL");
+        throw new Error("Invalid Skillrack URL");
       }
 
-      return {
+      const result = {
         platform: "Skillrack",
         rank,
         programsSolved,
         languages,
         certificates,
       };
+      setCache(cacheKey, result);
+      return result;
     } catch (error) {
       console.error(
         `Attempt ${attempt} failed to fetch Skillrack stats:`,
         error.message
       );
-      if (attempt < maxAttempts) await delay(1000 * attempt);
+      if (attempt < maxAttempts) await delay(500 * attempt);
       else {
         return {
           platform: "Skillrack",
@@ -649,6 +706,10 @@ async function getTryHackMeStats(username) {
 }
 
 async function getGithubStats(username) {
+  const cacheKey = `github:stats:${username}`;
+  const cached = getCached(cacheKey);
+  if (cached) return cached;
+
   try {
     const token = process.env.GITHUB_TOKEN;
     if (!token) {
@@ -663,7 +724,7 @@ async function getGithubStats(username) {
     const query = `
   query {
     user(login: "${username}") {
-      repositories(first: 100, ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) {
+      repositories(first: 50, ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) {
         totalCount
         nodes {
           name
@@ -708,15 +769,18 @@ async function getGithubStats(username) {
 
     const topLanguages = Object.entries(languageBytes)
       .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
       .map(([name]) => ({ name }));
 
-    return {
+    const result = {
       username,
       totalCommits,
       totalRepos,
       longestStreak: 0,
       topLanguages,
     };
+    setCache(cacheKey, result);
+    return result;
   } catch (error) {
     console.error("Error fetching GitHub stats:", error.message);
     return { error: "Failed to fetch GitHub stats" };
