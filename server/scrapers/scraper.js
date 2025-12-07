@@ -710,18 +710,23 @@ async function getGithubStats(username) {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  try {
-    const token = process.env.GITHUB_TOKEN;
-    if (!token) {
-      throw new Error("GitHub token not found");
-    }
-    const headers = {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-      "User-Agent": "AlgoLog-App",
-    };
+  const maxAttempts = 3;
+  const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-    const query = `
+  // 6. GitHub retry with exponential backoff
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const token = process.env.GITHUB_TOKEN;
+      if (!token) {
+        throw new Error("GitHub token not found");
+      }
+      const headers = {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+        "User-Agent": "AlgoLog-App",
+      };
+
+      const query = `
   query {
     user(login: "${username}") {
       repositories(first: 50, ownerAffiliations: OWNER, isFork: false, privacy: PUBLIC) {
@@ -747,43 +752,79 @@ async function getGithubStats(username) {
   }
 `;
 
-    const res = await axios.post(
-      "https://api.github.com/graphql",
-      { query },
-      { headers }
-    );
+      const res = await axios.post(
+        "https://api.github.com/graphql",
+        { query },
+        { headers, timeout: 10000 }
+      );
 
-    const user = res.data.data.user;
+      // 6. Better null checking
+      if (!res.data || !res.data.data || !res.data.data.user) {
+        throw new Error(`GitHub user not found or invalid response: ${username}`);
+      }
 
-    const totalRepos = user.repositories.totalCount;
-    const totalCommits =
-      user.contributionsCollection.contributionCalendar.totalContributions;
+      const user = res.data.data.user;
 
-    const languageBytes = {};
+      // Safe access with null checks
+      const totalRepos = user.repositories?.totalCount || 0;
+      const totalCommits =
+        user.contributionsCollection?.contributionCalendar?.totalContributions || 0;
 
-    user.repositories.nodes.forEach((repo) => {
-      repo.languages.edges.forEach(({ node, size }) => {
-        languageBytes[node.name] = (languageBytes[node.name] || 0) + size;
-      });
-    });
+      const languageBytes = {};
 
-    const topLanguages = Object.entries(languageBytes)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 5)
-      .map(([name]) => ({ name }));
+      if (user.repositories?.nodes) {
+        user.repositories.nodes.forEach((repo) => {
+          if (repo && repo.languages && repo.languages.edges) {
+            repo.languages.edges.forEach(({ node, size }) => {
+              if (node && node.name) {
+                languageBytes[node.name] = (languageBytes[node.name] || 0) + size;
+              }
+            });
+          }
+        });
+      }
 
-    const result = {
-      username,
-      totalCommits,
-      totalRepos,
-      longestStreak: 0,
-      topLanguages,
-    };
-    setCache(cacheKey, result);
-    return result;
-  } catch (error) {
-    console.error("Error fetching GitHub stats:", error.message);
-    return { error: "Failed to fetch GitHub stats" };
+      const topLanguages = Object.entries(languageBytes)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name]) => ({ name }));
+
+      const result = {
+        platform: "GitHub",
+        username,
+        totalCommits,
+        totalRepos,
+        longestStreak: 0,
+        topLanguages,
+      };
+      
+      setCache(cacheKey, result);
+      console.log(`[GitHub] ✅ Success for ${username} on attempt ${attempt}`);
+      return result;
+    } catch (error) {
+      const isRateLimited = error.response?.status === 403 || error.response?.status === 429;
+      const isTimeout = error.code === 'ECONNABORTED' || error.message.includes('timeout');
+      
+      console.error(
+        `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username}: ${error.message}`
+      );
+
+      if (attempt < maxAttempts) {
+        // 6. Exponential backoff: 2s, 4s, 8s
+        const waitTime = isRateLimited ? 5000 * Math.pow(2, attempt - 1) : 2000 * attempt;
+        console.warn(`⏳ Waiting ${waitTime / 1000}s before retry...`);
+        await delay(waitTime);
+      } else {
+        return {
+          platform: "GitHub",
+          username,
+          error: `Failed to fetch data after ${maxAttempts} attempts: ${error.message}`,
+          totalCommits: 0,
+          totalRepos: 0,
+          topLanguages: [],
+        };
+      }
+    }
   }
 }
 

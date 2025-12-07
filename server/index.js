@@ -267,6 +267,10 @@ app.get("/api/students/refetch", async (req, res) => {
       );
     });
 
+    // Prepare data quality tracking
+    const dataQualityUpdates = [];
+    const bulkUpdateOps = [];
+
     // Process all students in batches
     const { results, stats, errors } = await processor.processBatch(
       students,
@@ -313,11 +317,13 @@ app.get("/api/students/refetch", async (req, res) => {
 
           // Merge stats - only update platforms without errors
           const mergedStats = { ...student.stats };
+          let platformsUpdated = 0;
           for (const [platform, platformStats] of Object.entries(
             updatedStats.stats
           )) {
             if (!platformStats.error) {
               mergedStats[platform] = platformStats;
+              platformsUpdated++;
             } else {
               console.warn(
                 `⚠️  Keeping old ${platform} stats for ${student.name} due to error`
@@ -325,18 +331,44 @@ app.get("/api/students/refetch", async (req, res) => {
             }
           }
 
-          // Update student in database
-          await Student.findByIdAndUpdate(student._id, {
-            stats: mergedStats,
-            updatedAt: now,
+          // Calculate data quality score
+          const avgValidationScore = Object.values(validation.platforms)
+            .reduce((sum, p) => sum + (p.score || 0), 0) / 
+            Object.keys(validation.platforms).length;
+
+          // Prepare bulk update operation (3. Database optimization)
+          bulkUpdateOps.push({
+            updateOne: {
+              filter: { _id: student._id },
+              update: {
+                $set: {
+                  stats: mergedStats,
+                  updatedAt: now,
+                  dataQuality: {
+                    score: avgValidationScore,
+                    lastValidation: now,
+                    platformsUpdated,
+                    hasAnomalies: Object.keys(anomalies).length > 0,
+                  }
+                },
+                // 9. Data quality - Historical tracking
+                $push: {
+                  statsHistory: {
+                    $each: [{
+                      timestamp: now,
+                      stats: mergedStats,
+                      validationScore: avgValidationScore,
+                      anomalies: Object.keys(anomalies).length > 0 ? anomalies : undefined,
+                    }],
+                    $slice: -10 // Keep last 10 history entries
+                  }
+                }
+              }
+            }
           });
 
           console.log(
-            `✅ Updated ${student.name} - Validation score: ${
-              Object.values(validation.platforms)
-                .reduce((sum, p) => sum + (p.score || 0), 0) / 
-              Object.keys(validation.platforms).length
-            }%`
+            `✅ Prepared update for ${student.name} - Validation score: ${avgValidationScore.toFixed(1)}%`
           );
 
           return {

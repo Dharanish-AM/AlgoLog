@@ -1,10 +1,11 @@
 /**
  * Advanced Batch Processor with error handling, retry logic, and progress tracking
- * Note: Using simple concurrency control without p-limit
+ * Includes: Circuit breaker, adaptive concurrency, resume capability, priority queue
  */
 class BatchProcessor {
   constructor(options = {}) {
     this.concurrency = options.concurrency || 5;
+    this.originalConcurrency = this.concurrency;
     this.batchSize = options.batchSize || 10;
     this.retryAttempts = options.retryAttempts || 2;
     this.retryDelay = options.retryDelay || 1000;
@@ -23,6 +24,36 @@ class BatchProcessor {
       onProgress: null,
       onBatchComplete: null,
       onError: null,
+    };
+    
+    // 4. Circuit breaker state
+    this.circuitBreaker = {
+      state: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
+      failures: 0,
+      threshold: options.circuitBreakerThreshold || 5,
+      resetTimeout: options.circuitBreakerResetTimeout || 30000,
+      lastFailureTime: null,
+    };
+    
+    // 4. Adaptive concurrency
+    this.adaptiveConcurrency = {
+      enabled: options.adaptiveConcurrency !== false,
+      errorRateThreshold: 0.3, // 30% error rate
+      recentErrors: [],
+      windowSize: 10, // Track last 10 operations
+    };
+    
+    // 7. Resume capability
+    this.resumeState = {
+      enabled: options.enableResume || false,
+      lastProcessedIndex: -1,
+      checkpointInterval: options.checkpointInterval || 10,
+    };
+    
+    // 7. Priority queue support
+    this.priorityQueue = {
+      enabled: options.enablePriority || false,
+      priorityFn: options.priorityFn || null,
     };
   }
 
@@ -52,6 +83,7 @@ class BatchProcessor {
 
   /**
    * Process items in batches with concurrency control
+   * Includes circuit breaker, adaptive concurrency, and resume capability
    */
   async processBatch(items, processFn) {
     this.stats.total = items.length;
@@ -63,15 +95,44 @@ class BatchProcessor {
     this.errors = [];
 
     const results = [];
+    
+    // 7. Priority queue - sort items by priority if enabled
+    if (this.priorityQueue.enabled && this.priorityQueue.priorityFn) {
+      items = [...items].sort(this.priorityQueue.priorityFn);
+      console.log('📊 Items sorted by priority');
+    }
+    
+    // 7. Resume from checkpoint if enabled
+    let startIndex = 0;
+    if (this.resumeState.enabled && this.resumeState.lastProcessedIndex >= 0) {
+      startIndex = this.resumeState.lastProcessedIndex + 1;
+      console.log(`🔄 Resuming from index ${startIndex}`);
+      items = items.slice(startIndex);
+      this.stats.total = items.length;
+    }
+
     const batches = this.createBatches(items);
 
     console.log(`📦 Processing ${items.length} items in ${batches.length} batches (${this.batchSize} items/batch, ${this.concurrency} concurrent)`);
 
     for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      // 4. Check circuit breaker state
+      if (this.circuitBreaker.state === 'OPEN') {
+        const timeSinceLastFailure = Date.now() - this.circuitBreaker.lastFailureTime;
+        if (timeSinceLastFailure > this.circuitBreaker.resetTimeout) {
+          console.log('🔧 Circuit breaker transitioning to HALF_OPEN');
+          this.circuitBreaker.state = 'HALF_OPEN';
+          this.circuitBreaker.failures = 0;
+        } else {
+          console.error('⛔ Circuit breaker OPEN - skipping remaining batches');
+          break;
+        }
+      }
+
       const batch = batches[batchIndex];
       const batchStartTime = Date.now();
 
-      console.log(`\n🔄 Batch ${batchIndex + 1}/${batches.length} started...`);
+      console.log(`\n🔄 Batch ${batchIndex + 1}/${batches.length} started (concurrency: ${this.concurrency})...`);
 
       
       const batchResults = await this.processConcurrently(
@@ -117,7 +178,46 @@ class BatchProcessor {
       }
 
       const batchDuration = Date.now() - batchStartTime;
-      console.log(`✅ Batch ${batchIndex + 1}/${batches.length} completed in ${(batchDuration / 1000).toFixed(2)}s`);
+      const batchSuccessRate = batch.length > 0 ? this.stats.succeeded / this.stats.processed : 1;
+      
+      console.log(`✅ Batch ${batchIndex + 1}/${batches.length} completed in ${(batchDuration / 1000).toFixed(2)}s (success rate: ${(batchSuccessRate * 100).toFixed(1)}%)`);
+
+      // 4. Update circuit breaker based on batch results
+      const batchErrors = batchResults.filter(r => r.status === 'rejected' || !r.value?.success).length;
+      if (batchErrors > batch.length * 0.5) { // >50% failure rate
+        this.circuitBreaker.failures++;
+        this.circuitBreaker.lastFailureTime = Date.now();
+        
+        if (this.circuitBreaker.failures >= this.circuitBreaker.threshold) {
+          console.error(`⛔ Circuit breaker OPENED after ${this.circuitBreaker.failures} consecutive failures`);
+          this.circuitBreaker.state = 'OPEN';
+        }
+      } else if (this.circuitBreaker.state === 'HALF_OPEN') {
+        console.log('✅ Circuit breaker transitioning to CLOSED');
+        this.circuitBreaker.state = 'CLOSED';
+        this.circuitBreaker.failures = 0;
+      }
+      
+      // 4. Adaptive concurrency based on error rate
+      if (this.adaptiveConcurrency.enabled) {
+        const errorRate = this.stats.processed > 0 ? this.stats.failed / this.stats.processed : 0;
+        
+        if (errorRate > this.adaptiveConcurrency.errorRateThreshold) {
+          // Reduce concurrency
+          this.concurrency = Math.max(1, Math.floor(this.concurrency * 0.7));
+          console.warn(`⬇️  Reducing concurrency to ${this.concurrency} due to high error rate (${(errorRate * 100).toFixed(1)}%)`);
+        } else if (errorRate < 0.1 && this.concurrency < this.originalConcurrency) {
+          // Gradually increase concurrency
+          this.concurrency = Math.min(this.originalConcurrency, this.concurrency + 1);
+          console.log(`⬆️  Increasing concurrency to ${this.concurrency}`);
+        }
+      }
+      
+      // 7. Save checkpoint for resume capability
+      if (this.resumeState.enabled && (batchIndex + 1) % this.resumeState.checkpointInterval === 0) {
+        this.resumeState.lastProcessedIndex = startIndex + (batchIndex + 1) * this.batchSize - 1;
+        console.log(`💾 Checkpoint saved at index ${this.resumeState.lastProcessedIndex}`);
+      }
 
       
       if (this.callbacks.onBatchComplete) {
@@ -126,6 +226,9 @@ class BatchProcessor {
           totalBatches: batches.length,
           batchSize: batch.length,
           duration: batchDuration,
+          successRate: batchSuccessRate,
+          circuitBreakerState: this.circuitBreaker.state,
+          currentConcurrency: this.concurrency,
         });
       }
 
@@ -241,6 +344,71 @@ class BatchProcessor {
    */
   getErrors() {
     return [...this.errors];
+  }
+  
+  /**
+   * 7. Set priority function for priority queue
+   */
+  setPriorityFunction(priorityFn) {
+    this.priorityQueue.priorityFn = priorityFn;
+    this.priorityQueue.enabled = true;
+    return this;
+  }
+  
+  /**
+   * 7. Enable resume capability
+   */
+  enableResume(checkpointInterval = 10) {
+    this.resumeState.enabled = true;
+    this.resumeState.checkpointInterval = checkpointInterval;
+    return this;
+  }
+  
+  /**
+   * 7. Get resume state for persistence
+   */
+  getResumeState() {
+    return {
+      lastProcessedIndex: this.resumeState.lastProcessedIndex,
+      stats: { ...this.stats },
+      circuitBreakerState: this.circuitBreaker.state,
+    };
+  }
+  
+  /**
+   * 7. Load resume state from persistence
+   */
+  loadResumeState(state) {
+    if (state.lastProcessedIndex !== undefined) {
+      this.resumeState.lastProcessedIndex = state.lastProcessedIndex;
+      this.resumeState.enabled = true;
+    }
+    return this;
+  }
+  
+  /**
+   * 4. Get circuit breaker status
+   */
+  getCircuitBreakerStatus() {
+    return {
+      state: this.circuitBreaker.state,
+      failures: this.circuitBreaker.failures,
+      threshold: this.circuitBreaker.threshold,
+      timeSinceLastFailure: this.circuitBreaker.lastFailureTime 
+        ? Date.now() - this.circuitBreaker.lastFailureTime 
+        : null,
+    };
+  }
+  
+  /**
+   * 4. Reset circuit breaker manually
+   */
+  resetCircuitBreaker() {
+    this.circuitBreaker.state = 'CLOSED';
+    this.circuitBreaker.failures = 0;
+    this.circuitBreaker.lastFailureTime = null;
+    console.log('🔧 Circuit breaker manually reset to CLOSED');
+    return this;
   }
 }
 
