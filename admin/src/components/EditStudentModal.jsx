@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getDepartments } from "../services/adminOperations";
+import { validateSkillrackUrl } from "../utils/skillrackValidator";
 
 export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
   const [formData, setFormData] = useState({
@@ -75,14 +76,16 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const skillrackRegex =
-      /^https:\/\/www\.skillrack\.com\/faces\/resume\.xhtml\?id=\d+&key=[a-fA-F0-9]+$/;
-    if (formData.skillrack && !skillrackRegex.test(formData.skillrack)) {
-      alert(
-        "Invalid SkillRack URL. Please enter a valid URL in the format: https://www.skillrack.com/faces/resume.xhtml?id=123456&key=abcdef1234567890"
-      );
-      return;
+    
+    // Validate Skillrack URL if provided
+    if (formData.skillrack) {
+      const validation = validateSkillrackUrl(formData.skillrack);
+      if (!validation.valid) {
+        alert(validation.message);
+        return;
+      }
     }
+    
     const trimmedData = {
       ...formData,
       leetcode: formData.leetcode.trim(),
@@ -136,7 +139,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
                     : field === "codeforces"
                     ? "Enter codeforces username (e.g., johndoe_cf)"
                     : field === "skillrack"
-                    ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181...)"
+                    ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47... OR https://www.skillrack.com/faces/resume.xhtml?id=...&key=...)"
                     : field === "github"
                     ? "Enter GitHub username (e.g., johndoe)"
                     : `Enter ${field}`

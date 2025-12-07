@@ -14,6 +14,16 @@ console.error = (...args) => _error(chalk.red(...args));
 const _info = console.info;
 console.info = (...args) => _info(chalk.blue(...args));
 
+// 🎨 Pretty block logger (Option C)
+function prettyBlock(title, lines = []) {
+  const border = "─".repeat(60);
+  console.log("\n" + border);
+  console.log(`🟣 ${title}`);
+  console.log(border);
+  for (const line of lines) console.log(line);
+  console.log(border + "\n");
+}
+
 /**
  * Advanced Batch Processor with error handling, retry logic, and progress tracking
  * Includes: Circuit breaker, adaptive concurrency, resume capability, priority queue
@@ -148,7 +158,13 @@ class BatchProcessor {
       const batch = batches[batchIndex];
       const batchStartTime = Date.now();
 
-      console.log(`\n🔄 Batch ${batchIndex + 1}/${batches.length} started (concurrency: ${this.concurrency})...`);
+      prettyBlock(
+        `Batch ${batchIndex + 1}/${batches.length} Started`,
+        [
+          `📦 Concurrency : ${this.concurrency}`,
+          `📏 Batch Size  : ${batch.length} items`
+        ]
+      );
 
       
       const batchResults = await this.processConcurrently(
@@ -196,7 +212,15 @@ class BatchProcessor {
       const batchDuration = Date.now() - batchStartTime;
       const batchSuccessRate = batch.length > 0 ? this.stats.succeeded / this.stats.processed : 1;
       
-      console.log(`✅ Batch ${batchIndex + 1}/${batches.length} completed in ${(batchDuration / 1000).toFixed(2)}s (success rate: ${(batchSuccessRate * 100).toFixed(1)}%)`);
+      prettyBlock(
+        `Batch ${batchIndex + 1}/${batches.length} Completed`,
+        [
+          `⏱ Duration     : ${(batchDuration / 1000).toFixed(2)}s`,
+          `🎯 Success Rate : ${(batchSuccessRate * 100).toFixed(1)}%`,
+          `🔌 Circuit     : ${this.circuitBreaker.state}`,
+          `⚙️ Concurrency  : ${this.concurrency}`
+        ]
+      );
 
       // 4. Update circuit breaker based on batch results
       const batchErrors = batchResults.filter(r => r.status === 'rejected' || !r.value?.success).length;
@@ -259,10 +283,16 @@ class BatchProcessor {
     this.stats.endTime = Date.now();
     const totalDuration = this.stats.endTime - this.stats.startTime;
 
-    console.log(`\n✨ Batch processing complete!`);
-    console.log(`📊 Stats: ${this.stats.succeeded} succeeded, ${this.stats.failed} failed, ${this.stats.skipped} skipped`);
-    console.log(`⏱️  Total duration: ${(totalDuration / 1000).toFixed(2)}s`);
-    console.log(`⚡ Average: ${(totalDuration / items.length).toFixed(0)}ms per item`);
+    prettyBlock(
+      "Batch Processing Complete",
+      [
+        `✔ Succeeded : ${this.stats.succeeded}`,
+        `❌ Failed    : ${this.stats.failed}`,
+        `⏭ Skipped   : ${this.stats.skipped}`,
+        `⏱ Duration  : ${(totalDuration / 1000).toFixed(2)}s`,
+        `⚡ Avg/Item  : ${(totalDuration / items.length).toFixed(0)}ms`
+      ]
+    );
 
     return {
       results,

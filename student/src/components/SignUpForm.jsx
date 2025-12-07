@@ -3,6 +3,7 @@ import toast, { Toaster } from "react-hot-toast";
 import axios from "axios";
 import { GridLoader } from "react-spinners";
 import { X } from "lucide-react";
+import { validateSkillrackUrl } from "../utils/skillrackValidator";
 
 const API_URL = import.meta.env.VITE_API_URL;
 console.log(API_URL);
@@ -57,10 +58,11 @@ const SignUpForm = ({ onClose }) => {
       return;
     }
 
+    // Validate Skillrack URL
     const skillrackUrl = formData.skillrack.trim();
-    const skillrackRegex = /^https:\/\/www\.skillrack\.com\/faces\/resume\.xhtml\?id=\d+&key=[a-fA-F0-9]+$/;
-    if (!skillrackRegex.test(skillrackUrl)) {
-      toast.error("SkillRack URL must be in the format: https://www.skillrack.com/faces/resume.xhtml?id=<digits>&key=<hex>");
+    const skillrackValidation = validateSkillrackUrl(skillrackUrl);
+    if (!skillrackValidation.valid) {
+      toast.error(skillrackValidation.message);
       setIsSubmitting(false);
       return;
     }
@@ -243,7 +245,7 @@ const SignUpForm = ({ onClose }) => {
                         : key === "codeforces"
                         ? "Enter codeforces username (e.g., johndoe_cf)"
                         : key === "skillrack"
-                        ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181....)"
+                        ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47... OR https://www.skillrack.com/faces/resume.xhtml?id=...&key=...)"
                         : key === "github"
                         ? "Enter GitHub username (e.g., johndoe)"
                         : `Enter ${label.toLowerCase()}`
