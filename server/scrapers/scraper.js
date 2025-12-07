@@ -29,12 +29,12 @@ function setCache(key, data) {
 }
 
 const platformLimits = {
-  codechef: { minTime: 4000, maxConcurrent: 1 }, // Increased for batch processing
-  leetcode: { minTime: 500, maxConcurrent: 5 },
-  hackerrank: { minTime: 1000, maxConcurrent: 3 },
-  github: { minTime: 200, maxConcurrent: 10 },
-  skillrack: { minTime: 1000, maxConcurrent: 3 },
-  codeforces: { minTime: 500, maxConcurrent: 3 },
+  codechef: { minTime: 2000, maxConcurrent: 2 }, // Reduced from 4s/1 to 2s/2 for speed
+  leetcode: { minTime: 300, maxConcurrent: 5 },  // Reduced from 500ms to 300ms
+  hackerrank: { minTime: 800, maxConcurrent: 3 }, // Reduced from 1s
+  github: { minTime: 150, maxConcurrent: 10 },    // Reduced from 200ms
+  skillrack: { minTime: 800, maxConcurrent: 3 },  // Reduced from 1s
+  codeforces: { minTime: 300, maxConcurrent: 3 }, // Reduced from 500ms
 };
 
 const limiters = Object.fromEntries(

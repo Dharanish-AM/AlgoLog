@@ -162,6 +162,28 @@ export const refetchStudents = async (classId, token, dispatch) => {
   }
 };
 
+export const refetchAllStudents = async (token, dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/students/refetch/all`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (response.status === 200) {
+      // Refresh data after refetch
+      await getDepartments(token, dispatch);
+      await getClasses(token, dispatch);
+      await getAllStudents(token, dispatch);
+    }
+
+    return response;
+  } catch (error) {
+    console.error("Error refetching all students:", error);
+    throw error;
+  }
+};
+
 export const getAllStudents = async (token, dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/api/students/all`, {

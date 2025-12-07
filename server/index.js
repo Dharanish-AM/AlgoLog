@@ -269,7 +269,7 @@ app.get("/api/students/refetch", async (req, res) => {
 
     // Prepare data quality tracking
     const dataQualityUpdates = [];
-    const bulkUpdateOps = [];
+    const updatePromises = []; // Collect update promises for parallel execution
 
     // Process all students in batches
     const { results, stats, errors } = await processor.processBatch(
@@ -336,36 +336,34 @@ app.get("/api/students/refetch", async (req, res) => {
             .reduce((sum, p) => sum + (p.score || 0), 0) / 
             Object.keys(validation.platforms).length;
 
-          // Prepare bulk update operation (3. Database optimization)
-          bulkUpdateOps.push({
-            updateOne: {
-              filter: { _id: student._id },
-              update: {
-                $set: {
+          // Prepare parallel update (individual updates are faster than bulk)
+          const updatePromise = Student.findByIdAndUpdate(student._id, {
+            $set: {
+              stats: mergedStats,
+              updatedAt: now,
+              dataQuality: {
+                score: avgValidationScore,
+                lastValidation: now,
+                platformsUpdated,
+                hasAnomalies: Object.keys(anomalies).length > 0,
+              }
+            },
+            // 9. Data quality - Historical tracking
+            $push: {
+              statsHistory: {
+                $each: [{
+                  timestamp: now,
                   stats: mergedStats,
-                  updatedAt: now,
-                  dataQuality: {
-                    score: avgValidationScore,
-                    lastValidation: now,
-                    platformsUpdated,
-                    hasAnomalies: Object.keys(anomalies).length > 0,
-                  }
-                },
-                // 9. Data quality - Historical tracking
-                $push: {
-                  statsHistory: {
-                    $each: [{
-                      timestamp: now,
-                      stats: mergedStats,
-                      validationScore: avgValidationScore,
-                      anomalies: Object.keys(anomalies).length > 0 ? anomalies : undefined,
-                    }],
-                    $slice: -10 // Keep last 10 history entries
-                  }
-                }
+                  validationScore: avgValidationScore,
+                  anomalies: Object.keys(anomalies).length > 0 ? anomalies : undefined,
+                }],
+                $slice: -10 // Keep last 10 history entries
               }
             }
           });
+          
+          // Collect promise for parallel execution
+          updatePromises.push(updatePromise);
 
           console.log(
             `✅ Prepared update for ${student.name} - Validation score: ${avgValidationScore.toFixed(1)}%`
@@ -451,6 +449,134 @@ app.get("/api/students/refetch", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to refetch stats for all students",
+      message: error.message,
+    });
+  }
+});
+
+// Refetch stats for all departments -> classes -> students
+app.get("/api/students/refetch/all", async (_req, res) => {
+  const start = Date.now();
+  const now = new Date();
+
+  const summary = {
+    departments: 0,
+    classes: 0,
+    totalStudents: 0,
+    succeeded: 0,
+    failed: 0,
+    skipped: 0,
+    totalPlatformsUpdated: 0,
+    totalPlatformErrors: 0,
+    validationIssues: [],
+    anomalies: [],
+  };
+
+  try {
+    const departments = await Department.find();
+    summary.departments = departments.length;
+
+    const validator = new DataValidator();
+
+    for (const department of departments) {
+      const classes = await Class.find({ department: department._id });
+      summary.classes += classes.length;
+
+      for (const classItem of classes) {
+        const students = await Student.find({ classId: classItem._id });
+        summary.totalStudents += students.length;
+
+        if (!students.length) continue;
+
+        const processor = new BatchProcessor({
+          concurrency: 5,
+          batchSize: 12,
+          retryAttempts: 2,
+          timeout: 60000,
+        });
+
+        const { stats } = await processor.processBatch(
+          students,
+          async (student) => {
+            const newStats = await getStatsForStudent(student, student.stats || {});
+
+            const validation = validator.validateAll(newStats);
+
+            const anomalies = {};
+            for (const platform of Object.keys(newStats)) {
+              const platformAnomalies = validator.detectAnomalies(
+                student.stats?.[platform],
+                newStats[platform],
+                platform
+              );
+              if (platformAnomalies.length > 0) {
+                anomalies[platform] = platformAnomalies;
+              }
+            }
+
+            const mergedStats = { ...(student.stats || {}) };
+            for (const [platform, platformStats] of Object.entries(newStats)) {
+              if (!platformStats.error) {
+                mergedStats[platform] = platformStats;
+                summary.totalPlatformsUpdated++;
+              } else {
+                summary.totalPlatformErrors++;
+              }
+            }
+
+            await Student.findByIdAndUpdate(student._id, {
+              stats: mergedStats,
+              updatedAt: now,
+            });
+
+            if (!validation.valid && summary.validationIssues.length < 20) {
+              summary.validationIssues.push({
+                student: student.name,
+                rollNo: student.rollNo,
+                errors: validation.errors.slice(0, 3),
+                department: department.name,
+                class: classItem.name,
+              });
+            }
+
+            if (Object.keys(anomalies).length > 0 && summary.anomalies.length < 20) {
+              summary.anomalies.push({
+                student: student.name,
+                rollNo: student.rollNo,
+                anomalies,
+                department: department.name,
+                class: classItem.name,
+              });
+            }
+
+            return { success: true };
+          }
+        );
+
+        summary.succeeded += stats.succeeded;
+        summary.failed += stats.failed;
+        summary.skipped += stats.skipped;
+
+        await Class.findByIdAndUpdate(classItem._id, {
+          studentsUpdatedAt: now,
+        });
+      }
+    }
+
+    const durationMs = Date.now() - start;
+    const durationSec = (durationMs / 1000).toFixed(2);
+
+    res.status(200).json({
+      success: true,
+      durationMs,
+      durationSec,
+      ...summary,
+    });
+  } catch (error) {
+    console.error("❌ ERROR in /api/students/refetch/all:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to refetch all students",
       message: error.message,
     });
   }

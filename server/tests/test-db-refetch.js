@@ -6,6 +6,7 @@
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const path = require('path');
+const chalk = require('chalk');
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
@@ -25,6 +26,77 @@ const {
   getCodeforcesStats,
 } = require('../scrapers/scraper');
 
+/* -------------------------------------------------------------------------- */
+/*                                LOGGER SETUP                                */
+/* -------------------------------------------------------------------------- */
+
+const symbols = {
+  info: 'ℹ️ ',
+  success: '✅',
+  warn: '⚠️ ',
+  error: '❌',
+  title: '🚀',
+  db: '📡',
+  dept: '🏢',
+  cls: '📚',
+  student: '👤',
+  progress: '📊',
+  metrics: '⚡',
+};
+
+const log = {
+  line(char = '─', len = 80) {
+    console.log(chalk.dim(char.repeat(len)));
+  },
+
+  sectionTitle(title) {
+    this.line('═');
+    console.log(
+      chalk.bgMagentaBright.black(` ${symbols.title} ${title} `)
+    );
+    this.line('═');
+  },
+
+  subSection(title, icon = symbols.info) {
+    this.line('─');
+    console.log(
+      chalk.bold.cyan(` ${icon} ${title}`)
+    );
+    this.line('─');
+  },
+
+  info(msg) {
+    console.log(chalk.blue(`${symbols.info} ${msg}`));
+  },
+
+  success(msg) {
+    console.log(chalk.green(`${symbols.success} ${msg}`));
+  },
+
+  warn(msg) {
+    console.log(chalk.keyword('orange')(`${symbols.warn} ${msg}`));
+  },
+
+  error(msg) {
+    console.error(chalk.red(`${symbols.error} ${msg}`));
+  },
+
+  badge(label, value, color = chalk.cyan) {
+    return chalk.bgBlackBright(
+      ` ${chalk.bold(label)}: ${color(value)} `
+    );
+  },
+
+  kv(label, value, color = chalk.white) {
+    const key = chalk.dim(label.padEnd(22, ' '));
+    return `${key} ${color(value)}`;
+  },
+};
+
+/* -------------------------------------------------------------------------- */
+/*                     Fetch stats for a single student                       */
+/* -------------------------------------------------------------------------- */
+
 /**
  * Fetch stats for a single student
  */
@@ -40,7 +112,13 @@ async function getStatsForStudent(student, oldStats = {}) {
     github,
   } = student;
 
-  console.log(`\n🔍 Fetching stats for: ${name} (${rollNo})`);
+  console.log(
+    '\n' +
+      chalk.bold(
+        `${symbols.student} ${chalk.yellow(name)} ` +
+          chalk.dim(`(${rollNo || 'No RollNo'})`)
+      )
+  );
 
   const platforms = [
     { key: 'leetcode', value: leetcode, fetchFn: getLeetCodeStats },
@@ -53,14 +131,30 @@ async function getStatsForStudent(student, oldStats = {}) {
 
   const statsPromises = platforms.map(async ({ key, value, fetchFn, isUrl }) => {
     if (!value || (isUrl && !value.startsWith('http'))) {
+      log.warn(
+        `Skipping ${chalk.bold(key)} — ${chalk.dim('No identifier provided')}`
+      );
       return [key, oldStats[key] || { error: 'No identifier provided' }];
     }
 
     try {
+      const start = Date.now();
       const result = await fetchFn(value);
+      const duration = Date.now() - start;
+
+      log.success(
+        `${chalk.bold(key.padEnd(10))} ` +
+          chalk.green('OK') +
+          chalk.dim(`  (${duration}ms)`)
+      );
+
       return [key, result];
     } catch (err) {
-      console.warn(`  ⚠️  ${key} failed: ${err.message}`);
+      log.warn(
+        `${chalk.bold(key.padEnd(10))} ` +
+          chalk.red('FAILED') +
+          chalk.dim(`  (${err.message})`)
+      );
       return [key, oldStats[key] || { error: err.message }];
     }
   });
@@ -75,14 +169,18 @@ async function getStatsForStudent(student, oldStats = {}) {
   return finalStats;
 }
 
-/**
- * Main test function - Process all departments, classes, and students
- */
+/* -------------------------------------------------------------------------- */
+/*                  Main test function - Full DB batch refetch                */
+/* -------------------------------------------------------------------------- */
+
 async function testDatabaseRefetch() {
-  console.log('\n' + '='.repeat(80));
-  console.log('🚀 TESTING COMPLETE DATABASE BATCH REFETCH');
-  console.log('   Processing: Departments → Classes → Students');
-  console.log('='.repeat(80));
+  log.sectionTitle('TESTING COMPLETE DATABASE BATCH REFETCH');
+  console.log(
+    '   ' +
+      log.badge('Flow', 'Departments → Classes → Students', chalk.yellow) +
+      '  ' +
+      log.badge('Mode', 'REFETCH', chalk.green)
+  );
 
   const overallStartTime = Date.now();
   const globalStats = {
@@ -101,36 +199,44 @@ async function testDatabaseRefetch() {
   };
 
   try {
-    // Connect to MongoDB
-    console.log('\n📡 Connecting to MongoDB...');
+    /* ---------------------------- DB Connection ---------------------------- */
+    log.subSection('Connecting to MongoDB', symbols.db);
+    log.info('Connecting using DB_URI from environment...');
     await mongoose.connect(process.env.DB_URI);
-    console.log('✅ Connected to MongoDB');
+    log.success('Connected to MongoDB');
 
-    // Get all departments
-    console.log('\n🏢 Fetching departments...');
+    /* ----------------------------- Departments ----------------------------- */
+    log.subSection('Fetching departments', symbols.dept);
     const departments = await Department.find();
     globalStats.departments = departments.length;
-    
+
     if (!departments || departments.length === 0) {
-      console.log('⚠️  No departments found in database');
+      log.warn('No departments found in database');
       return;
     }
 
-    console.log(`✅ Found ${departments.length} department(s):`);
+    log.success(
+      `Found ${chalk.bold(departments.length)} department(s)`
+    );
     departments.forEach((dept, i) => {
-      console.log(`   ${i + 1}. ${dept.name} (ID: ${dept._id})`);
+      console.log(
+        `   ${chalk.dim(String(i + 1).padStart(2, '0'))}. ` +
+          `${chalk.bold(dept.name)} ` +
+          chalk.gray(`(ID: ${dept._id})`)
+      );
     });
 
     const validator = new DataValidator();
 
-    // Process each department
+    /* ----------------------- Process each department ----------------------- */
     for (let deptIndex = 0; deptIndex < departments.length; deptIndex++) {
       const department = departments[deptIndex];
       const deptStartTime = Date.now();
 
-      console.log('\n' + '─'.repeat(80));
-      console.log(`🏢 DEPARTMENT ${deptIndex + 1}/${departments.length}: ${department.name}`);
-      console.log('─'.repeat(80));
+      log.subSection(
+        `DEPARTMENT ${deptIndex + 1}/${departments.length}: ${department.name}`,
+        symbols.dept
+      );
 
       const deptStats = {
         departmentName: department.name,
@@ -149,19 +255,29 @@ async function testDatabaseRefetch() {
       globalStats.classes += classes.length;
 
       if (!classes || classes.length === 0) {
-        console.log(`⚠️  No classes found for ${department.name}`);
+        log.warn(`No classes found for department ${chalk.bold(department.name)}`);
         globalStats.departmentResults.push(deptStats);
         continue;
       }
 
-      console.log(`📚 Found ${classes.length} class(es) in ${department.name}`);
+      log.info(
+        `Found ${chalk.bold(classes.length)} class(es) in ${chalk.bold(
+          department.name
+        )}`
+      );
 
-      // Process each class
+      /* ------------------------- Process each class ------------------------ */
       for (let classIndex = 0; classIndex < classes.length; classIndex++) {
         const classItem = classes[classIndex];
         const classStartTime = Date.now();
 
-        console.log(`\n  📖 Class ${classIndex + 1}/${classes.length}: ${classItem.name || classItem._id}`);
+        console.log(
+          '\n' +
+            chalk.bold(
+              `${symbols.cls} Class ${classIndex + 1}/${classes.length}: ` +
+                `${chalk.yellow(classItem.name || classItem._id)}`
+            )
+        );
 
         const classStats = {
           className: classItem.name || 'Unnamed',
@@ -179,19 +295,23 @@ async function testDatabaseRefetch() {
         globalStats.totalStudents += students.length;
 
         if (!students || students.length === 0) {
-          console.log(`    ⚠️  No students found in this class`);
+          log.warn('    No students found in this class');
           deptStats.classResults.push(classStats);
           continue;
         }
 
-        console.log(`    👥 Processing ${students.length} student(s)...`);
+        log.info(
+          `    ${symbols.student} Processing ${chalk.bold(
+            students.length
+          )} student(s)...`
+        );
 
         // Initialize batch processor for this class
         const processor = new BatchProcessor({
-          concurrency: 3, // Reduced from 5 to 3 to avoid rate limits
-          batchSize: 8,   // Reduced from 10 to 8 for better control
-          retryAttempts: 2, // Increased from 1 to 2 for better retry handling
-          timeout: 60000, // Increased to 60 seconds for slower platforms
+          concurrency: 5, // Increased from 3 for faster processing
+          batchSize: 12, // Increased from 8 for larger batches
+          retryAttempts: 2,
+          timeout: 60000,
         });
 
         let batchProgress = 0;
@@ -203,9 +323,24 @@ async function testDatabaseRefetch() {
             const percentage = stats.percentage.toFixed(1);
             const succeeded = stats.succeeded;
             const failed = stats.failed;
+
             console.log(
-              `       📊 ${stats.processed}/${stats.total} (${percentage}%) - ` +
-              `✅ ${succeeded} | ❌ ${failed}`
+              '       ' +
+                chalk.bold(symbols.progress) +
+                ' ' +
+                log.kv('Processed', `${stats.processed}/${stats.total}`) +
+                '  ' +
+                log.kv(
+                  'Completion',
+                  `${percentage}%`,
+                  percentage === '100.0'
+                    ? chalk.green
+                    : chalk.cyan
+                ) +
+                '  ' +
+                log.kv('✅ Success', succeeded, chalk.green) +
+                '  ' +
+                log.kv('❌ Failed', failed, chalk.red)
             );
           }
         });
@@ -307,9 +442,11 @@ async function testDatabaseRefetch() {
           studentsUpdatedAt: new Date(),
         });
 
-        console.log(
-          `    ✅ Class completed: ${stats.succeeded}/${students.length} successful ` +
-          `(${(classStats.duration / 1000).toFixed(1)}s)`
+        log.success(
+          `    Class completed: ${chalk.bold(
+            `${stats.succeeded}/${students.length}`
+          )} students successful ` +
+            chalk.dim(`(${(classStats.duration / 1000).toFixed(1)}s)`)
         );
 
         deptStats.classResults.push(classStats);
@@ -319,109 +456,224 @@ async function testDatabaseRefetch() {
       deptStats.duration = Date.now() - deptStartTime;
       globalStats.departmentResults.push(deptStats);
 
+      const successRate =
+        deptStats.totalStudents > 0
+          ? ((deptStats.successfulStudents / deptStats.totalStudents) * 100).toFixed(1)
+          : 0;
+
+      console.log('\n' + chalk.bold(symbols.dept) + ' Department Summary');
       console.log(
-        `\n🏢 Department "${department.name}" completed: ` +
-        `${deptStats.successfulStudents}/${deptStats.totalStudents} students ` +
-        `across ${deptStats.classes} classes (${(deptStats.duration / 1000).toFixed(1)}s)`
+        '  ' +
+          log.kv('Name', deptStats.departmentName, chalk.yellow) +
+          '\n  ' +
+          log.kv(
+            'Students',
+            `${deptStats.successfulStudents}/${deptStats.totalStudents}`,
+            chalk.green
+          ) +
+          '\n  ' +
+          log.kv('Classes', deptStats.classes, chalk.cyan) +
+          '\n  ' +
+          log.kv(
+            'Success Rate',
+            `${successRate}%`,
+            successRate >= 90 ? chalk.green : chalk.keyword('orange')
+          ) +
+          '\n  ' +
+          log.kv(
+            'Duration',
+            `${(deptStats.duration / 1000).toFixed(1)}s`,
+            chalk.magenta
+          )
       );
     }
 
     const totalDuration = Date.now() - overallStartTime;
 
-    // Print comprehensive results
-    console.log('\n' + '='.repeat(80));
-    console.log('📊 COMPLETE DATABASE REFETCH RESULTS');
-    console.log('='.repeat(80));
+    /* ------------------------------- SUMMARY ------------------------------- */
+    log.sectionTitle('COMPLETE DATABASE REFETCH RESULTS');
 
-    console.log('\n🎯 Overall Summary:');
-    console.log(`  🏢 Departments: ${globalStats.departments}`);
-    console.log(`  📚 Classes: ${globalStats.classes}`);
-    console.log(`  👥 Total Students: ${globalStats.totalStudents}`);
-    console.log(`  ✅ Successfully Updated: ${globalStats.successfulStudents}`);
-    console.log(`  ❌ Failed: ${globalStats.failedStudents}`);
-    console.log(`  ⏭️  Skipped: ${globalStats.skippedStudents}`);
-    console.log(`  📈 Success Rate: ${((globalStats.successfulStudents / globalStats.totalStudents) * 100).toFixed(1)}%`);
-    console.log(`  🔧 Platforms Updated: ${globalStats.totalPlatformsUpdated}`);
-    console.log(`  ⚠️  Platform Errors: ${globalStats.totalPlatformErrors}`);
-    console.log(`  ⏱️  Total Duration: ${(totalDuration / 1000).toFixed(2)}s (${(totalDuration / 60000).toFixed(2)} min)`);
-    console.log(`  ⚡ Average per Student: ${(totalDuration / globalStats.totalStudents).toFixed(0)}ms`);
-    console.log(`  🚀 Throughput: ${(globalStats.totalStudents / (totalDuration / 1000)).toFixed(2)} students/sec`);
+    console.log('\n' + chalk.bold('🎯 OVERALL SUMMARY'));
+    console.log(
+      '  ' +
+        log.kv('Departments', globalStats.departments, chalk.yellow) +
+        '\n  ' +
+        log.kv('Classes', globalStats.classes, chalk.cyan) +
+        '\n  ' +
+        log.kv('Total Students', globalStats.totalStudents, chalk.white) +
+        '\n  ' +
+        log.kv('Successfully Updated', globalStats.successfulStudents, chalk.green) +
+        '\n  ' +
+        log.kv('Failed', globalStats.failedStudents, chalk.red) +
+        '\n  ' +
+        log.kv('Skipped', globalStats.skippedStudents, chalk.gray)
+    );
 
-    // Department breakdown
-    console.log('\n📋 Department Breakdown:');
-    globalStats.departmentResults.forEach((dept, i) => {
-      const successRate = dept.totalStudents > 0 
-        ? ((dept.successfulStudents / dept.totalStudents) * 100).toFixed(1)
+    const successRateOverall =
+      globalStats.totalStudents > 0
+        ? ((globalStats.successfulStudents / globalStats.totalStudents) * 100).toFixed(1)
         : 0;
+
+    console.log(
+      '\n  ' +
+        log.kv(
+          'Success Rate',
+          `${successRateOverall}%`,
+          successRateOverall >= 90 ? chalk.green : chalk.keyword('orange')
+        ) +
+        '\n  ' +
+        log.kv('Platforms Updated', globalStats.totalPlatformsUpdated, chalk.green) +
+        '\n  ' +
+        log.kv('Platform Errors', globalStats.totalPlatformErrors, chalk.red) +
+        '\n  ' +
+        log.kv(
+          'Total Duration',
+          `${(totalDuration / 1000).toFixed(2)}s (${(totalDuration / 60000).toFixed(
+            2
+          )} min)`,
+          chalk.magenta
+        )
+    );
+
+    if (globalStats.totalStudents > 0) {
+      const avgPerStudent = totalDuration / globalStats.totalStudents;
       console.log(
-        `  ${i + 1}. ${dept.departmentName}: ` +
-        `${dept.successfulStudents}/${dept.totalStudents} students ` +
-        `across ${dept.classes} classes ` +
-        `(${successRate}% success, ${(dept.duration / 1000).toFixed(1)}s)`
+        '  ' +
+          log.kv(
+            'Average per Student',
+            `${avgPerStudent.toFixed(0)}ms`,
+            chalk.cyan
+          ) +
+          '\n  ' +
+          log.kv(
+            'Throughput',
+            `${(globalStats.totalStudents / (totalDuration / 1000)).toFixed(
+              2
+            )} students/sec`,
+            chalk.cyan
+          )
+      );
+    }
+
+    /* ------------------------ Department Breakdown ------------------------ */
+    console.log('\n' + chalk.bold('📋 DEPARTMENT BREAKDOWN'));
+    globalStats.departmentResults.forEach((dept, i) => {
+      const successRate =
+        dept.totalStudents > 0
+          ? ((dept.successfulStudents / dept.totalStudents) * 100).toFixed(1)
+          : 0;
+      console.log(
+        `  ${chalk.dim(String(i + 1).padStart(2, '0'))}. ` +
+          `${chalk.bold(dept.departmentName)} → ` +
+          `${chalk.green(`${dept.successfulStudents}/${dept.totalStudents}`)} students ` +
+          chalk.dim(
+            `across ${dept.classes} classes, ${successRate}% success, ${(dept.duration /
+              1000).toFixed(1)}s`
+          )
       );
     });
 
-    // Validation issues
+    /* --------------------------- Validation issues ------------------------ */
     if (globalStats.validationIssues.length > 0) {
-      console.log(`\n⚠️  Validation Issues (${globalStats.validationIssues.length}):`);
+      console.log(
+        '\n' +
+          chalk.bold(
+            `${symbols.warn} VALIDATION ISSUES (${globalStats.validationIssues.length})`
+          )
+      );
       const displayLimit = 10;
       globalStats.validationIssues.slice(0, displayLimit).forEach((issue, i) => {
         console.log(
-          `  ${i + 1}. ${issue.department} → ${issue.class} → ` +
-          `${issue.student} (${issue.rollNo})`
+          `  ${chalk.dim(String(i + 1).padStart(2, '0'))}. ` +
+            `${issue.department} → ${issue.class} → ` +
+            `${chalk.yellow(issue.student)} (${chalk.dim(issue.rollNo)})`
         );
-        issue.errors.slice(0, 2).forEach(err => console.log(`     - ${err}`));
+        issue.errors.slice(0, 2).forEach(err =>
+          console.log(`     - ${chalk.red(err)}`)
+        );
       });
       if (globalStats.validationIssues.length > displayLimit) {
-        console.log(`  ... and ${globalStats.validationIssues.length - displayLimit} more`);
+        console.log(
+          `  ... and ${chalk.bold(
+            globalStats.validationIssues.length - displayLimit
+          )} more`
+        );
       }
     }
 
-    // Anomalies
+    /* ----------------------------- Anomalies ------------------------------ */
     if (globalStats.anomalies.length > 0) {
-      console.log(`\n🔍 Anomalies Detected (${globalStats.anomalies.length}):`);
+      console.log(
+        '\n' +
+          chalk.bold(
+            `${symbols.student} ANOMALIES DETECTED (${globalStats.anomalies.length})`
+          )
+      );
       const displayLimit = 10;
       globalStats.anomalies.slice(0, displayLimit).forEach((anomaly, i) => {
         console.log(
-          `  ${i + 1}. ${anomaly.department} → ${anomaly.class} → ` +
-          `${anomaly.student} (${anomaly.rollNo})`
+          `  ${chalk.dim(String(i + 1).padStart(2, '0'))}. ` +
+            `${anomaly.department} → ${anomaly.class} → ` +
+            `${chalk.yellow(anomaly.student)} (${chalk.dim(anomaly.rollNo)})`
         );
         const platforms = Object.keys(anomaly.anomalies);
         platforms.slice(0, 2).forEach(platform => {
           anomaly.anomalies[platform].slice(0, 1).forEach(issue => {
-            console.log(`     ${platform}: ${issue}`);
+            console.log(
+              `     ${chalk.cyan(platform)}: ${chalk.keyword('orange')(issue)}`
+            );
           });
         });
       });
       if (globalStats.anomalies.length > displayLimit) {
-        console.log(`  ... and ${globalStats.anomalies.length - displayLimit} more`);
+        console.log(
+          `  ... and ${chalk.bold(
+            globalStats.anomalies.length - displayLimit
+          )} more`
+        );
       }
     }
 
-    // Performance metrics
-    console.log('\n⚡ Performance Metrics:');
-    const avgDeptTime = totalDuration / globalStats.departments;
-    const avgClassTime = totalDuration / globalStats.classes;
-    const avgStudentTime = totalDuration / globalStats.totalStudents;
-    console.log(`  Average per Department: ${(avgDeptTime / 1000).toFixed(2)}s`);
-    console.log(`  Average per Class: ${(avgClassTime / 1000).toFixed(2)}s`);
-    console.log(`  Average per Student: ${avgStudentTime.toFixed(0)}ms`);
-    console.log(`  Estimated time for 1000 students: ${((avgStudentTime * 1000) / 60000).toFixed(2)} min`);
+    /* ------------------------- Performance metrics ------------------------ */
+    console.log('\n' + chalk.bold(`${symbols.metrics} PERFORMANCE METRICS`));
+    const avgDeptTime =
+      globalStats.departments > 0 ? totalDuration / globalStats.departments : 0;
+    const avgClassTime =
+      globalStats.classes > 0 ? totalDuration / globalStats.classes : 0;
+    const avgStudentTime =
+      globalStats.totalStudents > 0 ? totalDuration / globalStats.totalStudents : 0;
 
-    console.log('\n' + '='.repeat(80));
-    console.log('✅ COMPLETE DATABASE REFETCH SUCCESSFUL');
-    console.log('='.repeat(80) + '\n');
+    console.log(
+      '  ' +
+        log.kv(
+          'Average per Department',
+          `${(avgDeptTime / 1000).toFixed(2)}s`,
+          chalk.cyan
+        ) +
+        '\n  ' +
+        log.kv('Average per Class', `${(avgClassTime / 1000).toFixed(2)}s`, chalk.cyan) +
+        '\n  ' +
+        log.kv('Average per Student', `${avgStudentTime.toFixed(0)}ms`, chalk.cyan) +
+        '\n  ' +
+        log.kv(
+          'Est. time for 1000 students',
+          `${((avgStudentTime * 1000) / 60000).toFixed(2)} min`,
+          chalk.magenta
+        )
+    );
+
+    log.sectionTitle('COMPLETE DATABASE REFETCH SUCCESSFUL 🎉');
 
     return globalStats;
-
   } catch (error) {
-    console.error('\n❌ TEST FAILED:', error);
-    console.error('Stack trace:', error.stack);
+    log.error('TEST FAILED');
+    console.error(error);
+    console.error(chalk.dim('Stack trace:'), error.stack);
     process.exit(1);
   } finally {
     // Disconnect from MongoDB
     await mongoose.disconnect();
-    console.log('📡 Disconnected from MongoDB\n');
+    log.info('Disconnected from MongoDB');
   }
 }
 
@@ -429,11 +681,12 @@ async function testDatabaseRefetch() {
 if (require.main === module) {
   testDatabaseRefetch()
     .then(() => {
-      console.log('🎉 All tests passed!');
+      log.success('All tests completed');
       process.exit(0);
     })
     .catch((error) => {
-      console.error('💥 Test crashed:', error);
+      log.error('Test crashed');
+      console.error(error);
       process.exit(1);
     });
 }

@@ -79,6 +79,8 @@ export default function Dashboard() {
     await getDepartments(token, dispatch);
   };
 
+  
+
   const handleDepartmentClick = (deptId, deptName) => {
     setSelectedDepartment(deptId);
     setSelectedDepartmentName(deptName);

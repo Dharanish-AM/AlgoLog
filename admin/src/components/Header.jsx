@@ -1,13 +1,14 @@
 import React, { useEffect } from "react";
 import logo from "../assets/algolog.png";
-import { UserPlus, Download, User, ChartBar, School, Plus } from "lucide-react";
+import { UserPlus, Download, User, ChartBar, School, Plus, RefreshCcw } from "lucide-react";
 import Profile from "./Profile";
 import AddDepartment from "./AddDepartment";
 import AddClass from "./AddClass";
 import { useLocation, useNavigate } from "react-router-dom";
 import Papa from "papaparse";
-import { useSelector } from "react-redux";
-import toast from "react-hot-toast"
+import { useDispatch, useSelector } from "react-redux";
+import toast from "react-hot-toast";
+import { refetchAllStudents } from "../services/adminOperations";
 
 export default function Header({}) {
   const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
@@ -17,13 +18,15 @@ export default function Header({}) {
     (state) => state.admin.currentDepartment
   );
   const currentClass = useSelector((state) => state.admin.currentClass);
-  const currentYear = useSelector((state)=> state.admin.currentYear)
+  const currentYear = useSelector((state) => state.admin.currentYear);
   const navigation = useNavigate();
   const [isAddDepartmentModalOpen, setIsAddDepartmentModalOpen] =
     React.useState(false);
   const [isAddClassModalOpen, setIsAddClassModalOpen] = React.useState(false);
   const location = useLocation();
-
+  const [isRefetchingAll, setIsRefetchingAll] = React.useState(false);
+  const token = localStorage.getItem("token");
+  const dispatch = useDispatch();
 
   const handleExportCSV = (scope = "department") => {
     let filteredStudents = [];
@@ -70,8 +73,10 @@ export default function Header({}) {
             ? student.year
             : String(student.year || "N/A");
 
-        const skillrackCertCount = (student.stats.skillrack?.certificates || []).length;
-        const leetcodeContestCount = (student.stats.leetcode?.contests || []).length;
+        const skillrackCertCount = (student.stats.skillrack?.certificates || [])
+          .length;
+        const leetcodeContestCount = (student.stats.leetcode?.contests || [])
+          .length;
 
         return {
           name: student.name,
@@ -84,7 +89,9 @@ export default function Header({}) {
           leetcode_easy: student.stats.leetcode?.solved?.Easy || 0,
           leetcode_medium: student.stats.leetcode?.solved?.Medium || 0,
           leetcode_hard: student.stats.leetcode?.solved?.Hard || 0,
-          leetcode_rating: parseFloat(student.stats.leetcode?.rating || 0).toFixed(2),
+          leetcode_rating: parseFloat(
+            student.stats.leetcode?.rating || 0
+          ).toFixed(2),
           leetcode_contest_count: leetcodeContestCount,
           hackerrank_badge_count: student.stats.hackerrank?.badges?.length || 0,
           codechef_rating: student.stats.codechef?.rating || 0,
@@ -98,7 +105,7 @@ export default function Header({}) {
           skillrack_rank: student.stats.skillrack?.rank || "N/A",
           skillrack_certificates_count: skillrackCertCount,
           github_commits: student.stats.github?.totalCommits || 0,
-          github_repos: student.stats.github?.totalRepos || 0
+          github_repos: student.stats.github?.totalRepos || 0,
         };
       })
     );
@@ -111,11 +118,31 @@ export default function Header({}) {
     toast.success("CSV exported successfully!");
   };
 
+  const handleRefetchAll = async () => {
+    try {
+      setIsRefetchingAll(true);
+      const response = await refetchAllStudents(token, dispatch);
+      if (response?.status === 200) {
+        toast.success("Refetched all students successfully!");
+      } else {
+        toast.error("Failed to refetch all students.");
+      }
+    } catch (error) {
+      toast.error("Failed to refetch all students.");
+      console.error("Error refetching all students:", error);
+    } finally {
+      setIsRefetchingAll(false);
+    }
+  };
+
   return (
     <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-      <div onClick={()=>{
-        window.location.reload()
-      }} className="flex cursor-pointer items-center">
+      <div
+        onClick={() => {
+          window.location.reload();
+        }}
+        className="flex cursor-pointer items-center"
+      >
         <img
           src={logo}
           alt="AlgoLog Logo"
@@ -126,6 +153,18 @@ export default function Header({}) {
         </h1>
       </div>
       <div className="flex items-center gap-4">
+        <button
+          onClick={handleRefetchAll}
+          disabled={isRefetchingAll}
+          className={`inline-flex cursor-pointer items-center px-4 py-2 rounded-md text-sm shadow-sm transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+            isRefetchingAll
+              ? "bg-blue-300 cursor-not-allowed"
+              : "bg-blue-600 hover:bg-blue-700 text-white"
+          }`}
+        >
+          <RefreshCcw className="mr-2" size={18} />
+          {isRefetchingAll ? "Refetching..." : "Refetch All Students"}
+        </button>
         <button
           onClick={() => setIsAddDepartmentModalOpen(true)}
           className="flex cursor-pointer items-center gap-2 px-4 py-2 bg-white dark:bg-gray-700 rounded-md shadow-sm hover:bg-gray-50 dark:hover:bg-gray-600"

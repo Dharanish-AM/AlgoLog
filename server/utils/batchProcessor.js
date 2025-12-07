@@ -1,12 +1,28 @@
+// 🔵 Enhanced colorful logging wrapper (auto-applies to all console logs)
+const chalk = require("chalk"); // Ensure chalk@4 is installed
+
+// Override console methods with color-enhanced professional logging
+const _log = console.log;
+console.log = (...args) => _log(chalk.cyan(...args));
+
+const _warn = console.warn;
+console.warn = (...args) => _warn(chalk.keyword("orange")(...args));
+
+const _error = console.error;
+console.error = (...args) => _error(chalk.red(...args));
+
+const _info = console.info;
+console.info = (...args) => _info(chalk.blue(...args));
+
 /**
  * Advanced Batch Processor with error handling, retry logic, and progress tracking
  * Includes: Circuit breaker, adaptive concurrency, resume capability, priority queue
  */
 class BatchProcessor {
   constructor(options = {}) {
-    this.concurrency = options.concurrency || 5;
+    this.concurrency = options.concurrency || 8; // Increased from 5 to 8
     this.originalConcurrency = this.concurrency;
-    this.batchSize = options.batchSize || 10;
+    this.batchSize = options.batchSize || 15; // Increased from 10 to 15
     this.retryAttempts = options.retryAttempts || 2;
     this.retryDelay = options.retryDelay || 1000;
     this.timeout = options.timeout || 30000;
@@ -30,15 +46,15 @@ class BatchProcessor {
     this.circuitBreaker = {
       state: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
       failures: 0,
-      threshold: options.circuitBreakerThreshold || 5,
-      resetTimeout: options.circuitBreakerResetTimeout || 30000,
+      threshold: options.circuitBreakerThreshold || 8, // Increased from 5 for more tolerance
+      resetTimeout: options.circuitBreakerResetTimeout || 20000, // Reduced from 30s
       lastFailureTime: null,
     };
     
     // 4. Adaptive concurrency
     this.adaptiveConcurrency = {
       enabled: options.adaptiveConcurrency !== false,
-      errorRateThreshold: 0.3, // 30% error rate
+      errorRateThreshold: 0.5, // 50% error rate (increased from 30% for more speed)
       recentErrors: [],
       windowSize: 10, // Track last 10 operations
     };
