@@ -11,5 +11,8 @@ const departmentSchema = new mongoose.Schema({
   }
 });
 
+// Add indexes for faster queries
+departmentSchema.index({ name: 1 }); // For name queries
+
 const Department = mongoose.model("Department", departmentSchema);
 module.exports = Department;

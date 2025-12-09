@@ -19,27 +19,44 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
     github: "",
   });
   const [departments, setDepartments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const token = localStorage.getItem("token");
   const dispatch = useDispatch();
 
+  // Fetch departments once on mount
   useEffect(() => {
     const fetchDepartments = async () => {
-      const dpt = await getDepartments(token, dispatch);
-      setDepartments(dpt);
+      try {
+        setLoading(true);
+        const dpt = await getDepartments(token, dispatch);
+        setDepartments(dpt);
+      } catch (error) {
+        console.error("Failed to fetch departments:", error);
+      } finally {
+        setLoading(false);
+      }
     };
-    fetchDepartments();
-  }, [token, dispatch]);
+    
+    if (isOpen) {
+      fetchDepartments();
+    }
+  }, [isOpen]); // Only run when modal opens
 
+  // Populate form data immediately when student changes
   useEffect(() => {
-    if (student && departments.length > 0) {
+    if (student) {
+      const departmentId = typeof student.department === "object"
+        ? student.department._id
+        : student.department || "";
+      
+      console.log("Student data:", student);
+      console.log("Department ID extracted:", departmentId);
+      
       setFormData({
         name: student.name || "",
         email: student.email || "",
         rollNo: student.rollNo || "",
-        department:
-          typeof student.department === "object"
-            ? student.department._id
-            : student.department || "",
+        department: departmentId,
         year: student.year || "",
         section: student.section || "",
         leetcode: student?.leetcode || "",
@@ -50,7 +67,13 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         github: student?.github || "",
       });
     }
-  }, [student, departments]);
+  }, [student]); // Only depend on student, not departments
+
+  // Debug log whenever formData changes
+  useEffect(() => {
+    console.log("Current formData:", formData);
+    console.log("Current departments:", departments);
+  }, [formData, departments]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -152,8 +175,8 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             required
             className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
           >
-            <option value="" disabled>
-              Select department
+            <option value="" disabled={!formData.department}>
+              {loading ? "Loading departments..." : "Select department"}
             </option>
             {departments.map((dpt) => (
               <option key={dpt._id} value={dpt._id}>

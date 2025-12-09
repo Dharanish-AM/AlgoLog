@@ -9,13 +9,12 @@ const {
 
 async function withRetry(
   promiseFn,
-  retries = 1,
+  retries = 1, // Reduced default retries
   platform = "Unknown",
   identifier = "N/A"
 ) {
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
-      console.debug(`[${platform}] Attempt ${attempt} for ${identifier}`);
       const result = await promiseFn();
       
       // Check if result contains an error (failed fetch that returned error object)
@@ -24,9 +23,11 @@ async function withRetry(
           `[${platform}] ❌ Failed for ${identifier}: ${result.error}`
         );
       } else {
-        console.info(
-          `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`
-        );
+        if (attempt > 1) {
+          console.info(
+            `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`
+          );
+        }
       }
       return result;
     } catch (err) {
@@ -34,6 +35,8 @@ async function withRetry(
         `[${platform}] ❌ Attempt ${attempt} failed for ${identifier}: ${err.message}`
       );
       if (attempt > retries) throw err;
+      // Faster retry delay
+      await new Promise(resolve => setTimeout(resolve, 300 * attempt));
     }
   }
 }
@@ -127,14 +130,14 @@ async function getStatsForStudent(student, oldStats = {}) {
       try {
         const result = await withRetry(
           () => fetchFn(value),
-          2,
+          1, // Single retry only
           platformName,
           value
         );
         return [key, result];
       } catch (err) {
         console.warn(
-          `[${platformName}] ❗ Using old stats due to fetch failure`
+          `[${platformName}] ❗ Using cached/old stats: ${err.message}`
         );
         return [
           key,
@@ -148,7 +151,7 @@ async function getStatsForStudent(student, oldStats = {}) {
     statsEntries.map((entry) => entry.value)
   );
 
-  console.log(`✅ Finished fetching all platforms for: ${name} (${rollNo})`);
+  console.log(`✅ Completed fetch for: ${name} (${rollNo})`);
 
   return {
     _id,

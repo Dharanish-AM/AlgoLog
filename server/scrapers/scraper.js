@@ -13,7 +13,7 @@ const crypto = require("crypto");
 
 // In-memory cache with TTL
 const cache = new Map();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes (increased for rate limit protection)
 
 function getCached(key) {
   const item = cache.get(key);
@@ -28,13 +28,36 @@ function setCache(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
 
+// Global rate limit tracker to prevent API abuse
+const rateLimitTracker = {
+  codechef: { lastRequest: 0, backoffUntil: 0 },
+  codeforces: { lastRequest: 0, backoffUntil: 0 },
+};
+
+async function checkRateLimit(platform) {
+  const now = Date.now();
+  const tracker = rateLimitTracker[platform];
+  
+  if (tracker && tracker.backoffUntil > now) {
+    const waitTime = tracker.backoffUntil - now;
+    console.warn(`[${platform}] Global backoff active. Waiting ${Math.ceil(waitTime / 1000)}s...`);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
+  }
+}
+
+function setRateLimitBackoff(platform, durationMs) {
+  if (rateLimitTracker[platform]) {
+    rateLimitTracker[platform].backoffUntil = Date.now() + durationMs;
+  }
+}
+
 const platformLimits = {
-  codechef: { minTime: 2000, maxConcurrent: 2 }, // Reduced from 4s/1 to 2s/2 for speed
-  leetcode: { minTime: 300, maxConcurrent: 5 },  // Reduced from 500ms to 300ms
-  hackerrank: { minTime: 800, maxConcurrent: 3 }, // Reduced from 1s
-  github: { minTime: 150, maxConcurrent: 10 },    // Reduced from 200ms
-  skillrack: { minTime: 800, maxConcurrent: 3 },  // Reduced from 1s
-  codeforces: { minTime: 300, maxConcurrent: 3 }, // Reduced from 500ms
+  codechef: { minTime: 2500, maxConcurrent: 2 }, // Slower to avoid 429s
+  leetcode: { minTime: 200, maxConcurrent: 8 },  // Increased concurrency
+  hackerrank: { minTime: 500, maxConcurrent: 5 }, // Faster with more concurrent
+  github: { minTime: 100, maxConcurrent: 15 },    // Maximum throughput
+  skillrack: { minTime: 500, maxConcurrent: 4 },  // Faster rate
+  codeforces: { minTime: 500, maxConcurrent: 3 }, // Slower for API stability
 };
 
 const limiters = Object.fromEntries(
@@ -56,10 +79,10 @@ const {
 const agent = new https.Agent({ 
   family: 4,
   keepAlive: true,
-  keepAliveMsecs: 1000,
-  maxSockets: 50,
-  maxFreeSockets: 10,
-  timeout: 30000,
+  keepAliveMsecs: 3000, // Longer keepalive
+  maxSockets: 100, // More concurrent connections
+  maxFreeSockets: 20, // More free sockets
+  timeout: 15000, // Faster timeout
   scheduling: 'lifo'
 });
 
@@ -102,8 +125,11 @@ async function getLeetCodeQuestionOfToday() {
       {
         headers: {
           "Content-Type": "application/json",
+          "Accept-Encoding": "gzip, deflate, br",
         },
         httpsAgent: agent,
+        timeout: 8000,
+        decompress: true,
       }
     );
 
@@ -241,8 +267,11 @@ async function getLeetCodeStats(username) {
       {
         headers: {
           "Content-Type": "application/json",
+          "Accept-Encoding": "gzip, deflate, br",
         },
         httpsAgent: agent,
+        timeout: 10000,
+        decompress: true,
       }
     );
 
@@ -329,8 +358,13 @@ async function getLeetCodeStats(username) {
     setCache(cacheKey, result);
     return result;
   } catch (error) {
-    console.error("LeetCode fetch error:", error.message);
-    return { platform: "LeetCode", username, error: "Failed to fetch data" };
+    const errorMsg = error.response?.status === 404 
+      ? "User not found" 
+      : error.code === 'ECONNABORTED' || error.message.includes('timeout')
+      ? "Request timeout"
+      : "Failed to fetch data";
+    console.error(`[LeetCode] Error for ${username}:`, error.message);
+    return { platform: "LeetCode", username, error: errorMsg };
   }
 }
 
@@ -350,10 +384,12 @@ async function getHackerRankStats(username) {
         headers: {
           "User-Agent": "Mozilla/5.0",
           "Accept-Language": "en-US,en;q=0.9",
+          "Accept-Encoding": "gzip, deflate, br",
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 12000,
+        timeout: 8000,
+        decompress: true,
       });
 
       const $ = cheerio.load(data);
@@ -395,8 +431,11 @@ async function getCodeChefStats(username) {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
+  // Check global rate limit
+  await checkRateLimit('codechef');
+
   const url = `https://www.codechef.com/users/${username}`;
-  const maxAttempts = 2;
+  const maxAttempts = 3; // Increased attempts
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -407,11 +446,13 @@ async function getCodeChefStats(username) {
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9",
           "Accept-Language": "en-US,en;q=0.9",
+          "Accept-Encoding": "gzip, deflate, br",
           Connection: "keep-alive",
           Referer: url,
         },
         httpsAgent: agent,
-        timeout: 10000,
+        timeout: 8000,
+        decompress: true,
       });
 
       if (
@@ -493,11 +534,14 @@ async function getCodeChefStats(username) {
       if (attempt < maxAttempts) {
         // Exponential backoff for rate limiting (429 errors)
         if (error.response?.status === 429) {
-          const waitTime = Math.min(5000 * Math.pow(2, attempt - 1), 20000); // 5s, 10s, 20s max
-          console.warn(`⏳ Rate limited. Waiting ${waitTime / 1000}s before retry...`);
+          const waitTime = Math.min(8000 * Math.pow(2, attempt - 1), 30000); // 8s, 16s, 30s max
+          console.warn(`⏳ CodeChef rate limited. Waiting ${waitTime / 1000}s before retry...`);
+          setRateLimitBackoff('codechef', waitTime); // Set global backoff
           await delay(waitTime);
+        } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+          await delay(2000 * attempt); // Timeout - progressive delay
         } else {
-          await delay(1000 * attempt);
+          await delay(1500 * attempt); // Other errors
         }
       } else {
         return {
@@ -537,7 +581,13 @@ async function callCF(method, params) {
     apiSig,
   }).toString()}`;
 
-  const res = await axios.get(url);
+  const res = await axios.get(url, {
+    timeout: 10000,
+    httpsAgent: agent,
+    headers: {
+      "Accept-Encoding": "gzip, deflate, br",
+    },
+  });
   if (res.data.status !== "OK") throw new Error(res.data.comment);
   return res.data.result;
 }
@@ -547,15 +597,22 @@ async function getCodeforcesStats(username) {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
-  try {
-    // Fetch info and rating in parallel, submissions separately with limit
-    const [info, ratingData] = await Promise.all([
-      callCF("user.info", { handles: username }),
-      callCF("user.rating", { handle: username })
-    ]);
-    
-    // Fetch only recent 1000 submissions for faster response
-    const submissions = await callCF("user.status", { handle: username, from: 1, count: 1000 });
+  // Check global rate limit
+  await checkRateLimit('codeforces');
+
+  const maxAttempts = 2;
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      // Fetch info and rating in parallel, submissions separately with limit
+      const [info, ratingData] = await Promise.all([
+        callCF("user.info", { handles: username }),
+        callCF("user.rating", { handle: username }).catch(() => [])
+      ]);
+      
+      // Fetch only recent 500 submissions for faster response (reduced from 1000)
+      const submissions = await callCF("user.status", { handle: username, from: 1, count: 500 }).catch(() => []);
 
     const user = info[0];
     const contests = ratingData.length;
@@ -567,24 +624,40 @@ async function getCodeforcesStats(username) {
       }
     });
 
-    const result = {
-      platform: "Codeforces",
-      username,
-      rating: user.rating || "Unrated",
-      maxRating: user.maxRating || "N/A",
-      rank: user.rank || "Unranked",
-      maxRank: user.maxRank || "N/A",
-      contests,
-      problemsSolved: solved.size,
-    };
-    setCache(cacheKey, result);
-    return result;
-  } catch (err) {
-    return {
-      platform: "Codeforces",
-      username,
-      error: err.message,
-    };
+      const result = {
+        platform: "Codeforces",
+        username,
+        rating: user.rating || "Unrated",
+        maxRating: user.maxRating || "N/A",
+        rank: user.rank || "Unranked",
+        maxRank: user.maxRank || "N/A",
+        contests,
+        problemsSolved: solved.size,
+      };
+      setCache(cacheKey, result);
+      console.info(`[Codeforces] ✅ Success for ${username} on attempt ${attempt}`);
+      return result;
+    } catch (err) {
+      console.warn(`[Codeforces] Attempt ${attempt}/${maxAttempts} failed for ${username}: ${err.message}`);
+      
+      if (attempt < maxAttempts) {
+        const waitTime = 2000 * attempt; // 2s, 4s progressive delay
+        console.warn(`⏳ Codeforces waiting ${waitTime / 1000}s before retry...`);
+        
+        // Set backoff for rate limit or API errors
+        if (err.response?.status === 429 || err.message.includes('limit')) {
+          setRateLimitBackoff('codeforces', waitTime);
+        }
+        
+        await delay(waitTime);
+      } else {
+        return {
+          platform: "Codeforces",
+          username,
+          error: err.message.includes('User with handle') ? 'User not found' : err.message,
+        };
+      }
+    }
   }
 }
 
@@ -609,8 +682,10 @@ async function getSkillrackStats(resumeUrl) {
         headers: {
           "User-Agent": "Mozilla/5.0",
           "Accept-Language": "en-US,en;q=0.9",
+          "Accept-Encoding": "gzip, deflate, br",
         },
-        timeout: 4000,
+        timeout: 6000,
+        decompress: true,
         httpsAgent: agent,
       });
       const $ = cheerio.load(data);
@@ -755,7 +830,14 @@ async function getGithubStats(username) {
       const res = await axios.post(
         "https://api.github.com/graphql",
         { query },
-        { headers, timeout: 10000 }
+        { 
+          headers: {
+            ...headers,
+            "Accept-Encoding": "gzip, deflate, br",
+          }, 
+          timeout: 8000,
+          decompress: true,
+        }
       );
 
       // 6. Better null checking

@@ -30,12 +30,12 @@ function prettyBlock(title, lines = []) {
  */
 class BatchProcessor {
   constructor(options = {}) {
-    this.concurrency = options.concurrency || 8; // Increased from 5 to 8
+    this.concurrency = options.concurrency || 10; // Increased from 8 to 10
     this.originalConcurrency = this.concurrency;
-    this.batchSize = options.batchSize || 15; // Increased from 10 to 15
-    this.retryAttempts = options.retryAttempts || 2;
-    this.retryDelay = options.retryDelay || 1000;
-    this.timeout = options.timeout || 30000;
+    this.batchSize = options.batchSize || 20; // Increased from 15 to 20
+    this.retryAttempts = options.retryAttempts || 1; // Reduced from 2
+    this.retryDelay = options.retryDelay || 500; // Faster retry
+    this.timeout = options.timeout || 25000; // Faster timeout
     this.stats = {
       total: 0,
       processed: 0,
@@ -56,17 +56,17 @@ class BatchProcessor {
     this.circuitBreaker = {
       state: 'CLOSED', // CLOSED, OPEN, HALF_OPEN
       failures: 0,
-      threshold: options.circuitBreakerThreshold || 8, // Increased from 5 for more tolerance
-      resetTimeout: options.circuitBreakerResetTimeout || 20000, // Reduced from 30s
+      threshold: options.circuitBreakerThreshold || 10, // More tolerant
+      resetTimeout: options.circuitBreakerResetTimeout || 15000, // Faster reset
       lastFailureTime: null,
     };
     
     // 4. Adaptive concurrency
     this.adaptiveConcurrency = {
       enabled: options.adaptiveConcurrency !== false,
-      errorRateThreshold: 0.5, // 50% error rate (increased from 30% for more speed)
+      errorRateThreshold: 0.6, // 60% error rate threshold
       recentErrors: [],
-      windowSize: 10, // Track last 10 operations
+      windowSize: 15, // Track last 15 operations
     };
     
     // 7. Resume capability
@@ -274,7 +274,7 @@ class BatchProcessor {
 
       
       if (batchIndex < batches.length - 1) {
-        const interBatchDelay = 3000; 
+        const interBatchDelay = 1500; // Reduced from 3000ms
         console.log(`⏸️  Waiting ${interBatchDelay / 1000}s before next batch...`);
         await this.delay(interBatchDelay);
       }

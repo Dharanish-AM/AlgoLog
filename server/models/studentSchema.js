@@ -135,5 +135,13 @@ const studentSchema = new mongoose.Schema(
   }
 );
 
+// Add indexes for faster queries
+studentSchema.index({ classId: 1 }); // For classId queries
+studentSchema.index({ department: 1 }); // For department queries
+studentSchema.index({ email: 1 }, { unique: true }); // Unique email
+studentSchema.index({ rollNo: 1 }, { unique: true }); // Unique rollNo
+studentSchema.index({ classId: 1, section: 1 }); // Compound index for class+section
+studentSchema.index({ updatedAt: -1 }); // For sorting by recent updates
+
 const Student = mongoose.model("Student", studentSchema);
 module.exports = Student;

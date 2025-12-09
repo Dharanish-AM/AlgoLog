@@ -11,26 +11,21 @@ const DataValidator = require("../utils/dataValidator");
 exports.getStudentsByClass = async (req, res) => {
   try {
     const classId = req.query.classId;
-    const students = await Student.find({
-      classId,
-    })
+    const students = await Student.find({ classId })
       .lean()
-      .populate("department");
+      .select("-password -__v") // Exclude unnecessary fields
+      .populate("department", "name _id"); // Include _id for dropdown
+    
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
-    const results = students.map((student) => {
-      const { stats, ...studentWithoutStats } = student;
-      return { ...studentWithoutStats, stats };
-    });
-
     res.status(200).json({
-      students: results,
+      students,
     });
   } catch (error) {
-    console.error("Error fetching students and stats:", error);
-    res.status(500).json({ error: "Failed to fetch students and stats" });
+    console.error("Error fetching students:", error.message);
+    res.status(500).json({ error: "Failed to fetch students", message: error.message });
   }
 };
 
@@ -39,23 +34,19 @@ exports.getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
       .lean()
-      .select("-password")
-      .populate("department", "-password -classes");
+      .select("-password -__v")
+      .populate("department", "name _id"); // Include _id for dropdown
+    
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
     }
 
-    const results = students.map((student) => {
-      const { stats, ...studentWithoutStats } = student;
-      return { ...studentWithoutStats, stats };
-    });
-
     res.status(200).json({
-      students: results,
+      students,
     });
   } catch (error) {
-    console.error("Error fetching students and stats:", error);
-    res.status(500).json({ error: "Failed to fetch students and stats" });
+    console.error("Error fetching students:", error.message);
+    res.status(500).json({ error: "Failed to fetch students", message: error.message });
   }
 };
 
@@ -149,8 +140,27 @@ exports.addStudent = async (req, res) => {
 
     return res.status(201).json(savedStudent);
   } catch (error) {
-    console.error("Error adding student:", error);
-    return res.status(500).json({ error: "Failed to add student" });
+    console.error("Error adding student:", error.message);
+    
+    // Handle specific error types
+    if (error.code === 11000) {
+      return res.status(409).json({ 
+        error: "Duplicate entry", 
+        message: "Student with this email or roll number already exists"
+      });
+    }
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ 
+        error: "Validation error", 
+        message: error.message 
+      });
+    }
+    
+    return res.status(500).json({ 
+      error: "Failed to add student",
+      message: error.message
+    });
   }
 };
 
@@ -251,8 +261,27 @@ exports.updateStudent = async (req, res) => {
     console.log(`✅ Student updated: ${updatedStudent.name}`);
     res.status(200).json({ student: updatedStudent });
   } catch (error) {
-    console.error("🔥 Error updating student:", error);
-    res.status(500).json({ error: "Failed to update student" });
+    console.error("🔥 Error updating student:", error.message);
+    
+    // Handle specific error types
+    if (error.code === 11000) {
+      return res.status(409).json({ 
+        error: "Duplicate entry", 
+        message: "Email or roll number already in use"
+      });
+    }
+    
+    if (error.name === 'CastError') {
+      return res.status(400).json({ 
+        error: "Invalid ID format",
+        message: "The provided student ID is not valid"
+      });
+    }
+    
+    res.status(500).json({ 
+      error: "Failed to update student",
+      message: error.message
+    });
   }
 };
 
@@ -280,8 +309,18 @@ exports.deleteStudent = async (req, res) => {
       message: "Student deleted and removed from class successfully",
     });
   } catch (err) {
-    console.error("Error deleting student:", err);
-    res.status(500).json({ message: "Failed to delete student" });
+    console.error("Error deleting student:", err.message);
+    
+    if (err.name === 'CastError') {
+      return res.status(400).json({ 
+        message: "Invalid student ID format" 
+      });
+    }
+    
+    res.status(500).json({ 
+      message: "Failed to delete student",
+      error: err.message
+    });
   }
 };
 
@@ -463,10 +502,10 @@ exports.refetchClassStudents = async (req, res) => {
 
     const validator = new DataValidator();
     const processor = new BatchProcessor({
-      concurrency: 3,
-      batchSize: 10,
+      concurrency: 5, // Increased from 3
+      batchSize: 15, // Increased from 10
       retryAttempts: 1,
-      timeout: 45000,
+      timeout: 30000, // Reduced from 45s
     });
 
     let progressUpdate = null;
@@ -695,11 +734,11 @@ exports.refetchAllStudents = async (_req, res) => {
         if (!students.length) continue;
 
         const processor = new BatchProcessor({
-          concurrency: 5,
-          batchSize: 12,
-          retryAttempts: 2,
-          timeout: 60000,
-        });
+          concurrency: 6, // Increased from 5
+          batchSize: 15, // Increased from 12
+          retryAttempts: 1, // Reduced from 2
+          timeout: 30000, // Added explicit timeout
+        }); 
 
         const { stats } = await processor.processBatch(
           students,
