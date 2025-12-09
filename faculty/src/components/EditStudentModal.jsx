@@ -28,10 +28,10 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
       setDepartments(dpt);
     };
     fetchDepartments();
-  });
+  }, [token, dispatch]);
 
   useEffect(() => {
-    if (student) {
+    if (student && departments.length > 0) {
       setFormData({
         name: student.name || "",
         email: student.email || "",
@@ -50,7 +50,7 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
         github: student?.github || "",
       });
     }
-  }, [student]);
+  }, [student, departments]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

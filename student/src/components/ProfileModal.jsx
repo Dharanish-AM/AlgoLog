@@ -40,6 +40,13 @@ export default function ProfileModal({
     };
   }, []);
 
+  // Update data when student prop or departments change
+  useEffect(() => {
+    if (departments.length > 0) {
+      setData(student);
+    }
+  }, [student, departments]);
+
   useEffect(() => {
     if (departments.length > 0 && data.department) {
       const currentDept = departments.find((d) => d._id === data.department);

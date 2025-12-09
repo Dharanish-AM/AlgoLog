@@ -17,9 +17,17 @@ async function withRetry(
     try {
       console.debug(`[${platform}] Attempt ${attempt} for ${identifier}`);
       const result = await promiseFn();
-      console.info(
-        `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`
-      );
+      
+      // Check if result contains an error (failed fetch that returned error object)
+      if (result && result.error) {
+        console.warn(
+          `[${platform}] ❌ Failed for ${identifier}: ${result.error}`
+        );
+      } else {
+        console.info(
+          `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`
+        );
+      }
       return result;
     } catch (err) {
       console.warn(
