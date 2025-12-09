@@ -35,9 +35,9 @@ export function validateSkillrackUrl(url) {
     };
   }
 
-  // Format 2: Profile format
+  // Format 2: Profile format (supports both http and https)
   const profileRegex =
-    /^https:\/\/www\.skillrack\.com\/profile\/\d+\/[a-fA-F0-9]+$/;
+    /^https?:\/\/www\.skillrack\.com\/profile\/\d+\/[a-fA-F0-9]+$/;
   if (profileRegex.test(trimmedUrl)) {
     return {
       valid: true,
