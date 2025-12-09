@@ -846,8 +846,8 @@ exports.getStudent = async (req, res) => {
       return res.status(401).json({ message: "Invalid token" });
     }
 
-    const name = decoded.username;
-    const studentData = await Student.findOne({ name }).populate("department");
+    const studentId = decoded.id;
+    const studentData = await Student.findById(studentId).populate("department", "name _id");
 
     if (!studentData) {
       return res.status(404).json({ message: "Student not found" });

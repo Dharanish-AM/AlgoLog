@@ -42,8 +42,15 @@ export default function ProfileModal({
 
   // Update data when student prop or departments change
   useEffect(() => {
-    if (departments.length > 0) {
-      setData(student);
+    if (departments.length > 0 && student) {
+      // Ensure department is stored as ID string, not object
+      const departmentId = typeof student.department === 'object' 
+        ? student.department._id 
+        : student.department;
+      setData({
+        ...student,
+        department: departmentId
+      });
     }
   }, [student, departments]);
 
@@ -214,14 +221,13 @@ export default function ProfileModal({
             </label>
             <select
               name="department"
-              value={data.department}
+              value={data.department || ""}
               onChange={handleChange}
               required
               className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
             >
               <option value="" disabled>
-                {departments.find((dpt) => dpt._id === data.department)?.name ||
-                  "Select department"}
+                Select department
               </option>
               {departments.map((dpt) => (
                 <option key={dpt._id} value={dpt._id}>
