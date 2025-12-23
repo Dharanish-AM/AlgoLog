@@ -2,13 +2,19 @@ import React, { useState, useMemo } from "react";
 import FilterPanel from "../FilterPanel";
 import ContestsTable from "../ContestsTable";
 import ParticipantsView from "../ParticipantsView";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { refetchContests } from "../../services/adminOperations";
+import toast from "react-hot-toast";
+import { RefreshCw } from "lucide-react";
 
 const ContestsView = () => {
   const allContests = useSelector((state) => state.admin.allContests);
   const allStudents = useSelector((state) => state.admin.allStudents);
   const [selectedContest, setSelectedContest] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isRefetching, setIsRefetching] = useState(false);
+  const dispatch = useDispatch();
+  const token = localStorage.getItem("token");
 
   const [filters] = useState({
     department: "",
@@ -18,6 +24,26 @@ const ContestsView = () => {
 
   const handleFilterChange = () => {
     // Placeholder for contest-specific filters if needed
+  };
+
+  const handleRefetch = async () => {
+    setIsRefetching(true);
+    const loadingToast = toast.loading("Refetching contests from LeetCode...");
+    try {
+      const result = await refetchContests(token, dispatch);
+      toast.success(
+        `Successfully refetched ${result.count ?? result?.contests?.length ?? ""} contests!`,
+        { id: loadingToast }
+      );
+    } catch (error) {
+      console.error("Error refetching contests:", error);
+      toast.error(
+        error.response?.data?.message || "Failed to refetch contests",
+        { id: loadingToast }
+      );
+    } finally {
+      setIsRefetching(false);
+    }
   };
 
   const filteredContests = useMemo(() => {
@@ -98,13 +124,29 @@ const ContestsView = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-6">
-        <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-          Contests Dashboard
-        </h1>
-        <p className="text-sm sm:text-base text-slate-400">
-          Monitor contest participation and results
-        </p>
+      <div className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+            Contests Dashboard
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400">
+            Monitor contest participation and results
+          </p>
+        </div>
+        <button
+          onClick={handleRefetch}
+          disabled={isRefetching}
+          className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+            isRefetching
+              ? "bg-slate-700 text-slate-400 cursor-not-allowed"
+              : "bg-blue-600 text-white hover:bg-blue-700 active:scale-95"
+          }`}
+        >
+          <RefreshCw
+            className={`w-4 h-4 ${isRefetching ? "animate-spin" : ""}`}
+          />
+          {isRefetching ? "Refetching..." : "Refetch Contests"}
+        </button>
       </div>
 
       <FilterPanel

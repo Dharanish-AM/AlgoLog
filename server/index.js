@@ -8,6 +8,8 @@ dotenv.config();
 // Import configuration
 const connectDB = require("./config/database");
 
+
+
 // Import routes
 const studentRoutes = require("./routes/studentRoutes");
 const classRoutes = require("./routes/classRoutes");
@@ -38,6 +40,8 @@ app.use("/api/students", studentRoutes);  // For GET /api/students (list)
 app.use("/api/student", studentRoutes);   // For POST /api/student/login, GET /api/student/get-student
 app.use("/api/class", classRoutes);
 app.use("/api", authRoutes);
+
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {

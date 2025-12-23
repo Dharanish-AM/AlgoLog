@@ -1,9 +1,6 @@
 const Contest = require("../models/contestSchema");
 const axios = require("axios");
 
-/**
- * Fetch contests from LeetCode GraphQL API
- */
 const fetchContestsFromLeetCode = async () => {
   const query = `
     query {
@@ -41,8 +38,9 @@ const getAllContests = async (req, res) => {
     if (contestsCount > 0) {
       // Return from database
       const contests = await Contest.find().sort({ startTime: -1 }).lean();
+
       console.log(`✅ Returning ${contests.length} contests from database`);
-      
+
       return res.status(200).json({
         contests,
         source: "database",
@@ -64,11 +62,12 @@ const getAllContests = async (req, res) => {
     }));
 
     await Contest.bulkWrite(bulkOps);
+
     console.log(`✅ Saved ${leetcodeContests.length} contests to database`);
 
     // Return fresh data
     const savedContests = await Contest.find().sort({ startTime: -1 }).lean();
-    
+
     res.status(200).json({
       contests: savedContests,
       source: "leetcode",
@@ -76,6 +75,7 @@ const getAllContests = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error fetching contests:", error);
+
     res.status(500).json({
       error: "Failed to fetch contests",
       message: error.message,
@@ -89,15 +89,11 @@ const getAllContests = async (req, res) => {
 const refetchContests = async (req, res) => {
   try {
     console.log("🔄 Refetching contests from LeetCode...");
-    
+
     // Fetch fresh data from LeetCode
     const leetcodeContests = await fetchContestsFromLeetCode();
 
-    // Clear existing contests and insert fresh data
-    await Contest.deleteMany({});
-    console.log("🗑️  Cleared old contests from database");
-
-    // Bulk insert new contests
+    // Bulk upsert (update existing, insert new) without clearing
     const bulkOps = leetcodeContests.map((contest) => ({
       updateOne: {
         filter: { titleSlug: contest.titleSlug },
@@ -107,7 +103,10 @@ const refetchContests = async (req, res) => {
     }));
 
     const result = await Contest.bulkWrite(bulkOps);
-    console.log(`✅ Updated ${result.upsertedCount + result.modifiedCount} contests in database`);
+
+    console.log(
+      `✅ Updated ${result.modifiedCount} and inserted ${result.upsertedCount} contests`
+    );
 
     // Return updated contests
     const updatedContests = await Contest.find().sort({ startTime: -1 }).lean();
@@ -121,6 +120,7 @@ const refetchContests = async (req, res) => {
     });
   } catch (error) {
     console.error("❌ Error refetching contests:", error);
+
     res.status(500).json({
       error: "Failed to refetch contests",
       message: error.message,
@@ -135,15 +135,19 @@ const getContestStats = async (req, res) => {
   try {
     const totalContests = await Contest.countDocuments();
     const latestContest = await Contest.findOne().sort({ startTime: -1 });
-    const oldestUpdate = await Contest.findOne().sort({ updatedAt: 1 });
+    const oldestContest = await Contest.findOne().sort({ updatedAt: 1 });
 
-    res.status(200).json({
+    const stats = {
       totalContests,
       latestContest: latestContest?.title || null,
-      lastUpdated: oldestUpdate?.updatedAt || null,
-    });
+      lastUpdated: latestContest?.updatedAt || null,
+      oldestRecord: oldestContest?.updatedAt || null,
+    };
+
+    res.status(200).json(stats);
   } catch (error) {
     console.error("❌ Error getting contest stats:", error);
+
     res.status(500).json({
       error: "Failed to get contest statistics",
       message: error.message,

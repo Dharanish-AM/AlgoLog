@@ -30,7 +30,7 @@ const contestSchema = new mongoose.Schema(
 );
 
 // Index for faster queries
-contestSchema.index({ titleSlug: 1 });
+// titleSlug already has a unique index via the schema field; only keep startTime index
 contestSchema.index({ startTime: -1 });
 
 const Contest = mongoose.model("Contest", contestSchema);

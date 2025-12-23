@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Users, Trophy, Code, BarChart3, Loader2 } from "lucide-react";
+import { Users, Trophy, Code, BarChart3, Loader2, RefreshCw } from "lucide-react";
 import { GridLoader } from "react-spinners";
+import toast from "react-hot-toast";
 import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllContests, getAllStudents } from "../services/adminOperations";
+import { getAllContests, getAllStudents, refetchContests } from "../services/adminOperations";
 
 function Contest() {
   const [activeView, setActiveView] = useState("students");

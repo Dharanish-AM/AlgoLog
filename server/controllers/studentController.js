@@ -6,6 +6,15 @@ const { generateToken } = require("../utils/jwt");
 const { getStatsForStudent } = require("../utils/helpers");
 const BatchProcessor = require("../utils/batchProcessor");
 const DataValidator = require("../utils/dataValidator");
+const chalk = require("chalk");
+const {
+  logSingleRefetch,
+  logSingleRefetchError,
+  logClassRefetch,
+  logClassRefetchError,
+  logAllRefetch,
+  logAllRefetchError,
+} = require("../utils/refetchLogger");
 
 // Get students by class ID
 exports.getStudentsByClass = async (req, res) => {
@@ -443,10 +452,22 @@ exports.refetchSingleStudent = async (req, res) => {
         0
       ) / Object.keys(validation.platforms).length;
 
-    console.log(
-      `[TIMER] Refetch for ${student.name} completed in ${durationMs}ms (~${durationSec}s)`
-    );
-    console.log(`[QUALITY] Validation score: ${avgScore.toFixed(1)}%`);
+    logSingleRefetch({
+      studentName: student.name,
+      rollNo: student.rollNo,
+      departmentName: student.department?.name,
+      className: student.class?.name,
+      durationMs,
+      durationSec,
+      avgScore,
+      validation,
+      platformsUpdatedCount: Object.keys(stats).filter((p) => !stats[p].error)
+        .length,
+      platformsTotalCount: Object.keys(stats).length,
+      failedPlatforms,
+      anomalies,
+      timestamp: new Date().toLocaleString(),
+    });
 
     return res.status(200).json({
       success: true,
@@ -468,15 +489,15 @@ exports.refetchSingleStudent = async (req, res) => {
     });
   } catch (error) {
     const durationMs = Date.now() - startTime;
-    console.error(
-      `[ERROR] Failed to refetch student stats after ${durationMs}ms:`,
-      error.message
-    );
+    const durationSec = (durationMs / 1000).toFixed(2);
+    
+    logSingleRefetchError({ durationSec, errorMessage: error.message });
+    
     res.status(500).json({
       success: false,
       error: "Failed to refetch student stats",
       message: error.message,
-      duration: durationMs,
+      durationMs,
     });
   }
 };
@@ -664,19 +685,17 @@ exports.refetchClassStudents = async (req, res) => {
         anomalies: r.data.anomalies,
       }));
 
-    console.log(`\n${"=".repeat(60)}`);
-    console.log(`🎯 BATCH REFETCH COMPLETE`);
-    console.log(`${"=".repeat(60)}`);
-    console.log(`📊 Total Students: ${stats.total}`);
-    console.log(`✅ Successfully Updated: ${stats.succeeded}`);
-    console.log(`❌ Failed: ${stats.failed}`);
-    console.log(`⏭️  Skipped: ${stats.skipped}`);
-    console.log(`⏱️  Total Duration: ${(duration / 1000).toFixed(2)}s`);
-    console.log(`⚡ Average per Student: ${(duration / stats.total).toFixed(0)}ms`);
-    console.log(`🔍 Validation Issues: ${validationIssues.length}`);
-    console.log(`⚠️  Anomalies Detected: ${anomalyReports.length}`);
-    console.log(`📆 Completed at: ${new Date().toLocaleString()}`);
-    console.log(`${"=".repeat(60)}\n`);
+    logClassRefetch({
+      total: stats.total,
+      succeeded: stats.succeeded,
+      failed: stats.failed,
+      skipped: stats.skipped,
+      durationMs: duration,
+      avgPerStudentMs: Math.round(duration / stats.total),
+      validationIssuesCount: validationIssues.length,
+      anomaliesCount: anomalyReports.length,
+      timestamp: now.toLocaleString(),
+    });
 
     res.status(200).json({
       success: true,
@@ -694,7 +713,11 @@ exports.refetchClassStudents = async (req, res) => {
       updatedAt: now,
     });
   } catch (error) {
-    console.error("❌ Fatal error during batch refetch:", error);
+    const duration = Date.now() - start;
+    const durationSec = (duration / 1000).toFixed(2);
+    
+    logClassRefetchError({ durationSec, errorMessage: error.message });
+    
     res.status(500).json({
       success: false,
       error: "Failed to refetch stats for all students",
@@ -722,12 +745,50 @@ exports.refetchAllStudents = async (_req, res) => {
   };
 
   try {
+    // Banner
+    console.log(chalk.dim("".padEnd(80, "═")));
+    console.log(chalk.bgMagentaBright.black(" 🚀 ALL STUDENTS REFETCH "));
+    console.log(chalk.dim("".padEnd(80, "═")));
+    console.log(
+      "   " +
+        chalk.bgBlackBright(
+          ` ${chalk.bold("Flow")}: ${chalk.yellow(
+            "Departments → Classes → Students"
+          )} `
+        ) +
+        "  " +
+        chalk.bgBlackBright(` ${chalk.bold("Mode")}: ${chalk.green("REFETCH")} `)
+    );
+    console.log(chalk.dim("".padEnd(80, "─")));
+    console.log(chalk.bold.cyan(" 📡 Connecting to MongoDB"));
+    console.log(chalk.dim("".padEnd(80, "─")));
+    console.log(chalk.blue("ℹ️  Using existing server connection"));
+
     const departments = await Department.find();
     summary.departments = departments.length;
+
+    console.log(chalk.dim("".padEnd(80, "─")));
+    console.log(chalk.bold.cyan(" 🏢 Fetching departments"));
+    console.log(chalk.dim("".padEnd(80, "─")));
+    console.log(chalk.green(`✅ Found ${departments.length} department(s)`));
+    departments.forEach((dept, i) => {
+      console.log(
+        `   ${String(i + 1).padStart(2, "0")}. ${chalk.bold(dept.name)} ` +
+          chalk.gray(`(ID: ${dept._id})`)
+      );
+    });
 
     const validator = new DataValidator();
 
     for (const department of departments) {
+      console.log(chalk.dim("".padEnd(80, "─")));
+      console.log(
+        chalk.bold(
+          ` 🏢 DEPARTMENT ${chalk.yellow(department.name)}`
+        )
+      );
+      console.log(chalk.dim("".padEnd(80, "─")));
+
       const classes = await Class.find({ department: department._id });
       summary.classes += classes.length;
 
@@ -737,6 +798,7 @@ exports.refetchAllStudents = async (_req, res) => {
 
         if (!students.length) continue;
 
+        const updatePromises = [];
         const processor = new BatchProcessor({
           concurrency: 6, // Increased from 5
           batchSize: 15, // Increased from 12
@@ -744,13 +806,60 @@ exports.refetchAllStudents = async (_req, res) => {
           timeout: 30000, // Added explicit timeout
         }); 
 
+        const batches = Math.ceil(students.length / 15);
+        console.log("\n" + chalk.bold(`📚 Class: ${classItem.name || classItem._id}`));
+        console.log(
+          chalk.blue(
+            `ℹ️      👤 Processing ${chalk.bold(students.length)} student(s)...`
+          )
+        );
+        console.log(
+          chalk.bold(
+            `📦 Processing ${students.length} items in ${batches} batches (15 items/batch, 6 concurrent)`
+          )
+        );
+
+        // Progress callbacks similar to test harness
+        processor.onProgress((stats) => {
+          const percentage = stats.percentage.toFixed(1);
+          console.log(
+            "       " +
+              chalk.bold("📊") +
+              " " +
+              chalk.dim("Processed".padEnd(22)) +
+              `${stats.processed}/${stats.total}` +
+              "  " +
+              chalk.dim("Completion".padEnd(22)) +
+              (percentage === "100.0"
+                ? chalk.green(`${percentage}%`)
+                : chalk.cyan(`${percentage}%`)) +
+              "  " +
+              chalk.green(`✅ Success ${stats.succeeded}`) +
+              "  " +
+              chalk.red(`❌ Failed ${stats.failed}`)
+          );
+        });
+
+        processor.onBatchComplete((info) => {
+          console.log(chalk.dim("".padEnd(60, "-")));
+          console.log(chalk.bold(`✨ Batch ${info.batchIndex + 1}/${info.totalBatches} done`));
+          console.log(
+            chalk.dim(
+              `📦 Concurrency : ${info.concurrency}\n📏 Batch Size  : ${info.batchSize} items\n⏱️  Duration    : ${(info.duration / 1000).toFixed(2)}s`
+            )
+          );
+          console.log(chalk.dim("".padEnd(60, "-")));
+        });
+
         const { stats } = await processor.processBatch(
           students,
           async (student) => {
-            const newStats = await getStatsForStudent(
+            // Fetch updated stats object (helper returns { stats, ...meta })
+            const updated = await getStatsForStudent(
               student,
               student.stats || {}
             );
+            const newStats = updated?.stats || {};
             const validation = validator.validateAll(newStats);
 
             const anomalies = {};
@@ -776,10 +885,38 @@ exports.refetchAllStudents = async (_req, res) => {
               }
             }
 
-            await Student.findByIdAndUpdate(student._id, {
-              stats: mergedStats,
-              updatedAt: now,
+            const avgValidationScore =
+              Object.values(validation.platforms).reduce(
+                (sum, p) => sum + (p.score || 0),
+                0
+              ) / Object.keys(validation.platforms).length;
+
+            const updatePromise = Student.findByIdAndUpdate(student._id, {
+              $set: {
+                stats: mergedStats,
+                updatedAt: now,
+                dataQuality: {
+                  score: avgValidationScore,
+                  lastValidation: now,
+                  hasAnomalies: Object.keys(anomalies).length > 0,
+                },
+              },
+              $push: {
+                statsHistory: {
+                  $each: [
+                    {
+                      timestamp: now,
+                      stats: mergedStats,
+                      validationScore: avgValidationScore,
+                      anomalies: Object.keys(anomalies).length > 0 ? anomalies : undefined,
+                    },
+                  ],
+                  $slice: -10,
+                },
+              },
             });
+
+            updatePromises.push(updatePromise);
 
             if (
               !validation.valid &&
@@ -811,6 +948,9 @@ exports.refetchAllStudents = async (_req, res) => {
           }
         );
 
+        // Await all update operations
+        await Promise.all(updatePromises);
+
         summary.succeeded += stats.succeeded;
         summary.failed += stats.failed;
         summary.skipped += stats.skipped;
@@ -824,6 +964,26 @@ exports.refetchAllStudents = async (_req, res) => {
     const durationMs = Date.now() - start;
     const durationSec = (durationMs / 1000).toFixed(2);
 
+    logAllRefetch({
+      departments: summary.departments,
+      classes: summary.classes,
+      totalStudents: summary.totalStudents,
+      succeeded: summary.succeeded,
+      failed: summary.failed,
+      skipped: summary.skipped,
+      totalPlatformsUpdated: summary.totalPlatformsUpdated,
+      totalPlatformErrors: summary.totalPlatformErrors,
+      durationMs,
+      durationSec,
+      avgPerStudentMs:
+        summary.totalStudents > 0
+          ? Number((durationMs / summary.totalStudents).toFixed(0))
+          : 0,
+      validationIssuesCount: summary.validationIssues.length,
+      anomaliesCount: summary.anomalies.length,
+      timestamp: now.toLocaleString(),
+    });
+
     res.status(200).json({
       success: true,
       durationMs,
@@ -831,11 +991,16 @@ exports.refetchAllStudents = async (_req, res) => {
       ...summary,
     });
   } catch (error) {
-    console.error("❌ ERROR in refetchAllStudents:", error);
+    const durationMs = Date.now() - start;
+    const durationSec = (durationMs / 1000).toFixed(2);
+    
+    logAllRefetchError({ durationSec, errorMessage: error.message });
+    
     res.status(500).json({
       success: false,
       error: "Failed to refetch all students",
       message: error.message,
+      durationMs,
     });
   }
 };

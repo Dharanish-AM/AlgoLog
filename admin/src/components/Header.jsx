@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Papa from "papaparse";
 import { useDispatch, useSelector } from "react-redux";
 import toast from "react-hot-toast";
-import { refetchAllStudents } from "../services/adminOperations";
+import { refetchAllStudents, refetchContests } from "../services/adminOperations";
 
 export default function Header({}) {
   const [isProfileModalOpen, setIsProfileModalOpen] = React.useState(false);
@@ -123,6 +123,12 @@ export default function Header({}) {
       setIsRefetchingAll(true);
       const response = await refetchAllStudents(token, dispatch);
       if (response?.status === 200) {
+        // Also refresh LeetCode contests in the background for parity
+        try {
+          await refetchContests(token, dispatch);
+        } catch (err) {
+          console.error("Refetch contests after students failed", err);
+        }
         toast.success("Refetched all students successfully!");
       } else {
         toast.error("Failed to refetch all students.");

@@ -328,7 +328,7 @@ const StudentProfile = ({
               <div className="bg-gray-700 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600">
                 <div className="text-xl font-bold text-purple-400">
                   #
-                  {student.stats.leetcode.globalRanking
+                  {student.stats?.leetcode?.globalRanking
                     ? student.stats.leetcode.globalRanking.toLocaleString()
                     : 0}
                 </div>
@@ -336,7 +336,7 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="space-y-2">
-              {student &&
+              {student?.stats?.leetcode?.solved &&
                 Object.entries(student.stats.leetcode.solved)
                   .slice(1)
                   .map(([difficulty, count]) => (
@@ -418,20 +418,20 @@ const StudentProfile = ({
               <div className="mt-6 grid grid-cols-2 gap-4">
                 <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                   <div className="text-xl font-bold text-orange-400">
-                    🔥 {student.stats.leetcode.streak}
+                    🔥 {student.stats?.leetcode?.streak || 0}
                   </div>
                   <div className="text-sm text-gray-400">Current Streak</div>
                 </div>
                 <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                   <div className="text-xl font-bold text-green-400">
-                    🏁 {student.stats.leetcode.totalActiveDays}
+                    🏁 {student.stats?.leetcode?.totalActiveDays || 0}
                   </div>
                   <div className="text-sm text-gray-400">Active Days</div>
                 </div>
               </div>
             )}
 
-            {student.stats.leetcode.rating ? (
+            {student.stats?.leetcode?.rating ? (
               <div className="mt-6 space-y-4">
                 <div className="flex w-full">
                   <div className="bg-gray-700 w-full p-4 rounded-lg text-center hover:bg-gray-600">
@@ -444,7 +444,7 @@ const StudentProfile = ({
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                     <div className="text-xl font-bold text-white">
-                      {student.stats.leetcode.contestCount}
+                      {student.stats?.leetcode?.contestCount || 0}
                     </div>
                     <div className="text-sm text-gray-400">
                       Contests Attended
@@ -452,13 +452,13 @@ const StudentProfile = ({
                   </div>
                   <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
                     <div className="text-xl font-bold text-white">
-                      {student.stats.leetcode.topPercentage}%
+                      {student.stats?.leetcode?.topPercentage || 0}%
                     </div>
                     <div className="text-sm text-gray-400">Top Percentage</div>
                   </div>
                 </div>
 
-                {student.stats.leetcode.contests.length > 0 && (
+                {student.stats?.leetcode?.contests?.length > 0 && (
                   <div className="mt-4">
                     <button
                       onClick={() => setShowHistory(!showHistory)}
@@ -563,13 +563,13 @@ const StudentProfile = ({
               <div>
                 <h3 className="text-xl font-bold text-white">Skillrack</h3>
                 <p className="text-sm text-gray-400">
-                  Rank #{student.stats.skillrack.rank}
+                  Rank #{student.stats?.skillrack?.rank || 'N/A'}
                 </p>
               </div>
             </div>
             <div className="flex items-center justify-center flex-col mb-4 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
               <div className="text-2xl font-bold text-purple-400 mb-1">
-                {student.stats.skillrack.programsSolved}
+                {student.stats?.skillrack?.programsSolved || 0}
               </div>
               <div className="text-sm text-gray-400">Programs Solved</div>
             </div>
@@ -590,7 +590,7 @@ const StudentProfile = ({
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-white">Certificates</h4>
-              {student.stats.skillrack.certificates.map((cert, index) => (
+              {student.stats?.skillrack?.certificates?.map((cert, index) => (
                 <div
                   key={index}
                   className="p-2 bg-gray-700 py-4 px-6 rounded-lg hover:bg-gray-600"
@@ -681,13 +681,13 @@ const StudentProfile = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-yellow-400">
-                  {student.stats.codechef.fullySolved}
+                  {student.stats?.codechef?.fullySolved || 0}
                 </div>
                 <div className="text-sm text-gray-400">Fully Solved</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-white">
-                  {student.stats.codechef.rating || "N/A"}
+                  {student.stats?.codechef?.rating || "N/A"}
                 </div>
                 <div className="text-sm text-gray-400">Rating</div>
               </div>
@@ -716,25 +716,25 @@ const StudentProfile = ({
             <div className="grid grid-cols-2 gap-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-red-400">
-                  {student.stats.codeforces.rating}
+                  {student.stats?.codeforces?.rating || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">Rating</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-white">
-                  {student.stats.codeforces.rank}
+                  {student.stats?.codeforces?.rank || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">Rank</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-blue-400">
-                  {student.stats.codeforces.contests}
+                  {student.stats?.codeforces?.contests || 0}
                 </div>
                 <div className="text-sm text-gray-400">Contests</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-green-400">
-                  {student.stats.codeforces.problemsSolved}
+                  {student.stats?.codeforces?.problemsSolved || 0}
                 </div>
                 <div className="text-sm text-gray-400">Problems</div>
               </div>
