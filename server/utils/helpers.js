@@ -134,10 +134,19 @@ async function getStatsForStudent(student, oldStats = {}) {
           platformName,
           value
         );
+        
+        // If result has error, preserve old stats
+        if (result && result.error) {
+          console.warn(
+            `[${platformName}] ⚠️ Fetch returned error, preserving old stats for ${value}`
+          );
+          return [key, oldStats[key] || result];
+        }
+        
         return [key, result];
       } catch (err) {
         console.warn(
-          `[${platformName}] ❗ Using cached/old stats: ${err.message}`
+          `[${platformName}] ❗ Fetch failed, using cached/old stats: ${err.message}`
         );
         return [
           key,

@@ -11,7 +11,7 @@ export default function ProfileModal({
   onClose,
   handleUpdate,
   handleChangePassword,
-  setLoading
+  setLoading,
 }) {
   const [data, setData] = useState(student);
   const [departments, setDepartments] = useState([]);
@@ -44,12 +44,13 @@ export default function ProfileModal({
   useEffect(() => {
     if (departments.length > 0 && student) {
       // Ensure department is stored as ID string, not object
-      const departmentId = typeof student.department === 'object' 
-        ? student.department._id 
-        : student.department;
+      const departmentId =
+        typeof student.department === "object"
+          ? student.department._id
+          : student.department;
       setData({
         ...student,
-        department: departmentId
+        department: departmentId,
       });
     }
   }, [student, departments]);
@@ -71,7 +72,11 @@ export default function ProfileModal({
     let newValue = value;
 
     // Normalize usernames from URLs for specific platforms
-    if (["leetcode", "hackerrank", "codechef", "codeforces", "github"].includes(name)) {
+    if (
+      ["leetcode", "hackerrank", "codechef", "codeforces", "github"].includes(
+        name
+      )
+    ) {
       try {
         const url = new URL(value.trim());
         switch (name) {
@@ -86,7 +91,10 @@ export default function ProfileModal({
             break;
           case "hackerrank":
             // https://www.hackerrank.com/profile/<username>
-            if (url.hostname === "www.hackerrank.com" || url.hostname === "hackerrank.com") {
+            if (
+              url.hostname === "www.hackerrank.com" ||
+              url.hostname === "hackerrank.com"
+            ) {
               const parts = url.pathname.split("/");
               if (parts.length >= 3 && parts[1] === "profile") {
                 newValue = parts[2];
@@ -95,7 +103,10 @@ export default function ProfileModal({
             break;
           case "codechef":
             // https://www.codechef.com/users/<username>
-            if (url.hostname === "www.codechef.com" || url.hostname === "codechef.com") {
+            if (
+              url.hostname === "www.codechef.com" ||
+              url.hostname === "codechef.com"
+            ) {
               const parts = url.pathname.split("/");
               if (parts.length >= 3 && parts[1] === "users") {
                 newValue = parts[2];
@@ -139,7 +150,13 @@ export default function ProfileModal({
     e.preventDefault();
     setLoading(true);
     // Validation block
-    const invalidPlatforms = ["leetcode", "hackerrank", "codechef", "codeforces", "github"];
+    const invalidPlatforms = [
+      "leetcode",
+      "hackerrank",
+      "codechef",
+      "codeforces",
+      "github",
+    ];
     for (let field of invalidPlatforms) {
       if (data[field]?.includes("http") || data[field]?.includes("https")) {
         alert(`${field} should only contain a username, not a URL.`);
@@ -152,8 +169,13 @@ export default function ProfileModal({
       setLoading(false);
       return;
     }
-    if (!data.skillrack?.startsWith("http://") && !data.skillrack?.startsWith("https://")) {
-      toast.error("Skillrack must be a valid URL (starting with http:// or https://).");
+    if (
+      !data.skillrack?.startsWith("http://") &&
+      !data.skillrack?.startsWith("https://")
+    ) {
+      toast.error(
+        "Skillrack must be a valid URL (starting with http:// or https://)."
+      );
       setLoading(false);
       return;
     }

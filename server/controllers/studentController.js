@@ -408,14 +408,17 @@ exports.refetchSingleStudent = async (req, res) => {
       console.log(`[SUCCESS] All stats valid for ${student.name}`);
     }
 
-    const mergedStats = { ...student.stats };
+    const mergedStats = {};
     for (const [platform, platformStats] of Object.entries(stats)) {
       if (!platformStats.error) {
+        // Use new stats if fetch succeeded
         mergedStats[platform] = platformStats;
       } else {
+        // Preserve old stats if fetch failed
         console.warn(
           `[WARN] Keeping old ${platform} stats due to error: ${platformStats.error}`
         );
+        mergedStats[platform] = student.stats?.[platform] || platformStats;
       }
     }
 
@@ -563,7 +566,7 @@ exports.refetchClassStudents = async (req, res) => {
             }
           }
 
-          const mergedStats = { ...student.stats };
+          const mergedStats = {};
           let platformsUpdated = 0;
           for (const [platform, platformStats] of Object.entries(
             updatedStats.stats
@@ -575,6 +578,7 @@ exports.refetchClassStudents = async (req, res) => {
               console.warn(
                 `⚠️  Keeping old ${platform} stats for ${student.name} due to error`
               );
+              mergedStats[platform] = student.stats?.[platform] || platformStats;
             }
           }
 
@@ -761,13 +765,14 @@ exports.refetchAllStudents = async (_req, res) => {
               }
             }
 
-            const mergedStats = { ...(student.stats || {}) };
+            const mergedStats = {};
             for (const [platform, platformStats] of Object.entries(newStats)) {
               if (!platformStats.error) {
                 mergedStats[platform] = platformStats;
                 summary.totalPlatformsUpdated++;
               } else {
                 summary.totalPlatformErrors++;
+                mergedStats[platform] = student.stats?.[platform] || platformStats;
               }
             }
 
