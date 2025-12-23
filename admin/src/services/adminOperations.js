@@ -225,3 +225,29 @@ export const getAllContests = async (token, dispatch) => {
     throw error;
   }
 };
+
+export const refetchContests = async (token, dispatch) => {
+  try {
+    const response = await axios.get(`${API_URL}/api/contests/refetch`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.status === 200) {
+      dispatch({
+        type: "SET_ALL_CONTESTS",
+        payload: response.data.contests,
+      });
+      console.log(`✅ Refetched ${response.data.count} contests from LeetCode`);
+      return {
+        status: response.status,
+        contests: response.data.contests,
+        count: response.data.count,
+        message: response.data.message,
+      };
+    }
+  } catch (error) {
+    console.error("Error refetching contests:", error);
+    throw error;
+  }
+};

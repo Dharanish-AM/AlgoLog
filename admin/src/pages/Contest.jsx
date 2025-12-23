@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Users, Trophy, Code, BarChart3 } from "lucide-react";
+import { Users, Trophy, Code, BarChart3, Loader2 } from "lucide-react";
+import { GridLoader } from "react-spinners";
 import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,6 +8,7 @@ import { getAllContests, getAllStudents } from "../services/adminOperations";
 
 function Contest() {
   const [activeView, setActiveView] = useState("students");
+  const [isLoading, setIsLoading] = useState(false);
   const allStudents = useSelector((state) => state.admin.allStudents);
   const allContests = useSelector((state) => state.admin.allContests);
   const token = localStorage.getItem("token");
@@ -15,17 +17,29 @@ function Contest() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setIsLoading(true);
         await getAllStudents(token, dispatch);
 
         await getAllContests(token, dispatch);
       } catch (err) {
         console.error("Error fetching data:", err);
+      } finally {
+        setIsLoading(false);
       }
     };
     if (allStudents.length === 0 || allContests.length === 0) {
       fetchData();
     }
   }, [allContests.length, allStudents.length, dispatch, token]);
+
+  // Full-page loader (same style as App loader)
+  if (isLoading || (allStudents.length === 0 && allContests.length === 0)) {
+    return (
+      <div className="bg-[#161F2D] flex justify-center items-center w-screen h-screen">
+        <GridLoader color="#C084FC" size={20} />
+      </div>
+    );
+  }
 
   const navigationItems = [
     {
@@ -94,8 +108,17 @@ function Contest() {
 
       {/* Main Content */}
       <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8 overflow-hidden">
-        {activeView === "students" && <StudentsView />}
-        {activeView === "contests" && <ContestsView />}
+        {isLoading ? (
+          <div className="flex h-full min-h-[320px] items-center justify-center text-slate-200 gap-3">
+            <Loader2 className="h-6 w-6 animate-spin" />
+            <span className="text-sm sm:text-base">Loading contests and students...</span>
+          </div>
+        ) : (
+          <>
+            {activeView === "students" && <StudentsView />}
+            {activeView === "contests" && <ContestsView />}
+          </>
+        )}
       </main>
 
       {/* Footer */}

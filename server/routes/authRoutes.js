@@ -12,6 +12,11 @@ const {
   getAdminDepartments,
   getAdminClasses,
 } = require("../controllers/authController");
+const {
+  getAllContests,
+  refetchContests,
+  getContestStats,
+} = require("../controllers/contestController");
 
 // Department routes
 router.post("/department/login", loginDepartment);
@@ -115,36 +120,9 @@ router.get("/admin/get-admin", getAdmin);
 router.get("/admin/get-departments", getAdminDepartments);
 router.get("/admin/get-classes", getAdminClasses);
 
-// LeetCode contests
-router.get("/contests/all", async (req, res) => {
-  try {
-    const axios = require("axios");
-    const query = `
-      query {
-        allContests {
-          title
-          titleSlug
-          startTime
-          duration
-          isVirtual
-        }
-      }
-    `;
-    const response = await axios.post(
-      "https://leetcode.com/graphql",
-      { query },
-      {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    res.status(200).json({ contests: response.data.data.allContests });
-  } catch (err) {
-    console.error("Error fetching contests:", err);
-    res.status(500).json({ error: "Failed to fetch contests" });
-  }
-});
+// LeetCode contests routes
+router.get("/contests/all", getAllContests);
+router.get("/contests/refetch", refetchContests);
+router.get("/contests/stats", getContestStats);
 
 module.exports = router;

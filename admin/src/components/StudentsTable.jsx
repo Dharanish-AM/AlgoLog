@@ -47,7 +47,18 @@ const StudentsTable = ({ students }) => {
             </tr>
           </thead>
           <tbody className="bg-slate-800 divide-y divide-slate-700">
-            {students.map((student, index) => (
+            {students.map((student, index) => {
+              const leet = student?.stats?.leetcode || {};
+              const solved = leet.solved || {};
+              const rating = typeof leet.rating === "number" ? leet.rating : 0;
+              const globalRank = leet.globalRanking ?? 0;
+              const contestCount = leet.contestCount ?? 0;
+              const topPercentageValue =
+                typeof leet.topPercentage === "number"
+                  ? leet.topPercentage
+                  : Number(leet.topPercentage) || 0;
+
+              return (
               <tr
                 key={student._id}
                 className="hover:bg-slate-700/50 transition-colors duration-200"
@@ -74,78 +85,80 @@ const StudentsTable = ({ students }) => {
                 </td>
                 <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                   <div className="text-sm text-white mb-1">
-                    {student.stats.leetcode.solved?.All ?? 0}
+                    {solved.All ?? 0}
                   </div>
                   <div className="flex justify-center gap-1 text-xs flex-wrap">
                     <span className="bg-green-500/20 text-green-400 px-1.5 sm:px-2 py-0.5 rounded text-xs">
-                      E: {student.stats.leetcode.solved?.Easy ?? 0}
+                      E: {solved.Easy ?? 0}
                     </span>
                     <span className="bg-yellow-500/20 text-yellow-400 px-1.5 sm:px-2 py-0.5 rounded text-xs">
-                      M: {student.stats.leetcode.solved?.Medium ?? 0}
+                      M: {solved.Medium ?? 0}
                     </span>
                     <span className="bg-red-500/20 text-red-400 px-1.5 sm:px-2 py-0.5 rounded text-xs">
-                      H: {student.stats.leetcode.solved?.Hard ?? 0}
+                      H: {solved.Hard ?? 0}
                     </span>
                   </div>
                 </td>
                 <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                   <span
                     className={`text-sm ${
-                      student.stats.leetcode.rating == 0
+                      rating === 0
                         ? "text-red-400"
-                        : student.stats.leetcode.rating >= 1300
-                        ? "text-purple-400"
-                        : student.stats.leetcode.rating >= 1400
-                        ? "text-blue-400"
-                        : student.stats.leetcode.rating >= 1500
+                        : rating >= 1500
                         ? "text-green-400"
+                        : rating >= 1400
+                        ? "text-blue-400"
+                        : rating >= 1300
+                        ? "text-purple-400"
                         : "text-slate-300"
                     }`}
                   >
-                    {student.stats.leetcode.rating.toFixed(0)}
+                    {rating.toFixed(0)}
                   </span>
                 </td>
                 <td
                   className={`px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center text-sm ${
-                    student.stats.leetcode.globalRanking === 0
+                    globalRank === 0
                       ? "text-red-400"
                       : "text-white"
                   } hidden lg:table-cell`}
                 >
-                  {(student.stats.leetcode.globalRanking ?? 0).toLocaleString()}
+                  {globalRank.toLocaleString()}
                 </td>
                 <td
                   className={`px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center ${
-                    student.stats.leetcode.contestCount == 0 ||
-                    student.stats.leetcode.contestCount === "0"
+                    contestCount == 0 || contestCount === "0"
                       ? "text-red-400"
                       : "text-white"
                   } hidden md:table-cell`}
                 >
-                  {student.stats.leetcode.contestCount}
+                  {contestCount}
                 </td>
                 <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
                   <div className="flex items-center justify-center gap-1">
                     <span
                       className={`text-sm font-medium ${
-                        student.stats.leetcode.topPercentage === 0
+                        topPercentageValue === 0
                           ? "text-red-400"
-                          : student.stats.leetcode.topPercentage >= 80
+                          : topPercentageValue >= 80
                           ? "text-green-400"
-                          : student.stats.leetcode.topPercentage <= 20
+                          : topPercentageValue >= 50
+                          ? "text-blue-400"
+                          : topPercentageValue <= 20
                           ? "text-yellow-400"
                           : "text-slate-300"
                       }`}
                     >
-                      {student.stats.leetcode.topPercentage}%
+                      {topPercentageValue}%
                     </span>
-                    {student.topPercentage <= 10 && (
+                    {topPercentageValue >= 80 && (
                       <TrendingUp className="w-3 h-3 text-green-400" />
                     )}
                   </div>
                 </td>
               </tr>
-            ))}
+            );
+            })}
           </tbody>
         </table>
       </div>

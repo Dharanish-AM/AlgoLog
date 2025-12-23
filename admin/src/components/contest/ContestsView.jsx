@@ -98,7 +98,7 @@ const ContestsView = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
           Contests Dashboard
         </h1>
