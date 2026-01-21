@@ -57,9 +57,15 @@ export const loginDepartment = async (formData, dispatch) => {
 
 export const checkTokenValidity = async (token) => {
   try {
-    const response = await axios.post(`${API_URL}/api/check-token`, {
-      token,
-    });
+    const response = await axios.post(
+      `${API_URL}/api/check-token`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (response.status === 200) {
       return true;
     } else {
@@ -73,9 +79,15 @@ export const checkTokenValidity = async (token) => {
 
 export const handleGetUser = async (token) => {
   try {
-    const response = await axios.post(`${API_URL}/api/get-user`, {
-      token,
-    });
+    const response = await axios.post(
+      `${API_URL}/api/get-user`,
+      {},
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     if (response.status === 200) {
       console.log("GOt User: ", response.data);
       return response.data;

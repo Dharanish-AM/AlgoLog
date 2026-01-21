@@ -14,6 +14,9 @@ const authRoutes = require("./routes/authRoutes");
 const app = express();
 const PORT = process.env.PORT || 8000;
 
+// Trust first proxy (required for proxies like Render, Heroku, etc.)
+app.set('trust proxy', 1);
+
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
