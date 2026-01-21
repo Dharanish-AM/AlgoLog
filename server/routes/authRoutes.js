@@ -18,16 +18,13 @@ const {
   getContestStats,
 } = require("../controllers/contestController");
 
-// Department routes
 router.post("/department/login", loginDepartment);
 router.get("/departments", getAllDepartments);
 router.post("/department/create", createDepartment);
 
-// Shared routes
 router.get("/get-form-details", getFormDetails);
 router.get("/get-daily-leetcode-problem", getDailyLeetCodeProblem);
 
-// Auth routes (token validation can be moved to middleware)
 router.post("/check-token", (req, res) => {
   try {
     const jwt = require("jsonwebtoken");
@@ -113,14 +110,12 @@ router.post("/get-user", (req, res) => {
   }
 });
 
-// Admin routes
 router.post("/admin/create", createAdmin);
 router.post("/admin/login", loginAdmin);
 router.get("/admin/get-admin", getAdmin);
 router.get("/admin/get-departments", getAdminDepartments);
 router.get("/admin/get-classes", getAdminClasses);
 
-// LeetCode contests routes
 router.get("/contests/all", getAllContests);
 router.get("/contests/refetch", refetchContests);
 router.get("/contests/stats", getContestStats);

@@ -83,7 +83,6 @@ exports.addStudent = async (req, res) => {
         .json({ error: "Name, email, and roll number are required" });
     }
 
-    // Validate department
     const departmentData = await Department.findById(department);
     if (!departmentData) {
       return res.status(404).json({
@@ -91,7 +90,6 @@ exports.addStudent = async (req, res) => {
       });
     }
 
-    // Find class
     const classData = await Class.findOne({
       section,
       year,
@@ -104,11 +102,9 @@ exports.addStudent = async (req, res) => {
       });
     }
 
-    // Hash password
     const password = "sece@123";
     const hashPass = await bcrypt.hash(password, 10);
 
-    // Prepare student object
     const studentInfo = {
       name,
       email,
@@ -126,7 +122,6 @@ exports.addStudent = async (req, res) => {
       password: hashPass,
     };
 
-    // Fetch stats
     let statsResult = { stats: {} };
     try {
       statsResult = await getStatsForStudent(studentInfo, studentInfo.stats);
@@ -134,7 +129,6 @@ exports.addStudent = async (req, res) => {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
 
-    // Save student
     const newStudent = new Student({
       ...studentInfo,
       stats: statsResult.stats,
@@ -142,7 +136,6 @@ exports.addStudent = async (req, res) => {
 
     const savedStudent = await newStudent.save();
 
-    // Add student to class
     await Class.findByIdAndUpdate(classData._id, {
       $addToSet: { students: savedStudent._id },
     });
@@ -151,7 +144,6 @@ exports.addStudent = async (req, res) => {
   } catch (error) {
     console.error("Error adding student:", error.message);
     
-    // Handle specific error types
     if (error.code === 11000) {
       return res.status(409).json({ 
         error: "Duplicate entry", 
@@ -239,7 +231,6 @@ exports.updateStudent = async (req, res) => {
       classId: classData._id,
     };
 
-    // Update stats
     const updatedStats = await getStatsForStudent(
       { _id: existingStudent._id, ...updatedData },
       existingStudent.stats || {}
@@ -254,7 +245,6 @@ exports.updateStudent = async (req, res) => {
       { new: true }
     ).populate("department");
 
-    // Update class arrays if class changed
     if (existingStudent.classId?.toString() !== classData._id.toString()) {
       if (existingStudent.classId) {
         await Class.findByIdAndUpdate(existingStudent.classId, {
@@ -272,7 +262,6 @@ exports.updateStudent = async (req, res) => {
   } catch (error) {
     console.error("🔥 Error updating student:", error.message);
     
-    // Handle specific error types
     if (error.code === 11000) {
       return res.status(409).json({ 
         error: "Duplicate entry", 

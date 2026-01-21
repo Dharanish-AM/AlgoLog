@@ -6,7 +6,6 @@ const jwt = require("jsonwebtoken");
 const { generateToken } = require("../utils/jwt");
 const { getLeetCodeQuestionOfToday } = require("../config/scraper");
 
-// Department login
 exports.loginDepartment = async (req, res) => {
   const { departmentId, password } = req.body;
   if (!departmentId || !password) {
@@ -30,7 +29,6 @@ exports.loginDepartment = async (req, res) => {
   res.status(200).json({ token, department: deptWithoutPass });
 };
 
-// Get all departments
 exports.getAllDepartments = async (req, res) => {
   try {
     const departments = await Department.find({}).populate("classes");
@@ -45,7 +43,6 @@ exports.getAllDepartments = async (req, res) => {
   }
 };
 
-// Create department
 exports.createDepartment = async (req, res) => {
   try {
     const { name } = req.body;
@@ -78,7 +75,6 @@ exports.createDepartment = async (req, res) => {
   }
 };
 
-// Get form details for signup (departments and sections)
 exports.getFormDetails = async (req, res) => {
   try {
     const departments = await Department.find();
@@ -106,7 +102,6 @@ exports.getFormDetails = async (req, res) => {
   }
 };
 
-// Get daily LeetCode problem
 exports.getDailyLeetCodeProblem = async (req, res) => {
   try {
     const problem = await getLeetCodeQuestionOfToday();
@@ -117,7 +112,6 @@ exports.getDailyLeetCodeProblem = async (req, res) => {
   }
 };
 
-// Admin create
 exports.createAdmin = (req, res) => {
   const { name, email, password } = req.body;
 
@@ -140,7 +134,6 @@ exports.createAdmin = (req, res) => {
     });
 };
 
-// Admin login
 exports.loginAdmin = async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -168,7 +161,6 @@ exports.loginAdmin = async (req, res) => {
   }
 };
 
-// Get admin by token
 exports.getAdmin = async (req, res) => {
   try {
     const token = req.headers.authorization.split(" ")[1];
@@ -189,7 +181,6 @@ exports.getAdmin = async (req, res) => {
   }
 };
 
-// Get all departments for admin
 exports.getAdminDepartments = async (req, res) => {
   try {
     const departments = await Department.find().select("-password");
@@ -200,7 +191,6 @@ exports.getAdminDepartments = async (req, res) => {
   }
 };
 
-// Get all classes for admin
 exports.getAdminClasses = async (req, res) => {
   try {
     const classes = await Class.find().populate({

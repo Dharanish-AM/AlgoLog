@@ -5,15 +5,13 @@ const https = require("https");
 const dotenv = require("dotenv");
 const path = require("path");
 
-// Load .env from server directory (parent of scrapers)
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const Bottleneck = require("bottleneck");
 const crypto = require("crypto");
 
-// In-memory cache with TTL
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes (increased for rate limit protection)
+const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 
 function getCached(key) {
   const item = cache.get(key);
@@ -28,7 +26,6 @@ function setCache(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
 
-// Global rate limit tracker to prevent API abuse
 const rateLimitTracker = {
   codechef: { lastRequest: 0, backoffUntil: 0 },
   codeforces: { lastRequest: 0, backoffUntil: 0 },
@@ -52,12 +49,12 @@ function setRateLimitBackoff(platform, durationMs) {
 }
 
 const platformLimits = {
-  codechef: { minTime: 2500, maxConcurrent: 2 }, // Slower to avoid 429s
-  leetcode: { minTime: 200, maxConcurrent: 8 },  // Increased concurrency
-  hackerrank: { minTime: 500, maxConcurrent: 5 }, // Faster with more concurrent
-  github: { minTime: 100, maxConcurrent: 15 },    // Maximum throughput
-  skillrack: { minTime: 500, maxConcurrent: 4 },  // Faster rate
-  codeforces: { minTime: 500, maxConcurrent: 3 }, // Slower for API stability
+  codechef: { minTime: 2500, maxConcurrent: 2 },
+  leetcode: { minTime: 200, maxConcurrent: 8 },
+  hackerrank: { minTime: 500, maxConcurrent: 5 },
+  github: { minTime: 100, maxConcurrent: 15 },
+  skillrack: { minTime: 500, maxConcurrent: 4 },
+  codeforces: { minTime: 500, maxConcurrent: 3 },
 };
 
 const limiters = Object.fromEntries(
@@ -79,10 +76,10 @@ const {
 const agent = new https.Agent({ 
   family: 4,
   keepAlive: true,
-  keepAliveMsecs: 3000, // Longer keepalive
-  maxSockets: 100, // More concurrent connections
-  maxFreeSockets: 20, // More free sockets
-  timeout: 15000, // Faster timeout
+  keepAliveMsecs: 3000,
+  maxSockets: 100,
+  maxFreeSockets: 20,
+  timeout: 15000,
   scheduling: 'lifo'
 });
 
@@ -154,8 +151,6 @@ async function getLeetCodeQuestionOfToday() {
     return null;
   }
 }
-
-// getLeetCodeQuestionOfToday().then((e) => console.log(e));
 
 async function getLeetCodeStats(username) {
   const cacheKey = `leetcode:stats:${username}`;
@@ -277,11 +272,9 @@ async function getLeetCodeStats(username) {
 
     const userData = res.data.data;
     const stats = userData.matchedUser?.submitStats?.acSubmissionNum || [];
-    // Extract new fields
     const languageStats = userData.languageStats?.languageProblemCount || [];
     const skillStats = userData.skillStats?.tagProblemCounts || {};
     const calendar = userData.userProfileCalendar?.userCalendar || {};
-    // Merge tag data from fundamental, intermediate, advanced
     const allTags = [
       ...(skillStats.fundamental || []),
       ...(skillStats.intermediate || []),
@@ -367,8 +360,6 @@ async function getLeetCodeStats(username) {
     return { platform: "LeetCode", username, error: errorMsg };
   }
 }
-
-// getLeetCodeStats("sabarimcse6369").then((e) => console.log(e));
 
 async function getHackerRankStats(username) {
   const cacheKey = `hackerrank:stats:${username}`;
@@ -788,7 +779,6 @@ async function getGithubStats(username) {
   const maxAttempts = 3;
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
-  // 6. GitHub retry with exponential backoff
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
       const token = process.env.GITHUB_TOKEN;
@@ -822,6 +812,7 @@ async function getGithubStats(username) {
         contributionCalendar {
           totalContributions
         }
+        contributionYears
       }
     }
   }
@@ -840,17 +831,69 @@ async function getGithubStats(username) {
         }
       );
 
-      // 6. Better null checking
       if (!res.data || !res.data.data || !res.data.data.user) {
         throw new Error(`GitHub user not found or invalid response: ${username}`);
       }
 
       const user = res.data.data.user;
-
-      // Safe access with null checks
       const totalRepos = user.repositories?.totalCount || 0;
-      const totalCommits =
+
+      /* NOTE: GitHub "totalContributions" is NOT lifetime commits.
+         We compute lifetime contributions by summing totals across all years. */
+      const headersForHelpers = headers;
+      const years = user.contributionsCollection?.contributionYears || [];
+
+      let lifetimeContributions = 0;
+      if (Array.isArray(years) && years.length > 0) {
+        const perYearTotals = await Promise.all(
+          years.map(async (year) => {
+            const from = `${year}-01-01T00:00:00Z`;
+            const to = `${year}-12-31T23:59:59Z`;
+
+            const yearQuery = `
+              query {
+                user(login: "${username}") {
+                  contributionsCollection(from: "${from}", to: "${to}") {
+                    contributionCalendar {
+                      totalContributions
+                    }
+                  }
+                }
+              }
+            `;
+
+            const yearRes = await axios.post(
+              "https://api.github.com/graphql",
+              { query: yearQuery },
+              {
+                headers: {
+                  ...headersForHelpers,
+                  "Accept-Encoding": "gzip, deflate, br",
+                },
+                timeout: 8000,
+                decompress: true,
+              }
+            );
+
+            return (
+              yearRes?.data?.data?.user?.contributionsCollection?.contributionCalendar
+                ?.totalContributions || 0
+            );
+          })
+        );
+
+        lifetimeContributions = perYearTotals.reduce(
+          (sum, v) => sum + (Number(v) || 0),
+          0
+        );
+      }
+
+      const currentYearContributions =
         user.contributionsCollection?.contributionCalendar?.totalContributions || 0;
+
+      // We keep the field name totalCommits for backward compatibility,
+      // but it now represents lifetime contributions.
+      const totalCommits = lifetimeContributions || currentYearContributions || 0;
 
       const languageBytes = {};
 
@@ -875,6 +918,8 @@ async function getGithubStats(username) {
         platform: "GitHub",
         username,
         totalCommits,
+        currentYearContributions,
+        lifetimeContributions,
         totalRepos,
         longestStreak: 0,
         topLanguages,
@@ -885,14 +930,12 @@ async function getGithubStats(username) {
       return result;
     } catch (error) {
       const isRateLimited = error.response?.status === 403 || error.response?.status === 429;
-      const isTimeout = error.code === 'ECONNABORTED' || error.message.includes('timeout');
       
       console.error(
         `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username}: ${error.message}`
       );
 
       if (attempt < maxAttempts) {
-        // 6. Exponential backoff: 2s, 4s, 8s
         const waitTime = isRateLimited ? 5000 * Math.pow(2, attempt - 1) : 2000 * attempt;
         console.warn(`⏳ Waiting ${waitTime / 1000}s before retry...`);
         await delay(waitTime);
@@ -909,6 +952,10 @@ async function getGithubStats(username) {
     }
   }
 }
+
+getGithubStats("Dharanish-AM").then((e) =>
+  console.log(JSON.stringify(e, null, 2))
+);
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
