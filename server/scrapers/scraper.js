@@ -793,7 +793,15 @@ async function getGithubStats(username) {
     try {
       const token = process.env.GITHUB_TOKEN;
       if (!token) {
-        throw new Error("GitHub token not found");
+        console.warn("[GitHub] Token not found. Skipping GitHub scraping.");
+        return {
+          platform: "GitHub",
+          username,
+          error: "GitHub token not configured",
+          totalCommits: 0,
+          totalRepos: 0,
+          topLanguages: [],
+        };
       }
       const headers = {
         Authorization: `Bearer ${token}`,

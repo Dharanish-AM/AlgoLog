@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 8000;
 // Middleware
 app.use(
   cors({
-    origin: "*",
+    origin: "*", // TODO: Update this to specific domains in production (e.g. ["http://localhost:5173", "https://algolog.com"])
   })
 );
 app.use(express.json());
@@ -36,8 +36,8 @@ app.get("/", (req, res) => {
 });
 
 // Mount routes with /api prefix
-app.use("/api/students", studentRoutes);  // For GET /api/students (list)
-app.use("/api/student", studentRoutes);   // For POST /api/student/login, GET /api/student/get-student
+app.use("/api/student", studentRoutes);   // Consolidated route for students
+app.use("/api/students", studentRoutes);  // Kept for backward compatibility, but consider deprecating
 app.use("/api/class", classRoutes);
 app.use("/api", authRoutes);
 
