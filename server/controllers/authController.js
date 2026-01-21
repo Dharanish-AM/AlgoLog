@@ -153,7 +153,7 @@ exports.loginAdmin = async (req, res) => {
     let adminWithoutPassword = admin.toObject();
     delete adminWithoutPassword.password;
 
-    const token = await generateToken(admin.username, admin._id);
+    const token = await generateToken(admin.email, admin._id);
     res.status(200).json({ token, admin: adminWithoutPassword });
   } catch (err) {
     console.error("Error logging in:", err);
@@ -163,13 +163,7 @@ exports.loginAdmin = async (req, res) => {
 
 exports.getAdmin = async (req, res) => {
   try {
-    const token = req.headers.authorization.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    const username = decoded.username;
-    const adminData = await Admin.findOne({ username });
+    const adminData = await Admin.findById(req.user.id);
     if (!adminData) {
       return res.status(404).json({ message: "Admin not found" });
     }

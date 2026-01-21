@@ -12,7 +12,7 @@ const departmentSchema = new mongoose.Schema({
 });
 
 // Add indexes for faster queries
-departmentSchema.index({ name: 1 }); // For name queries
+departmentSchema.index({ name: 1 }, { unique: true }); // For name queries with uniqueness
 
 const Department = mongoose.model("Department", departmentSchema);
 module.exports = Department;

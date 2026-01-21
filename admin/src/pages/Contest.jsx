@@ -6,6 +6,7 @@ import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllContests, getAllStudents, refetchContests } from "../services/adminOperations";
+import logo from "../assets/algolog.png";
 
 function Contest() {
   const [activeView, setActiveView] = useState("students");
@@ -64,7 +65,7 @@ function Contest() {
         <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-3">
-              <img src="../algolog.png" alt="Logo" className="w-11 h-11" />
+              <img src={logo} alt="AlgoLog Logo" className="w-11 h-11" />
               <div className="min-w-0">
                 <h1 className="text-lg sm:text-xl font-bold text-white truncate">
                   LeetCode Dashboard

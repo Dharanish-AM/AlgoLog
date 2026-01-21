@@ -13,6 +13,10 @@ const {
   loginStudent,
   changeStudentPassword,
 } = require("../controllers/studentController");
+const authMiddleware = require("../middleware/authMiddleware");
+
+router.post("/login", loginStudent);
+router.use(authMiddleware);
 
 router.get("/", getStudentsByClass);
 router.get("/all", getAllStudents);
@@ -22,7 +26,6 @@ router.get("/refetch/all", refetchAllStudents);
 router.get("/get-student", getStudent);
 
 router.post("/", addStudent);
-router.post("/login", loginStudent);
 router.post("/change-password", changeStudentPassword);
 
 router.put("/:id", updateStudent);

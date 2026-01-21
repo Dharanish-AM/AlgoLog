@@ -17,6 +17,7 @@ const {
   refetchContests,
   getContestStats,
 } = require("../controllers/contestController");
+const authMiddleware = require("../middleware/authMiddleware");
 
 router.post("/department/login", loginDepartment);
 router.get("/departments", getAllDepartments);
@@ -25,43 +26,18 @@ router.post("/department/create", createDepartment);
 router.get("/get-form-details", getFormDetails);
 router.get("/get-daily-leetcode-problem", getDailyLeetCodeProblem);
 
-router.post("/check-token", (req, res) => {
-  try {
-    const jwt = require("jsonwebtoken");
-    const token = req.body.token;
-    if (!token) {
-      return res.status(400).json({ message: "Token is required" });
-    }
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-    res.status(200).json({ message: "Token is valid" });
-  } catch (err) {
-    console.log(err);
-    res.status(500).json({ message: "Internal server error" });
-  }
+router.post("/check-token", authMiddleware, (req, res) => {
+  return res.status(200).json({ message: "Token is valid", user: req.user });
 });
 
-router.post("/get-user", (req, res) => {
+router.post("/get-user", authMiddleware, (req, res) => {
   try {
-    const jwt = require("jsonwebtoken");
     const Department = require("../models/departmentSchema");
     const Admin = require("../models/adminSchema");
     const Class = require("../models/classSchema");
 
-    const token = req.body?.token;
-    if (!token) {
-      return res.status(400).json({ message: "Token is required" });
-    }
-
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (!decoded) {
-      return res.status(401).json({ message: "Invalid token" });
-    }
-
     Promise.all([
-      Department.findById(decoded.id)
+      Department.findById(req.user.id)
         .select("+password")
         .populate({
           path: "classes",
@@ -74,8 +50,8 @@ router.post("/get-user", (req, res) => {
             },
           },
         }),
-      Admin.findById(decoded.id),
-      Class.findById(decoded.id).populate("department"),
+      Admin.findById(req.user.id),
+      Class.findById(req.user.id).populate("department"),
     ])
       .then(([departmentData, admin, classData]) => {
         if (departmentData) {
@@ -112,12 +88,12 @@ router.post("/get-user", (req, res) => {
 
 router.post("/admin/create", createAdmin);
 router.post("/admin/login", loginAdmin);
-router.get("/admin/get-admin", getAdmin);
-router.get("/admin/get-departments", getAdminDepartments);
-router.get("/admin/get-classes", getAdminClasses);
+router.get("/admin/get-admin", authMiddleware, getAdmin);
+router.get("/admin/get-departments", authMiddleware, getAdminDepartments);
+router.get("/admin/get-classes", authMiddleware, getAdminClasses);
 
-router.get("/contests/all", getAllContests);
-router.get("/contests/refetch", refetchContests);
-router.get("/contests/stats", getContestStats);
+router.get("/contests/all", authMiddleware, getAllContests);
+router.get("/contests/refetch", authMiddleware, refetchContests);
+router.get("/contests/stats", authMiddleware, getContestStats);
 
 module.exports = router;
