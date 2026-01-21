@@ -953,9 +953,9 @@ async function getGithubStats(username) {
   }
 }
 
-getGithubStats("Dharanish-AM").then((e) =>
-  console.log(JSON.stringify(e, null, 2))
-);
+// getGithubStats("Dharanish-AM").then((e) =>
+//   console.log(JSON.stringify(e, null, 2))
+// );
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);
 
