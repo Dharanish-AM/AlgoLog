@@ -28,7 +28,7 @@ export default function Header() {
   const classId = window.location.pathname.split("/").pop();
   const department = useSelector((state) => state.auth.department);
   const [selectedClass, setSelectedClass] = useState(null);
-  const classes = useSelector((state) => state.auth.department.classes);
+  const classes = useSelector((state) => state.auth.department?.classes || []);
   const navigation = useNavigate();
   const token = localStorage.getItem("token");
   const dispatch = useDispatch();
@@ -198,18 +198,18 @@ export default function Header() {
             Last Updated:{" "}
             {selectedClass
               ? new Date(selectedClass.studentsUpdatedAt).toLocaleString(
-                  "en-US",
-                  {
-                    weekday: "short", // e.g. 'Tue'
-                    year: "numeric",
-                    month: "short", // e.g. 'May'
-                    day: "numeric", // e.g. '11'
-                    hour: "numeric", // e.g. '1'
-                    minute: "numeric", // e.g. '30'
-                    second: "numeric", // e.g. '45'
-                    hour12: true, // 12-hour time format
-                  }
-                )
+                "en-US",
+                {
+                  weekday: "short", // e.g. 'Tue'
+                  year: "numeric",
+                  month: "short", // e.g. 'May'
+                  day: "numeric", // e.g. '11'
+                  hour: "numeric", // e.g. '1'
+                  minute: "numeric", // e.g. '30'
+                  second: "numeric", // e.g. '45'
+                  hour12: true, // 12-hour time format
+                }
+              )
               : "N/A"}
           </div>
         )}

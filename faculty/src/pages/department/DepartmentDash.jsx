@@ -116,13 +116,13 @@ export default function DepartmentDash() {
                 className="w-full md:w-auto px-4 py-3 rounded-xl border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-200 shadow-sm appearance-none cursor-pointer"
               >
                 <option value={"all"}>All Years</option>
-                
-                  {[...new Set(department.classes.map((cls) => cls.year))].map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                
+
+                {[...new Set(department.classes.map((cls) => cls.year))].map((year) => (
+                  <option key={year} value={year}>
+                    {year}
+                  </option>
+                ))}
+
               </select>
             </div>
           </div>
@@ -136,33 +136,44 @@ export default function DepartmentDash() {
             .filter((cls) =>
               searchTerm
                 ? cls.username?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  cls.section?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                  cls.year?.toLowerCase().includes(searchTerm.toLowerCase())
+                cls.section?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                cls.year?.toLowerCase().includes(searchTerm.toLowerCase())
                 : true
             )
             .sort((a, b) => a.section.localeCompare(b.section))
             .map((cls) => (
               <div
                 key={cls._id}
-                className={`cursor-pointer p-4 rounded-lg shadow-md border hover:bg-purple-50 transition dark:hover:bg-gray-700 ${
-                  selectedClass?._id === cls._id
-                    ? "border-purple-500"
-                    : "border-gray-300"
-                }`}
                 onClick={() => navigate(`/class/${cls._id}`)}
+                className={`group relative bg-white dark:bg-gray-800/60 backdrop-blur-md rounded-2xl p-6 border transition-all duration-300 cursor-pointer overflow-hidden
+                  ${selectedClass?._id === cls._id
+                    ? "border-purple-500 ring-2 ring-purple-500/20 shadow-purple-500/20"
+                    : "border-gray-200 dark:border-white/10 hover:border-purple-500/50 hover:shadow-xl hover:-translate-y-1"
+                  }
+                `}
               >
-                <h3 className="text-lg font-semibold dark:text-white">
-                  {cls.username}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Section: {cls.section}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Year: {cls.year}
-                </p>
-                <p className="text-sm mt-1 text-gray-500 dark:text-gray-500">
-                  Students: {cls.students.length}
-                </p>
+                <div className="relative z-10 flex flex-col h-full">
+                  <div className="mb-4">
+                    <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                      {cls.username}
+                    </h3>
+                    <div className="flex flex-wrap gap-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-500/20 dark:text-purple-300 border border-purple-200 dark:border-purple-500/20">
+                        Section {cls.section}
+                      </span>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-500/20 dark:text-blue-300 border border-blue-200 dark:border-blue-500/20">
+                        {cls.year}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="mt-auto pt-4 border-t border-gray-100 dark:border-white/5 flex items-end justify-between">
+                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Total Students</span>
+                    <span className="text-3xl font-bold text-gray-900 dark:text-white tracking-tight leading-none">
+                      {cls.students.length}
+                    </span>
+                  </div>
+                </div>
               </div>
             ))}
         </div>
