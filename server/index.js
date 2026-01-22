@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
 
 dotenv.config();
 
@@ -16,14 +15,6 @@ const PORT = process.env.PORT || 8000;
 
 // Trust first proxy (required for proxies like Render, Heroku, etc.)
 app.set('trust proxy', 1);
-
-const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: process.env.NODE_ENV === 'production' ? 100 : 1000, // Higher limit for development
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: 'Too many requests from this IP, please try again later.',
-});
 
 app.use(
   cors({
