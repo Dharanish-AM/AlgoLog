@@ -89,7 +89,7 @@ router.post("/get-user", authMiddleware, (req, res) => {
 router.post("/admin/create", createAdmin);
 router.post("/admin/login", loginAdmin);
 router.get("/admin/get-admin", authMiddleware, getAdmin);
-router.get("/admin/get-departments", authMiddleware, getAdminDepartments);
+router.get("/admin/get-departments", getAdminDepartments);
 router.get("/admin/get-classes", authMiddleware, getAdminClasses);
 
 router.get("/contests/all", authMiddleware, getAllContests);

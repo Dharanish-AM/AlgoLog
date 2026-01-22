@@ -14,7 +14,7 @@ export default function DepartmentLogin() {
   useEffect(() => {
     const fetchDepartments = async () => {
       try {
-        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/admin/get-departments`);
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/departments`);
         console.log(res)
         setDepartments(res.data?.departments || []);
       } catch (err) {

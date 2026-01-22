@@ -49,12 +49,12 @@ function setRateLimitBackoff(platform, durationMs) {
 }
 
 const platformLimits = {
-  codechef: { minTime: 2500, maxConcurrent: 2 },
-  leetcode: { minTime: 200, maxConcurrent: 8 },
-  hackerrank: { minTime: 500, maxConcurrent: 5 },
-  github: { minTime: 100, maxConcurrent: 15 },
-  skillrack: { minTime: 500, maxConcurrent: 4 },
-  codeforces: { minTime: 500, maxConcurrent: 3 },
+  codechef: { minTime: 3000, maxConcurrent: 2 }, // Reduced from 2.5s, keeping at 2
+  leetcode: { minTime: 300, maxConcurrent: 6 }, // Reduced from 8 to 6
+  hackerrank: { minTime: 600, maxConcurrent: 4 }, // Reduced from 5 to 4
+  github: { minTime: 200, maxConcurrent: 10 }, // Reduced from 15 to 10 (still high for fetch checks)
+  skillrack: { minTime: 700, maxConcurrent: 3 }, // Reduced from 4 to 3
+  codeforces: { minTime: 750, maxConcurrent: 2 }, // Increased from 500ms to 750ms, reduced from 3 to 2
 };
 
 const limiters = Object.fromEntries(
@@ -588,6 +588,16 @@ async function getCodeforcesStats(username) {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
+  // Validate username format (Codeforces usernames are alphanumeric, underscores, etc)
+  if (!username || typeof username !== 'string' || username.trim().length === 0) {
+    console.warn(`[Codeforces] ⚠️ Invalid username format: "${username}"`);
+    return {
+      platform: "Codeforces",
+      username,
+      error: 'Invalid username format',
+    };
+  }
+
   // Check global rate limit
   await checkRateLimit('codeforces');
 
@@ -602,18 +612,23 @@ async function getCodeforcesStats(username) {
         callCF("user.rating", { handle: username }).catch(() => [])
       ]);
       
+      // Validate response
+      if (!info || !Array.isArray(info) || info.length === 0) {
+        throw new Error('User not found - empty response from Codeforces API');
+      }
+
       // Fetch only recent 500 submissions for faster response (reduced from 1000)
       const submissions = await callCF("user.status", { handle: username, from: 1, count: 500 }).catch(() => []);
 
-    const user = info[0];
-    const contests = ratingData.length;
+      const user = info[0];
+      const contests = ratingData.length;
 
-    const solved = new Set();
-    submissions.forEach((s) => {
-      if (s.verdict === "OK" && s.problem) {
-        solved.add(`${s.problem.contestId}-${s.problem.index}`);
-      }
-    });
+      const solved = new Set();
+      submissions.forEach((s) => {
+        if (s.verdict === "OK" && s.problem) {
+          solved.add(`${s.problem.contestId}-${s.problem.index}`);
+        }
+      });
 
       const result = {
         platform: "Codeforces",
@@ -629,23 +644,48 @@ async function getCodeforcesStats(username) {
       console.info(`[Codeforces] ✅ Success for ${username} on attempt ${attempt}`);
       return result;
     } catch (err) {
-      console.warn(`[Codeforces] Attempt ${attempt}/${maxAttempts} failed for ${username}: ${err.message}`);
+      // Classify error
+      const errorStatus = err.response?.status;
+      const errorMessage = err.message || 'Unknown error';
+      let errorType = 'unknown';
+      let isSkippable = false;
+
+      if (errorStatus === 400 || errorMessage.includes('User with handle')) {
+        errorType = 'invalid-profile';
+        isSkippable = true; // Don't retry 400 errors
+      } else if (errorStatus === 429) {
+        errorType = 'rate-limit';
+      } else if (errorStatus === 404) {
+        errorType = 'not-found';
+        isSkippable = true;
+      } else if (err.code === 'ECONNABORTED' || errorMessage.includes('timeout')) {
+        errorType = 'timeout';
+      }
+
+      console.warn(`[Codeforces] Attempt ${attempt}/${maxAttempts} failed for ${username} [${errorType}]: ${errorMessage}`);
       
-      if (attempt < maxAttempts) {
+      if (attempt < maxAttempts && !isSkippable) {
         const waitTime = 2000 * attempt; // 2s, 4s progressive delay
         console.warn(`⏳ Codeforces waiting ${waitTime / 1000}s before retry...`);
         
         // Set backoff for rate limit or API errors
-        if (err.response?.status === 429 || err.message.includes('limit')) {
+        if (errorStatus === 429 || errorMessage.includes('limit')) {
           setRateLimitBackoff('codeforces', waitTime);
         }
         
         await delay(waitTime);
+      } else if (isSkippable) {
+        // Don't retry on 400/404 errors
+        return {
+          platform: "Codeforces",
+          username,
+          error: `Invalid profile: ${errorMessage}`,
+        };
       } else {
         return {
           platform: "Codeforces",
           username,
-          error: err.message.includes('User with handle') ? 'User not found' : err.message,
+          error: `Failed after ${maxAttempts} attempts: ${errorMessage}`,
         };
       }
     }
@@ -776,6 +816,19 @@ async function getGithubStats(username) {
   const cached = getCached(cacheKey);
   if (cached) return cached;
 
+  // Validate username format
+  if (!username || typeof username !== 'string' || username.trim().length === 0) {
+    console.warn(`[GitHub] ⚠️ Invalid username format: "${username}"`);
+    return {
+      platform: "GitHub",
+      username,
+      error: 'Invalid username format',
+      totalCommits: 0,
+      totalRepos: 0,
+      topLanguages: [],
+    };
+  }
+
   const maxAttempts = 3;
   const delay = (ms) => new Promise(res => setTimeout(res, ms));
 
@@ -791,6 +844,44 @@ async function getGithubStats(username) {
         "User-Agent": "AlgoLog-App",
       };
 
+      // Step 1: Quick check - validate user exists with a lightweight query first
+      if (attempt === 1) {
+        const quickCheckQuery = `query { user(login: "${username}") { id login } }`;
+        try {
+          const quickRes = await axios.post(
+            "https://api.github.com/graphql",
+            { query: quickCheckQuery },
+            { 
+              headers: {
+                ...headers,
+                "Accept-Encoding": "gzip, deflate, br",
+              }, 
+              timeout: 4000,
+              decompress: true,
+            }
+          );
+          
+          if (!quickRes.data?.data?.user) {
+            throw new Error(`GitHub user not found: ${username}`);
+          }
+        } catch (quickErr) {
+          if (quickErr.message.includes('not found') || 
+              quickErr.response?.data?.errors?.some(e => e.message.includes('Could not resolve to a User'))) {
+            console.warn(`[GitHub] ❌ User ${username} does not exist (skipping full fetch)`);
+            return {
+              platform: "GitHub",
+              username,
+              error: `User not found on GitHub`,
+              totalCommits: 0,
+              totalRepos: 0,
+              topLanguages: [],
+            };
+          }
+          throw quickErr; // Re-throw if it's a different error
+        }
+      }
+
+      // Step 2: Fetch full data
       const query = `
   query {
     user(login: "${username}") {
@@ -930,15 +1021,27 @@ async function getGithubStats(username) {
       return result;
     } catch (error) {
       const isRateLimited = error.response?.status === 403 || error.response?.status === 429;
+      const isNotFound = error.message.includes('not found') || 
+                        error.response?.data?.errors?.some(e => e.message.includes('Could not resolve'));
       
       console.error(
-        `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username}: ${error.message}`
+        `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username} [${isNotFound ? 'not-found' : isRateLimited ? 'rate-limit' : 'error'}]: ${error.message}`
       );
 
-      if (attempt < maxAttempts) {
+      if (attempt < maxAttempts && !isNotFound) {
         const waitTime = isRateLimited ? 5000 * Math.pow(2, attempt - 1) : 2000 * attempt;
         console.warn(`⏳ Waiting ${waitTime / 1000}s before retry...`);
         await delay(waitTime);
+      } else if (isNotFound) {
+        // Don't retry 404/not found errors
+        return {
+          platform: "GitHub",
+          username,
+          error: `User not found on GitHub`,
+          totalCommits: 0,
+          totalRepos: 0,
+          topLanguages: [],
+        };
       } else {
         return {
           platform: "GitHub",

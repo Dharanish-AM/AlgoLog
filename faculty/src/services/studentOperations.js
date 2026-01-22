@@ -149,11 +149,7 @@ export const handleDeleteStudent = async (id, token, dispatch) => {
 
 export const getDepartments = async (token, dispatch) => {
   try {
-    const response = await axios.get(`${API_URL}/api/departments`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    const response = await axios.get(`${API_URL}/api/departments`);
     if (response.status === 200) {
       const departments = response.data.departments;
       return departments;

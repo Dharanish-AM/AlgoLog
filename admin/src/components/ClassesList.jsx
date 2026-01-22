@@ -64,49 +64,60 @@ export default function ClassesList({
           No classes found.
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
           {filteredClasses.map((cls) => (
             <div
               key={cls._id}
               onClick={() => setSelectedClass(cls)}
-              className="bg-white mt-2 flex-col gap-2 dark:bg-gray-800 relative p-6 rounded-lg shadow hover:shadow-xl transform hover:scale-105 transition duration-300 ease-in-out border border-gray-200 dark:border-gray-700 cursor-pointer flex items-start justify-center text-center"
+              className="group bg-white dark:bg-gray-800 relative p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer overflow-hidden"
             >
-              <Edit
-                size={20}
-                className="absolute top-4 right-4 text-gray-500 dark:text-gray-400"
-              />
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Username:
-                </span>{" "}
-                <span className="text-gray-900 dark:text-white">
-                  {cls.username}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Email:
-                </span>{" "}
-                <span className="text-gray-900 dark:text-white">
-                  {cls.email}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Section:
-                </span>{" "}
-                <span className="text-gray-900 dark:text-white">
-                  {cls.section}
-                </span>
-              </p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                <span className="font-medium text-gray-700 dark:text-gray-300">
-                  Total Students:
-                </span>{" "}
-                <span className="text-gray-900 dark:text-white">
-                  {cls.students.length}
-                </span>
-              </p>
+              {/* Edit icon */}
+              <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/50">
+                <Edit size={16} className="text-gray-600 dark:text-gray-400" />
+              </div>
+
+              {/* Content */}
+              <div className="relative space-y-3">
+                {/* Username as title with section badge */}
+                <div className="pb-3 border-b border-gray-100 dark:border-gray-700">
+                  <p className="text-base font-semibold text-gray-900 dark:text-white mb-1.5">
+                    {cls.username}
+                  </p>
+                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                    Section {cls.section}
+                  </span>
+                </div>
+
+                {/* Year */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Academic Year
+                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {cls.year || 'N/A'}
+                  </p>
+                </div>
+
+                {/* Email */}
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Email Address
+                  </p>
+                  <p className="text-sm text-gray-900 dark:text-white truncate">
+                    {cls.email}
+                  </p>
+                </div>
+
+                {/* Student count with badge */}
+                <div className="flex items-center justify-between pt-2">
+                  <span className="text-xs font-medium text-gray-500 dark:text-gray-400">
+                    Total Students
+                  </span>
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
+                    {cls.students.length}
+                  </span>
+                </div>
+              </div>
             </div>
           ))}
         </div>

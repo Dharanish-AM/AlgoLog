@@ -1,5 +1,6 @@
 // 🔵 Enhanced colorful logging wrapper (auto-applies to all console logs)
 const chalk = require("chalk"); // Ensure chalk@4 is installed
+const ErrorTracker = require('./errorTracker');
 
 // Override console methods with color-enhanced professional logging
 const _log = console.log;
@@ -13,6 +14,9 @@ console.error = (...args) => _error(chalk.red(...args));
 
 const _info = console.info;
 console.info = (...args) => _info(chalk.blue(...args));
+
+// Initialize error tracker
+const errorTracker = new ErrorTracker();
 
 // 🎨 Pretty block logger (Option C)
 function prettyBlock(title, lines = []) {
@@ -459,3 +463,4 @@ class BatchProcessor {
 }
 
 module.exports = BatchProcessor;
+module.exports.errorTracker = errorTracker;

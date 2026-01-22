@@ -3,7 +3,11 @@ const API_URL = import.meta.env.VITE_API_URL;
 
 export const getDepartments = async (token, dispatch) => {
   try {
-    const response = await axios.get(`${API_URL}/api/admin/get-departments`);
+    const response = await axios.get(`${API_URL}/api/admin/get-departments`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     console.log(response);
     dispatch({
       type: "SET_DEPARTMENTS",
@@ -17,7 +21,11 @@ export const getDepartments = async (token, dispatch) => {
 
 export const getClasses = async (token, dispatch) => {
   try {
-    const response = await axios.get(`${API_URL}/api/admin/get-classes`);
+    const response = await axios.get(`${API_URL}/api/admin/get-classes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
     dispatch({
       type: "SET_CLASSES",
       payload: response.data.classes,
