@@ -1,21 +1,30 @@
 import React from "react";
-import { Trophy, TrendingUp } from "lucide-react";
+import { Trophy, TrendingUp, Users } from "lucide-react";
 
 const StudentsTable = ({ students }) => {
   if (students.length === 0) {
     return (
-      <div className="bg-slate-800 rounded-lg border border-slate-700 p-8 sm:p-12 text-center">
-        <div className="text-slate-400 mb-4">
-          <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p className="text-base sm:text-lg">No students found</p>
-          <p className="text-sm">Try adjusting your filters to see results</p>
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 p-12 sm:p-16 text-center shadow-xl">
+        <div className="max-w-md mx-auto">
+          <div className="bg-slate-700/30 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Users className="w-10 h-10 text-slate-400" />
+          </div>
+          <h3 className="text-xl font-bold text-white mb-2">No Students Found</h3>
+          <p className="text-slate-400 mb-6">
+            We couldn't find any students matching your search criteria.
+          </p>
+          <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+            <p className="text-sm text-blue-300">
+              💡 Try adjusting your filters or search terms
+            </p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden h-full">
+    <div className="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden h-full shadow-xl">
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="bg-slate-700 sticky top-0 z-10">

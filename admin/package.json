@@ -27,6 +27,7 @@
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.6.0",
     "react-spinners": "^0.17.0",
+    "recharts": "^3.7.0",
     "tailwindcss": "^4.1.7"
   },
   "devDependencies": {

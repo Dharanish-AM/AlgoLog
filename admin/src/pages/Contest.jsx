@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Users, Trophy, Code, BarChart3, Loader2, RefreshCw } from "lucide-react";
+import { Users, Trophy, Code, BarChart3, Loader2, RefreshCw, TrendingUp, GitCompare } from "lucide-react";
 import { GridLoader } from "react-spinners";
 import toast from "react-hot-toast";
 import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
+import AnalyticsView from "../components/contest/AnalyticsView";
+import ComparisonView from "../components/contest/ComparisonView";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllContests, getAllStudents, refetchContests } from "../services/adminOperations";
 import logo from "../assets/algolog.png";
@@ -37,7 +39,7 @@ function Contest() {
   // Full-page loader (same style as App loader)
   if (isLoading || (allStudents.length === 0 && allContests.length === 0)) {
     return (
-      <div className="bg-[#161F2D] flex justify-center items-center w-screen h-screen">
+      <div className="bg-gradient-to-br from-[#161F2D] via-[#1a2332] to-[#161F2D] flex flex-col justify-center items-center w-screen h-screen">
         <GridLoader color="#C084FC" size={20} />
       </div>
     );
@@ -56,18 +58,30 @@ function Contest() {
       icon: Trophy,
       description: "Monitor contest results",
     },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: TrendingUp,
+      description: "Advanced insights & trends",
+    },
+    {
+      id: "comparison",
+      label: "Compare",
+      icon: GitCompare,
+      description: "Compare students",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex flex-col">
       {/* Header */}
-      <header className="bg-slate-800 border-b border-slate-700">
+      <header className="bg-gradient-to-r from-slate-800 to-slate-700 border-b border-slate-600 shadow-xl">
         <div className="w-full px-4 sm:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-3">
-              <img src={logo} alt="AlgoLog Logo" className="w-11 h-11" />
+            <div className="flex items-center gap-3 group">
+              <img src={logo} alt="AlgoLog Logo" className="w-11 h-11 transition-transform group-hover:scale-110" />
               <div className="min-w-0">
-                <h1 className="text-lg sm:text-xl font-bold text-white truncate">
+                <h1 className="text-lg sm:text-xl font-bold text-white">
                   LeetCode Dashboard
                 </h1>
                 <p className="text-xs sm:text-sm text-slate-400 hidden sm:block">
@@ -76,9 +90,9 @@ function Contest() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <BarChart3 className="w-5 h-5 text-slate-400" />
-              <span className="text-sm text-slate-400 hidden sm:inline">
+            <div className="flex items-center gap-2 flex-shrink-0 bg-slate-700/50 px-3 py-2 rounded-lg border border-slate-600">
+              <BarChart3 className="w-5 h-5 text-blue-400" />
+              <span className="text-sm text-slate-300 hidden sm:inline font-medium">
                 Analytics Panel
               </span>
             </div>
@@ -87,17 +101,17 @@ function Contest() {
       </header>
 
       {/* Navigation */}
-      <nav className="bg-slate-800 border-b border-slate-700">
+      <nav className="bg-slate-800/50 border-b border-slate-700 backdrop-blur-sm">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-4 sm:space-x-8 overflow-x-auto">
             {navigationItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-3 sm:py-4 text-sm font-medium transition-colors duration-200 border-b-2 whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-3 sm:py-4 text-sm font-semibold transition-all duration-300 border-b-2 whitespace-nowrap ${
                   activeView === item.id
-                    ? "text-blue-400 border-blue-400"
-                    : "text-slate-400 border-transparent hover:text-slate-300 hover:border-slate-300"
+                    ? "text-blue-400 border-blue-400 bg-blue-400/5"
+                    : "text-slate-400 border-transparent hover:text-slate-300 hover:border-slate-300 hover:bg-slate-700/30"
                 }`}
               >
                 <item.icon className="w-4 h-4" />
@@ -119,6 +133,8 @@ function Contest() {
           <>
             {activeView === "students" && <StudentsView />}
             {activeView === "contests" && <ContestsView />}
+            {activeView === "analytics" && <AnalyticsView />}
+            {activeView === "comparison" && <ComparisonView />}
           </>
         )}
       </main>
