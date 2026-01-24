@@ -462,7 +462,7 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
 
             <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
               <div className="flex items-center gap-3">
-                <Star size={24} className="text-yellow-500" />
+                <Star size={24} className="text-orange-500" />
                 <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
                   CodeChef
                 </h4>
@@ -472,9 +472,9 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   }`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ml-1 text-yellow-500 hover:text-yellow-700"
+                  className="ml-1 text-orange-500 hover:text-orange-700"
                 >
-                  <Link className="text-yellow-500" size={18} />
+                  <Link size={18} />
                 </a>
               </div>
               <div className="space-y-4">
@@ -482,39 +482,15 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Rating
                   </span>
-                  <span className="font-semibold text-yellow-600 dark:text-yellow-400">
-                    {codechef?.rating ?? "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Highest Rating
-                  </span>
-                  <span className="font-semibold text-purple-600 dark:text-purple-400">
-                    {codechef?.highestRating ?? "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Global Rank
-                  </span>
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">
-                    {codechef?.globalRank ? `#${codechef.globalRank.toLocaleString()}` : "N/A"}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
-                  <span className="text-sm text-gray-600 dark:text-gray-300">
-                    Country Rank
-                  </span>
-                  <span className="font-semibold text-cyan-600 dark:text-cyan-400">
-                    {codechef?.countryRank ? `#${codechef.countryRank.toLocaleString()}` : "N/A"}
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
+                    {codechef?.rank ? codechef.rank : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
                   <span className="text-sm text-gray-600 dark:text-gray-300">
                     Problems Solved
                   </span>
-                  <span className="font-semibold text-green-600 dark:text-green-400">
+                  <span className="font-semibold text-orange-600 dark:text-orange-400">
                     {codechef?.fullySolved ?? "N/A"}
                   </span>
                 </div>
