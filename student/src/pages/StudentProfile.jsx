@@ -679,47 +679,38 @@ const StudentProfile = ({
               </div>
             </div>
 
-            {/* Rating Section */}
-            {student.stats?.codechef?.rating ? (
-              <div className="mb-4 p-4 bg-gray-700/50 rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <div className="text-3xl font-bold text-yellow-400">
-                      {student.stats.codechef.rating}
-                    </div>
-                    <div className="text-sm text-gray-400">Current Rating</div>
-                  </div>
-                </div>
-                {student.stats.codechef.highestRating && (
-                  <div className="text-sm text-gray-300 border-t border-gray-600 pt-2">
-                    Highest Rating: <span className="font-semibold text-purple-400">{student.stats.codechef.highestRating}</span>
-                  </div>
-                )}
+            {/* CodeChef Stats */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Rating</span>
+                <span className="font-semibold text-yellow-400">
+                  {student.stats?.codechef?.rating ?? "N/A"}
+                </span>
               </div>
-            ) : null}
-
-            {/* Ranks Section */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="p-3 bg-gray-700 rounded-lg">
-                <div className="text-lg font-bold text-blue-400">
-                  {student.stats?.codechef?.globalRank || "N/A"}
-                </div>
-                <div className="text-xs text-gray-400">Global Rank</div>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Highest Rating</span>
+                <span className="font-semibold text-purple-400">
+                  {student.stats?.codechef?.highestRating ?? "N/A"}
+                </span>
               </div>
-              <div className="p-3 bg-gray-700 rounded-lg">
-                <div className="text-lg font-bold text-cyan-400">
-                  {student.stats?.codechef?.countryRank || "N/A"}
-                </div>
-                <div className="text-xs text-gray-400">Country Rank</div>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Global Rank</span>
+                <span className="font-semibold text-blue-400">
+                  {student.stats?.codechef?.globalRank ? `#${student.stats.codechef.globalRank.toLocaleString()}` : "N/A"}
+                </span>
               </div>
-            </div>
-
-            {/* Problems Solved */}
-            <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-              <div className="text-2xl font-bold text-yellow-400">
-                {student.stats?.codechef?.fullySolved || 0}
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Country Rank</span>
+                <span className="font-semibold text-cyan-400">
+                  {student.stats?.codechef?.countryRank ? `#${student.stats.codechef.countryRank.toLocaleString()}` : "N/A"}
+                </span>
               </div>
-              <div className="text-sm text-gray-400">Problems Solved</div>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Problems Solved</span>
+                <span className="font-semibold text-green-400">
+                  {student.stats?.codechef?.fullySolved ?? "N/A"}
+                </span>
+              </div>
             </div>
           </div>
 

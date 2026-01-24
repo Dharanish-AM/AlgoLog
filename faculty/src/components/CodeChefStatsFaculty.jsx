@@ -18,11 +18,18 @@ const CodeChefStatsFaculty = ({ stats }) => {
       </div>
 
       <div className="space-y-2 text-xs">
-        {/* Rating */}
+        {/* Rating with Division */}
         {stats.rating && (
           <div className="flex justify-between items-center">
             <span className="text-gray-300">Rating</span>
-            <span className="font-bold text-yellow-400">{stats.rating}</span>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-yellow-400">{stats.rating}</span>
+              {stats.division && (
+                <span className="bg-yellow-700/40 text-yellow-300 px-1.5 py-0.5 rounded text-xs">
+                  {stats.division}
+                </span>
+              )}
+            </div>
           </div>
         )}
 

@@ -96,6 +96,7 @@ export default function Header({}) {
           hackerrank_badge_count: student.stats.hackerrank?.badges?.length || 0,
           codechef_rating: student.stats.codechef?.rating || 0,
           codechef_highest_rating: student.stats.codechef?.highestRating || 0,
+          codechef_division: student.stats.codechef?.division || "N/A",
           codechef_global_rank: student.stats.codechef?.globalRank || "N/A",
           codechef_country_rank: student.stats.codechef?.countryRank || "N/A",
           codechef_solved: student.stats.codechef?.fullySolved || 0,

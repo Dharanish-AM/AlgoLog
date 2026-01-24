@@ -89,6 +89,7 @@ const studentSchema = new mongoose.Schema(
         platform: String,
         username: String,
         rating: mongoose.Schema.Types.Mixed,
+        division: String,
         highestRating: mongoose.Schema.Types.Mixed,
         globalRank: mongoose.Schema.Types.Mixed,
         countryRank: mongoose.Schema.Types.Mixed,

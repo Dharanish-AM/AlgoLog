@@ -17,9 +17,16 @@ const CodeChefStatsCard = ({ student }) => {
   return (
     <div className="bg-gradient-to-br from-yellow-900/20 to-yellow-900/5 rounded-lg p-4 border border-yellow-700/30">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-4 pb-3 border-b border-yellow-700/30">
-        <Award className="w-5 h-5 text-yellow-500" />
-        <span className="font-semibold text-yellow-400">CodeChef Stats</span>
+      <div className="flex items-center justify-between mb-4 pb-3 border-b border-yellow-700/30">
+        <div className="flex items-center gap-2">
+          <Award className="w-5 h-5 text-yellow-500" />
+          <span className="font-semibold text-yellow-400">CodeChef Stats</span>
+        </div>
+        {stats.division && (
+          <span className="text-xs bg-yellow-700/40 text-yellow-300 px-2 py-1 rounded">
+            {stats.division}
+          </span>
+        )}
       </div>
 
       {/* Rating Section */}
