@@ -353,12 +353,12 @@ const StudentTable = ({ students, handleRefetchSingleStudent }) => {
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {student.stats.codechef?.division && (
-                          <>Div: {student.stats.codechef.division}</>,
+                          <>Div: {student.stats.codechef.division}</>
                         )}
                       </div>
                       <div className="text-xs text-gray-500 dark:text-gray-400">
                         {student.stats.codechef?.globalRank ? (
-                          <>Rank: {student.stats.codechef.globalRank}</>,
+                          <>Rank: {student.stats.codechef.globalRank}</>
                         ) : null}
                       </div>
                     </td>
