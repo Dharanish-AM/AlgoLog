@@ -21,6 +21,20 @@ function App() {
     if (!token) setIsLoading(false);
   }, []);
 
+  // Token refresh check - verify token validity every 5 minutes
+  useEffect(() => {
+    if (!isAuthenticated || !student) return;
+
+    const tokenRefreshInterval = setInterval(async () => {
+      const isValid = await refreshToken();
+      if (!isValid) {
+        toast.error("Session expired. Please login again.");
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(tokenRefreshInterval);
+  }, [isAuthenticated, student]);
+
   const fetchDepartments = async () => {
     try {
       const response = await axios.get(
@@ -31,6 +45,29 @@ function App() {
     } catch (err) {
       console.error("Error fetching departments:", err);
       toast.error("Failed to fetch departments.");
+    }
+  };
+
+  const refreshToken = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+
+    try {
+      // Check token validity - if expired, logout
+      const response = await axios.post(
+        `${import.meta.env.VITE_API_URL}/api/check-token`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      return response.status === 200;
+    } catch (err) {
+      console.warn("Token invalid or expired");
+      localStorage.removeItem("token");
+      setIsAuthenticated(false);
+      setStudent(null);
+      return false;
     }
   };
 

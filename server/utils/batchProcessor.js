@@ -240,6 +240,9 @@ class BatchProcessor {
         console.log('✅ Circuit breaker transitioning to CLOSED');
         this.circuitBreaker.state = 'CLOSED';
         this.circuitBreaker.failures = 0;
+      } else if (this.circuitBreaker.state === 'CLOSED' && batchErrors === 0) {
+        // Reset failure counter on successful batches when CLOSED
+        this.circuitBreaker.failures = 0;
       }
       
       // 4. Adaptive concurrency based on error rate

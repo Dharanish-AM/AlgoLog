@@ -25,6 +25,22 @@ function AppContent() {
   const [loading, setLoading] = React.useState(true);
   const dispatch = useDispatch();
 
+  const refreshTokenValidity = async (currentToken) => {
+    if (!currentToken) return false;
+    try {
+      const isTokenValid = await checkTokenValidity(currentToken);
+      if (!isTokenValid) {
+        localStorage.removeItem("token");
+        return false;
+      }
+      return true;
+    } catch (error) {
+      console.error("Token refresh check failed:", error);
+      localStorage.removeItem("token");
+      return false;
+    }
+  };
+
   useEffect(() => {
     const handleCheckValidity = async () => {
       if (!token) {
@@ -61,6 +77,21 @@ function AppContent() {
     };
     handleCheckValidity();
   }, [token]);
+
+  // Token refresh check - verify token validity every 5 minutes
+  React.useEffect(() => {
+    if (!isAuthenticated || !role) return;
+
+    const tokenRefreshInterval = setInterval(async () => {
+      const currentToken = localStorage.getItem("token");
+      const isValid = await refreshTokenValidity(currentToken);
+      if (!isValid) {
+        dispatch({ type: "LOGOUT" });
+      }
+    }, 5 * 60 * 1000); // Check every 5 minutes
+
+    return () => clearInterval(tokenRefreshInterval);
+  }, [isAuthenticated, role, dispatch]);
 
   if (loading && !role) {
     return (

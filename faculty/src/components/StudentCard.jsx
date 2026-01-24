@@ -609,6 +609,84 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
                 </div>
               </div>
             </div>
+            <div className="space-y-6 bg-white/50 border border-gray-700 dark:bg-gray-800/50 p-6 rounded-xl backdrop-blur-sm">
+              <div className="flex items-center gap-3">
+                <Code size={24} className="text-yellow-500" />
+                <h4 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  CodeChef
+                </h4>
+                <a
+                  href={`https://www.codechef.com/users/${student.codechef || ""}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ml-1 text-yellow-500 hover:text-yellow-700"
+                >
+                  <Link size={18} />
+                </a>
+              </div>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Rating
+                  </span>
+                  <span className="font-semibold text-yellow-600 dark:text-yellow-400">
+                    {codechef?.rating ?? "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Highest Rating
+                  </span>
+                  <span className="font-semibold text-purple-600 dark:text-purple-400">
+                    {codechef?.highestRating ?? "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Global Rank
+                  </span>
+                  <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    {codechef?.globalRank
+                      ? `#${codechef.globalRank.toLocaleString()}`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Country Rank
+                  </span>
+                  <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+                    {codechef?.countryRank
+                      ? `#${codechef.countryRank.toLocaleString()}`
+                      : "N/A"}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center p-3 bg-white dark:bg-gray-700/50 rounded-lg">
+                  <span className="text-sm text-gray-600 dark:text-gray-300">
+                    Problems Solved
+                  </span>
+                  <span className="font-semibold text-green-600 dark:text-green-400">
+                    {codechef?.fullySolved ?? "N/A"}
+                  </span>
+                </div>
+                {codechef?.updatedAt && (
+                  <div className="flex justify-between items-center p-3 bg-gray-200 dark:bg-gray-700/30 rounded-lg text-xs">
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Last Updated
+                    </span>
+                    <span className="text-gray-700 dark:text-gray-300">
+                      {new Date(codechef.updatedAt).toLocaleString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        hour: "numeric",
+                        minute: "numeric",
+                        hour12: true,
+                      })}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
           <div className="text-sm flex justify-end gap-4 px-8 pb-6">
             <button

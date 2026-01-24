@@ -1,9 +1,11 @@
 const Student = require("../models/studentSchema");
 const Class = require("../models/classSchema");
 const Department = require("../models/departmentSchema");
+const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt");
 const { getStatsForStudent } = require("../utils/helpers");
+const { validateSkillrackUrl } = require("../utils/skillrackValidator");
 const BatchProcessor = require("../utils/batchProcessor");
 const DataValidator = require("../utils/dataValidator");
 const chalk = require("chalk");
@@ -83,6 +85,14 @@ exports.addStudent = async (req, res) => {
         .json({ error: "Name, email, and roll number are required" });
     }
 
+    // Validate Skillrack URL if provided
+    if (skillrack) {
+      const validation = validateSkillrackUrl(skillrack);
+      if (!validation.valid) {
+        return res.status(400).json({ error: `Invalid Skillrack URL: ${validation.message}` });
+      }
+    }
+
     const departmentData = await Department.findById(department);
     if (!departmentData) {
       return res.status(404).json({
@@ -129,16 +139,26 @@ exports.addStudent = async (req, res) => {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
 
-    const newStudent = new Student({
-      ...studentInfo,
-      stats: statsResult.stats,
-    });
-
-    const savedStudent = await newStudent.save();
-
-    await Class.findByIdAndUpdate(classData._id, {
-      $addToSet: { students: savedStudent._id },
-    });
+    const session = await mongoose.startSession();
+    let savedStudent;
+    
+    try {
+      await session.withTransaction(async () => {
+        const newStudent = new Student({
+          ...studentInfo,
+          stats: statsResult.stats,
+        });
+        savedStudent = await newStudent.save({ session });
+        
+        await Class.findByIdAndUpdate(
+          classData._id,
+          { $addToSet: { students: savedStudent._id } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
 
     return res.status(201).json(savedStudent);
   } catch (error) {
@@ -236,25 +256,34 @@ exports.updateStudent = async (req, res) => {
       existingStudent.stats || {}
     );
 
-    const updatedStudent = await Student.findByIdAndUpdate(
-      id,
-      {
-        ...updatedData,
-        stats: updatedStats?.stats || existingStudent.stats,
-      },
-      { new: true }
-    ).populate("department");
+    const session = await mongoose.startSession();
+    let updatedStudent;
+    
+    try {
+      await session.withTransaction(async () => {
+        updatedStudent = await Student.findByIdAndUpdate(
+          id,
+          {
+            ...updatedData,
+            stats: updatedStats?.stats || existingStudent.stats,
+          },
+          { new: true, session }
+        ).populate("department");
 
-    if (existingStudent.classId?.toString() !== classData._id.toString()) {
-      if (existingStudent.classId) {
-        await Class.findByIdAndUpdate(existingStudent.classId, {
-          $pull: { students: existingStudent._id },
-        });
-      }
+        if (existingStudent.classId?.toString() !== classData._id.toString()) {
+          if (existingStudent.classId) {
+            await Class.findByIdAndUpdate(existingStudent.classId, {
+              $pull: { students: existingStudent._id },
+            }, { session });
+          }
 
-      await Class.findByIdAndUpdate(classData._id, {
-        $addToSet: { students: existingStudent._id },
+          await Class.findByIdAndUpdate(classData._id, {
+            $addToSet: { students: existingStudent._id },
+          }, { session });
+        }
       });
+    } finally {
+      await session.endSession();
     }
 
     console.log(`✅ Student updated: ${updatedStudent.name}`);

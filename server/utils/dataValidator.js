@@ -146,6 +146,12 @@ class DataValidator {
       errors.push('Invalid platform identifier');
     }
 
+    // Validate username
+    if (!data.username || typeof data.username !== 'string') {
+      warnings.push('Missing or invalid username');
+    }
+
+    // Validate rating
     if (data.rating !== null && data.rating !== undefined) {
       const rating = parseInt(data.rating, 10);
       if (isNaN(rating) || rating < 0 || rating > 5000) {
@@ -153,6 +159,36 @@ class DataValidator {
       }
     }
 
+    // Validate highest rating
+    if (data.highestRating !== null && data.highestRating !== undefined) {
+      const highestRating = parseInt(data.highestRating, 10);
+      if (isNaN(highestRating) || highestRating < 0 || highestRating > 5000) {
+        warnings.push(`Invalid highest rating: ${data.highestRating}`);
+      }
+    }
+
+    // Validate division
+    if (data.division && typeof data.division !== 'string') {
+      warnings.push('Invalid division format');
+    }
+
+    // Validate global rank
+    if (data.globalRank !== null && data.globalRank !== undefined) {
+      const rank = parseInt(data.globalRank, 10);
+      if (isNaN(rank) || rank < 0) {
+        warnings.push(`Invalid global rank: ${data.globalRank}`);
+      }
+    }
+
+    // Validate country rank
+    if (data.countryRank !== null && data.countryRank !== undefined) {
+      const rank = parseInt(data.countryRank, 10);
+      if (isNaN(rank) || rank < 0) {
+        warnings.push(`Invalid country rank: ${data.countryRank}`);
+      }
+    }
+
+    // Validate problems solved
     if (data.fullySolved !== null && data.fullySolved !== undefined) {
       if (typeof data.fullySolved !== 'number' || data.fullySolved < 0) {
         errors.push('Invalid problems solved count');

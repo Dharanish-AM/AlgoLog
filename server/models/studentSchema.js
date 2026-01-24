@@ -87,8 +87,13 @@ const studentSchema = new mongoose.Schema(
       },
       codechef: {
         platform: String,
-        rating: String,
+        username: String,
+        rating: mongoose.Schema.Types.Mixed,
+        highestRating: mongoose.Schema.Types.Mixed,
+        globalRank: mongoose.Schema.Types.Mixed,
+        countryRank: mongoose.Schema.Types.Mixed,
         fullySolved: Number,
+        updatedAt: Date,
       },
       codeforces: {
         platform: String,

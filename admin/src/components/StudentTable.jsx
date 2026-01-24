@@ -351,6 +351,11 @@ const StudentTable = ({ students, handleRefetchSingleStudent }) => {
                           ? student.stats.codechef.rating
                           : "N/A"}
                       </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {student.stats.codechef?.globalRank ? (
+                          <>Rank: {student.stats.codechef.globalRank}</>,
+                        ) : null}
+                      </div>
                     </td>
 
                     <td

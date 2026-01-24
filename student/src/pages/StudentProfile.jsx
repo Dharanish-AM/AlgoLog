@@ -678,19 +678,48 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.codechef}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-yellow-400">
-                  {student.stats?.codechef?.fullySolved || 0}
+
+            {/* Rating Section */}
+            {student.stats?.codechef?.rating ? (
+              <div className="mb-4 p-4 bg-gray-700/50 rounded-lg">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <div className="text-3xl font-bold text-yellow-400">
+                      {student.stats.codechef.rating}
+                    </div>
+                    <div className="text-sm text-gray-400">Current Rating</div>
+                  </div>
                 </div>
-                <div className="text-sm text-gray-400">Fully Solved</div>
+                {student.stats.codechef.highestRating && (
+                  <div className="text-sm text-gray-300 border-t border-gray-600 pt-2">
+                    Highest Rating: <span className="font-semibold text-purple-400">{student.stats.codechef.highestRating}</span>
+                  </div>
+                )}
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-white">
-                  {student.stats?.codechef?.rating || "N/A"}
+            ) : null}
+
+            {/* Ranks Section */}
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="p-3 bg-gray-700 rounded-lg">
+                <div className="text-lg font-bold text-blue-400">
+                  {student.stats?.codechef?.globalRank || "N/A"}
                 </div>
-                <div className="text-sm text-gray-400">Rating</div>
+                <div className="text-xs text-gray-400">Global Rank</div>
               </div>
+              <div className="p-3 bg-gray-700 rounded-lg">
+                <div className="text-lg font-bold text-cyan-400">
+                  {student.stats?.codechef?.countryRank || "N/A"}
+                </div>
+                <div className="text-xs text-gray-400">Country Rank</div>
+              </div>
+            </div>
+
+            {/* Problems Solved */}
+            <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+              <div className="text-2xl font-bold text-yellow-400">
+                {student.stats?.codechef?.fullySolved || 0}
+              </div>
+              <div className="text-sm text-gray-400">Problems Solved</div>
             </div>
           </div>
 

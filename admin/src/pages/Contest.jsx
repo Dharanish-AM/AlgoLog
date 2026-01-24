@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { Users, Trophy, Code, BarChart3, Loader2, RefreshCw, TrendingUp, GitCompare } from "lucide-react";
 import { GridLoader } from "react-spinners";
-import toast from "react-hot-toast";
 import StudentsView from "../components/contest/StudentsView";
 import ContestsView from "../components/contest/ContestsView";
 import AnalyticsView from "../components/contest/AnalyticsView";
 import ComparisonView from "../components/contest/ComparisonView";
 import { useDispatch, useSelector } from "react-redux";
-import { getAllContests, getAllStudents, refetchContests } from "../services/adminOperations";
+import { getAllContests, getAllStudents } from "../services/adminOperations";
 import logo from "../assets/algolog.png";
 
 function Contest() {

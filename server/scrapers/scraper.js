@@ -26,6 +26,26 @@ function setCache(key, data) {
   cache.set(key, { data, timestamp: Date.now() });
 }
 
+// Periodic cache cleanup to prevent memory leaks
+function startCacheCleanup() {
+  setInterval(() => {
+    const now = Date.now();
+    let deletedCount = 0;
+    for (const [key, item] of cache.entries()) {
+      if (now - item.timestamp > CACHE_TTL) {
+        cache.delete(key);
+        deletedCount++;
+      }
+    }
+    if (deletedCount > 0) {
+      console.log(`🧹 Cache cleanup: removed ${deletedCount} expired entries (${cache.size} remaining)`);
+    }
+  }, CACHE_TTL); // Run cleanup every CACHE_TTL
+}
+
+// Start cleanup when module loads
+startCacheCleanup();
+
 const rateLimitTracker = {
   codechef: { lastRequest: 0, backoffUntil: 0 },
   codeforces: { lastRequest: 0, backoffUntil: 0 },
@@ -465,6 +485,7 @@ async function getCodeChefStats(username) {
 
       const $ = cheerio.load(data);
 
+      // Extract rating
       let rating = $("div.rating-number")
         .contents()
         .filter(function () {
@@ -474,6 +495,25 @@ async function getCodeChefStats(username) {
         .trim()
         .replace("?", "");
 
+      // Extract highest rating from "Highest Rating XXXX"
+      const highestRatingText = $("div.rating-header")
+        .find("small")
+        .text();
+      const highestRating = highestRatingText.match(/\d+/)?.[0] || null;
+
+      // Extract global rank
+      const globalRankElement = $("div.rating-ranks")
+        .find("ul li a")
+        .eq(0);
+      const globalRank = globalRankElement.text().trim();
+
+      // Extract country rank
+      const countryRankElement = $("div.rating-ranks")
+        .find("ul li a")
+        .eq(1);
+      const countryRank = countryRankElement.text().trim();
+
+      // Extract total problems solved
       const solvedText = $("h3")
         .filter((i, el) => $(el).text().includes("Total Problems Solved"))
         .text()
@@ -491,8 +531,12 @@ async function getCodeChefStats(username) {
       const result = {
         platform: "CodeChef",
         username,
-        rating,
+        rating: rating ? parseInt(rating, 10) : null,
+        highestRating: highestRating ? parseInt(highestRating, 10) : null,
+        globalRank: globalRank ? parseInt(globalRank.replace(/,/g, ""), 10) : null,
+        countryRank: countryRank ? parseInt(countryRank.replace(/,/g, ""), 10) : null,
         fullySolved,
+        updatedAt: new Date(),
       };
       setCache(cacheKey, result);
       return result;
@@ -544,6 +588,8 @@ async function getCodeChefStats(username) {
     }
   }
 }
+
+// getCodeChefStats("aadhi2131").then(console.log);
 
 const CF_KEY = "bc101866ff73f1c52d47a140da274741148a91cd";
 const CF_SECRET = "82a89e594a95dc4d4ce2d20954cace11de5e990a";
