@@ -292,30 +292,51 @@ exports.updateStudent = async (req, res) => {
 
     const session = await mongoose.startSession();
     let updatedStudent;
-    
-    try {
-      await session.withTransaction(async () => {
-        updatedStudent = await Student.findByIdAndUpdate(
-          id,
-          {
-            ...updatedData,
-            stats: updatedStats?.stats || existingStudent.stats,
-          },
-          { new: true, session }
-        ).populate("department");
 
-        if (existingStudent.classId?.toString() !== classData._id.toString()) {
-          if (existingStudent.classId) {
-            await Class.findByIdAndUpdate(existingStudent.classId, {
-              $pull: { students: existingStudent._id },
-            }, { session });
-          }
+    const runUpdates = async (opts = {}) => {
+      updatedStudent = await Student.findByIdAndUpdate(
+        id,
+        {
+          ...updatedData,
+          stats: updatedStats?.stats || existingStudent.stats,
+        },
+        { new: true, ...opts }
+      ).populate("department");
 
-          await Class.findByIdAndUpdate(classData._id, {
-            $addToSet: { students: existingStudent._id },
-          }, { session });
+      // Keep class membership in sync if class changed
+      if (existingStudent.classId?.toString() !== classData._id.toString()) {
+        if (existingStudent.classId) {
+          await Class.findByIdAndUpdate(
+            existingStudent.classId,
+            { $pull: { students: existingStudent._id } },
+            opts
+          );
         }
-      });
+
+        await Class.findByIdAndUpdate(
+          classData._id,
+          { $addToSet: { students: existingStudent._id } },
+          opts
+        );
+      }
+    };
+
+    try {
+      await session.withTransaction(async () => runUpdates({ session }));
+    } catch (txErr) {
+      // Fallback for standalone MongoDB (no replica set)
+      if (
+        txErr?.message?.includes(
+          "Transaction numbers are only allowed on a replica set member or mongos"
+        )
+      ) {
+        console.warn(
+          "⚠️ Transactions not supported on current Mongo instance; applying non-transactional updates"
+        );
+        await runUpdates();
+      } else {
+        throw txErr;
+      }
     } finally {
       await session.endSession();
     }
