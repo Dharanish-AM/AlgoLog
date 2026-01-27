@@ -26,8 +26,8 @@ import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
 import { GridLoader } from "react-spinners";
 import ChangePasswordModal from "../components/ChangePasswordModal";
-import LeetCodeLogo from "../../public/icons8-leetcode-100.png";
-import { use } from "react";
+
+const LeetCodeLogo = "/icons8-leetcode-100.png";
 
 const StudentProfile = ({
   student,
@@ -47,8 +47,6 @@ const StudentProfile = ({
   const [leetcodeDailyProblem, setLeetcodeDailyProblem] = useState(null);
   const [showDailyProblemModal, setShowDailyProblemModal] = useState(false)
 
-  console.log(student);
-
   useEffect(() => {
     const fetchDailyLeetCodeProblem = async () => {
       try {
@@ -59,7 +57,7 @@ const StudentProfile = ({
           setLeetcodeDailyProblem(response.data);
         }
       } catch (error) {
-        console.error("Error fetching daily LeetCode problem:", error);
+        // Error fetching daily LeetCode problem, continue without it
       }
     };
 

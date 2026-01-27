@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
 import { ArrowLeft, Edit } from "lucide-react";
 import { useDispatch } from "react-redux";
+import { ACADEMIC_YEARS } from "../utils/constants";
+import EditClass from "./EditClass";
 
 export default function ClassesList({
   departmentId,
@@ -11,6 +13,7 @@ export default function ClassesList({
   setSelectedDepartmentName,
 }) {
   const [selectedBatch, setSelectedBatch] = React.useState("all");
+  const [editingClass, setEditingClass] = React.useState(null);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -49,14 +52,11 @@ export default function ClassesList({
           className="px-4 py-2 appearance-none rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
         >
           <option value="all">All Years</option>
-          <option value="2027-2031">2027-2031</option>
-          <option value="2026-2030">2026-2030</option>
-          <option value="2025-2029">2025-2029</option>
-          <option value="2024-2028">2024-2028</option>
-          <option value="2023-2027">2023-2027</option>
-          <option value="2022-2026">2022-2026</option>
-          <option value="2021-2025">2021-2025</option>
-          <option value="2020-2024">2020-2024</option>
+          {ACADEMIC_YEARS.map((year) => (
+            <option key={year} value={year}>
+              {year}
+            </option>
+          ))}
         </select>
       </div>
       {filteredClasses.length === 0 ? (
@@ -68,16 +68,24 @@ export default function ClassesList({
           {filteredClasses.map((cls) => (
             <div
               key={cls._id}
-              onClick={() => setSelectedClass(cls)}
-              className="group bg-white dark:bg-gray-800 relative p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer overflow-hidden"
+              className="group bg-white dark:bg-gray-800 relative p-5 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden"
             >
               {/* Edit icon */}
-              <div className="absolute top-3 right-3 p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/50">
+              <div 
+                className="absolute top-3 right-3 p-1.5 rounded-lg bg-gray-100 dark:bg-gray-700/50 cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors z-10"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingClass(cls);
+                }}
+              >
                 <Edit size={16} className="text-gray-600 dark:text-gray-400" />
               </div>
 
               {/* Content */}
-              <div className="relative space-y-3">
+              <div 
+                className="relative space-y-3 cursor-pointer"
+                onClick={() => setSelectedClass(cls)}
+              >
                 {/* Username as title with section badge */}
                 <div className="pb-3 border-b border-gray-100 dark:border-gray-700">
                   <p className="text-base font-semibold text-gray-900 dark:text-white mb-1.5">
@@ -121,6 +129,14 @@ export default function ClassesList({
             </div>
           ))}
         </div>
+      )}
+      
+      {/* Edit Class Modal */}
+      {editingClass && (
+        <EditClass 
+          classData={editingClass} 
+          onClose={() => setEditingClass(null)} 
+        />
       )}
     </div>
   );

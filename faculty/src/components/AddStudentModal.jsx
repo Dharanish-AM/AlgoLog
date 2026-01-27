@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Axis3DIcon, X } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { getDepartments } from "../services/studentOperations";
+import { ACADEMIC_YEARS } from "../utils/constants";
 
 const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -245,14 +246,11 @@ const AddStudentModal = ({ isOpen, onClose, onSubmit }) => {
                     <option value="" disabled>
                       Select academic year
                     </option>
-                    <option value="2027-2031">2027-2031</option>
-                    <option value="2026-2030">2026-2030</option>
-                    <option value="2025-2029">2025-2029</option>
-                    <option value="2024-2028">2024-2028</option>
-                    <option value="2023-2027">2023-2027</option>
-                    <option value="2022-2026">2022-2026</option>
-                    <option value="2021-2025">2021-2025</option>
-                    <option value="2020-2024">2020-2024</option>
+                    {ACADEMIC_YEARS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}

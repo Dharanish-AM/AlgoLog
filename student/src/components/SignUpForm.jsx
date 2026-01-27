@@ -4,11 +4,11 @@ import axios from "axios";
 import { GridLoader } from "react-spinners";
 import { X } from "lucide-react";
 import { validateSkillrackUrl } from "../utils/skillrackValidator";
+import { ACADEMIC_YEARS } from "../utils/constants";
 
 const API_URL = import.meta.env.VITE_API_URL;
-console.log(API_URL);
 
-const SignUpForm = ({ onClose }) => {
+const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -24,24 +24,34 @@ const SignUpForm = ({ onClose }) => {
     github: "",
   });
   const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(parentDepartments ? false : true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/get-form-details`);
-        if (res.status == 200) {
-          setDepartments(Array.isArray(res.data) ? res.data : []);
+    if (parentDepartments && Array.isArray(parentDepartments) && parentDepartments.length > 0) {
+      setDepartments(parentDepartments);
+      setLoading(false);
+      return;
+    }
+
+    // Only fetch if parent departments not provided
+    if (!parentDepartments || parentDepartments.length === 0) {
+      const fetchDepartments = async () => {
+        try {
+          const res = await axios.get(`${API_URL}/api/get-form-details`);
+          if (res.status == 200) {
+            const deptData = Array.isArray(res.data) ? res.data : [];
+            setDepartments(deptData);
+          }
+        } catch (err) {
+          // Error fetching departments
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchDepartments();
-  }, []);
+      };
+      fetchDepartments();
+    }
+  }, [parentDepartments]);
 
   const selectedDept = Array.isArray(departments)
     ? departments.find((d) => d._id === formData.department)
@@ -77,15 +87,14 @@ const SignUpForm = ({ onClose }) => {
         skillrack: skillrackUrl,
         github: formData.github.trim(),
       };
-      console.log(trimmedData);
-      const res = await axios.post(`${API_URL}/api/students`, trimmedData);
-      if (res.status == 200 || res.status == 201) {
-        toast.success("Student Added Successfully");
+      const success = await onSubmit(trimmedData);
+      if (success) {
         setFormData({
           name: "",
           email: "",
           rollNo: "",
           year: "",
+          section: "",
           department: "",
           leetcode: "",
           hackerrank: "",
@@ -95,8 +104,6 @@ const SignUpForm = ({ onClose }) => {
           github: "",
         });
         onClose();
-      } else {
-        toast.error("Erro while adding student");
       }
     } catch (err) {
       toast.error("Error while adding student");
@@ -191,7 +198,7 @@ const SignUpForm = ({ onClose }) => {
                         Select department
                       </option>
                       {departments &&
-                        departments.map((dpt) => (
+                        [...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dpt) => (
                           <option key={dpt._id} value={dpt._id}>
                             {dpt.name}
                           </option>
@@ -206,7 +213,7 @@ const SignUpForm = ({ onClose }) => {
                       value={formData.section}
                       required
                       disabled={
-                        !selectedDept || selectedDept.sections.length === 0
+                        !selectedDept || !selectedDept.sections || selectedDept.sections.length === 0
                       }
                       onChange={(e) =>
                         setFormData({ ...formData, section: e.target.value })
@@ -218,7 +225,7 @@ const SignUpForm = ({ onClose }) => {
                           ? "Select section"
                           : "No sections available"}
                       </option>
-                      {selectedDept?.sections.map((sec) => (
+                      {selectedDept?.sections?.map((sec) => (
                         <option key={sec} value={sec}>
                           {sec}
                         </option>
@@ -284,8 +291,7 @@ const SignUpForm = ({ onClose }) => {
                             }
                           }
                         } catch (e) {
-                          console.warn("Invalid URL format entered for", key, value);
-                          console.error(e);
+                          // URL parsing failed, use value as-is
                         }
                       }
                       setFormData({
@@ -313,14 +319,11 @@ const SignUpForm = ({ onClose }) => {
                     <option value="" disabled>
                       Select academic year
                     </option>
-                    <option value="2027-2031">2027-2031</option>
-                    <option value="2026-2030">2026-2030</option>
-                    <option value="2025-2029">2025-2029</option>
-                    <option value="2024-2028">2024-2028</option>
-                    <option value="2023-2027">2023-2027</option>
-                    <option value="2022-2026">2022-2026</option>
-                    <option value="2021-2025">2021-2025</option>
-                    <option value="2020-2024">2020-2024</option>
+                    {ACADEMIC_YEARS.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
                   </select>
                 </div>
               )}

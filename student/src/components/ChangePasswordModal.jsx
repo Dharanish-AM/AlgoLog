@@ -76,6 +76,7 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   name="oldPassword"
                   placeholder="Enter your old password"
                   required
+                  autoComplete="current-password"
                   className="mt-1 block w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
                 />
                 <span
@@ -102,6 +103,7 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   name="newPassword"
                   placeholder="Enter your new password"
                   required
+                  autoComplete="new-password"
                   className="mt-1 text-sm block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
                 />
                 <span
@@ -127,6 +129,7 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   type={showPasswords.confirm ? "text" : "password"}
                   name="confirmPassword"
                   placeholder="Enter your confirm password"
+                  autoComplete="new-password"
                   required
                   className="mt-1 block text-sm w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
                 />

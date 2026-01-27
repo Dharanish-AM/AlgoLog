@@ -73,6 +73,24 @@ export const addClass = async (token, formData, dispatch) => {
   }
 };
 
+export const updateClass = async (token, classId, formData, dispatch) => {
+  try {
+    const response = await axios.post(
+      `${API_URL}/api/class/update-class`,
+      { classId, formData },
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    getClasses(token, dispatch);
+    return response;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
 export const editStudent = async (id, updatedData, token, dispatch) => {
   try {
     const response = await axios.put(

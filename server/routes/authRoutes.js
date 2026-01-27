@@ -11,6 +11,7 @@ const {
   getAdmin,
   getAdminDepartments,
   getAdminClasses,
+  getAcademicYears,
 } = require("../controllers/authController");
 const {
   getAllContests,
@@ -25,6 +26,7 @@ router.post("/department/create", createDepartment);
 
 router.get("/get-form-details", getFormDetails);
 router.get("/get-daily-leetcode-problem", getDailyLeetCodeProblem);
+router.get("/academic-years", getAcademicYears);
 
 router.post("/check-token", authMiddleware, (req, res) => {
   return res.status(200).json({ message: "Token is valid", user: req.user });

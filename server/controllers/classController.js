@@ -2,6 +2,7 @@ const Class = require("../models/classSchema");
 const Department = require("../models/departmentSchema");
 const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt");
+const { ACADEMIC_YEARS, isValidAcademicYear } = require("../utils/constants");
 
 // Class login
 exports.loginClass = async (req, res) => {
@@ -53,6 +54,14 @@ exports.registerClass = async (req, res) => {
     if (!password || !email || !departmentId || !year) {
       return res.status(400).json({
         message: "Password, email, department, and year are required",
+      });
+    }
+
+    // Validate academic year
+    if (!isValidAcademicYear(year)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid academic year. Valid years: ${ACADEMIC_YEARS.join(", ")}`,
       });
     }
 
@@ -156,11 +165,36 @@ exports.updateClass = async (req, res) => {
         .json({ message: "classId and formData are required" });
     }
 
-    const deptId = await Department.findOne({
-      name: formData.department,
-    });
+    // Validate academic year if provided
+    if (formData.year && !isValidAcademicYear(formData.year)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid academic year. Valid years: ${ACADEMIC_YEARS.join(", ")}`,
+      });
+    }
 
-    formData.department = deptId;
+    // Handle department - check if it's an ID or name
+    if (formData.departmentId) {
+      formData.department = formData.departmentId;
+      delete formData.departmentId;
+    } else if (formData.department && !formData.department.match(/^[0-9a-fA-F]{24}$/)) {
+      // If it's a name string, lookup by name
+      const deptId = await Department.findOne({
+        name: formData.department,
+      });
+      if (!deptId) {
+        return res.status(400).json({ message: "Department not found" });
+      }
+      formData.department = deptId._id;
+    }
+
+    // Hash password if provided (only when changing password)
+    if (formData.password) {
+      formData.password = await bcrypt.hash(formData.password, 10);
+    } else {
+      // Remove empty password field to avoid updating it
+      delete formData.password;
+    }
 
     const updatedClass = await Class.findByIdAndUpdate(
       classId,

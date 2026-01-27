@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import StudentProfile from "./pages/StudentProfile";
 import Auth from "./pages/Auth";
 import toast, { Toaster } from "react-hot-toast";
@@ -35,18 +35,18 @@ function App() {
     return () => clearInterval(tokenRefreshInterval);
   }, [isAuthenticated, student]);
 
-  const fetchDepartments = async () => {
+  const fetchDepartments = useCallback(async () => {
     try {
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/departments`
+        `${import.meta.env.VITE_API_URL}/api/get-form-details`
       );
-      setDepartments(response.data.departments);
-      console.log(response.data.departments);
+      const deptData = Array.isArray(response.data) ? response.data : [];
+      setDepartments(deptData);
     } catch (err) {
       console.error("Error fetching departments:", err);
       toast.error("Failed to fetch departments.");
     }
-  };
+  }, []);
 
   const refreshToken = async () => {
     const token = localStorage.getItem("token");
@@ -62,7 +62,7 @@ function App() {
         }
       );
       return response.status === 200;
-    } catch (err) {
+    } catch {
       console.warn("Token invalid or expired");
       localStorage.removeItem("token");
       setIsAuthenticated(false);
@@ -86,7 +86,6 @@ function App() {
         toast.success("Login successful!");
         setIsAuthenticated(true);
         localStorage.setItem("token", response.data.token);
-        console.log("Login successful:", response.data);
         getStudent();
       }
     } catch (err) {
@@ -108,8 +107,6 @@ function App() {
       );
 
       if (response.status === 201 || response.status === 200) {
-        console.log("Signup successful:", response.data);
-        toast.success("Signup Successful!");
         return true;
       }
     } catch (err) {
@@ -174,7 +171,6 @@ function App() {
         toast.success("Data refreshed successfully!");
       }
     } catch (err) {
-      console.log(err);
       toast.error("Failed to refresh data. ", err);
     } finally {
       setIsRefreshing(false);
@@ -233,12 +229,13 @@ function App() {
     }
   };
 
-  if (isLoading)
+  if (isLoading) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
         <GridLoader color="#C084FC" size={20} />
       </div>
     );
+  }
 
   return (
     <Router>

@@ -6,6 +6,7 @@ const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt");
 const { getStatsForStudent } = require("../utils/helpers");
 const { validateSkillrackUrl } = require("../utils/skillrackValidator");
+const { ACADEMIC_YEARS, isValidAcademicYear } = require("../utils/constants");
 const BatchProcessor = require("../utils/batchProcessor");
 const DataValidator = require("../utils/dataValidator");
 const chalk = require("chalk");
@@ -83,6 +84,15 @@ exports.addStudent = async (req, res) => {
       return res
         .status(400)
         .json({ error: "Name, email, and roll number are required" });
+    }
+
+    // Validate academic year
+    if (!year || !isValidAcademicYear(year)) {
+      return res
+        .status(400)
+        .json({ 
+          error: `Invalid academic year. Please select from: ${ACADEMIC_YEARS.join(', ')}` 
+        });
     }
 
     // Validate Skillrack URL if provided
@@ -209,6 +219,15 @@ exports.updateStudent = async (req, res) => {
     const existingStudent = await Student.findById(id);
     if (!existingStudent) {
       return res.status(404).json({ error: "Student not found" });
+    }
+
+    // Validate academic year if provided
+    if (year && !isValidAcademicYear(year)) {
+      return res
+        .status(400)
+        .json({ 
+          error: `Invalid academic year. Please select from: ${ACADEMIC_YEARS.join(', ')}` 
+        });
     }
 
     const departmentId =

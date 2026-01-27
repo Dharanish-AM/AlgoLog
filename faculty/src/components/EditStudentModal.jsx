@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { getDepartments } from "../services/studentOperations";
 import { validateSkillrackUrl } from "../utils/skillrackValidator";
+import { ACADEMIC_YEARS } from "../utils/constants";
 
 export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
   const [formData, setFormData] = useState({
@@ -199,10 +200,11 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             <option value="" disabled>
               Select year
             </option>
-            <option value="2023-2027">2023-2027</option>
-            <option value="2022-2026">2022-2026</option>
-            <option value="2021-2025">2021-2025</option>
-            <option value="2020-2024">2020-2024</option>
+            {ACADEMIC_YEARS.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
           </select>
         </div>
         <div>

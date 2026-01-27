@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { GridLoader } from "react-spinners";
+import { ACADEMIC_YEARS } from "../utils/constants";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -29,8 +30,6 @@ export default function ProfileModal({
     };
     fetchDepartments();
   }, []);
-
-  console.log(departments);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -272,10 +271,11 @@ export default function ProfileModal({
               <option value="" disabled>
                 Select year
               </option>
-              <option value="2023-2027">2023-2027</option>
-              <option value="2022-2026">2022-2026</option>
-              <option value="2021-2025">2021-2025</option>
-              <option value="2020-2024">2020-2024</option>
+              {ACADEMIC_YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
             </select>
           </div>
           <div>

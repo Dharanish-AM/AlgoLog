@@ -5,6 +5,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const { generateToken } = require("../utils/jwt");
 const { getLeetCodeQuestionOfToday } = require("../config/scraper");
+const { ACADEMIC_YEARS } = require("../utils/constants");
 
 exports.loginDepartment = async (req, res) => {
   const { departmentId, password } = req.body;
@@ -31,12 +32,36 @@ exports.loginDepartment = async (req, res) => {
 
 exports.getAllDepartments = async (req, res) => {
   try {
-    const departments = await Department.find({}).populate("classes");
-    if (!departments || departments.length === 0) {
-      return res.status(200).json({ departments: [] });
-    }
+    const Department = require("../models/departmentSchema");
+    const Class = require("../models/classSchema");
 
-    res.status(200).json({ departments });
+    const departments = await Department.find();
+
+    const departmentDetails = await Promise.all(
+      departments.map(async (dept) => {
+        // Get classes either from dept.classes array or by department field in Class model
+        let classes = await Class.find({
+          _id: { $in: dept.classes },
+        });
+
+        // If no classes found via dept.classes, try finding by department ID
+        if (classes.length === 0) {
+          classes = await Class.find({
+            department: dept._id,
+          });
+        }
+
+        const uniqueSections = [...new Set(classes.map((cls) => cls.section).filter(Boolean))];
+
+        return {
+          _id: dept._id,
+          name: dept.name,
+          sections: uniqueSections,
+        };
+      })
+    );
+
+    res.status(200).json(departmentDetails);
   } catch (err) {
     console.error("Error fetching departments:", err);
     res.status(500).json({ error: "Failed to fetch departments" });
@@ -77,15 +102,26 @@ exports.createDepartment = async (req, res) => {
 
 exports.getFormDetails = async (req, res) => {
   try {
+    const Department = require("../models/departmentSchema");
+    const Class = require("../models/classSchema");
+
     const departments = await Department.find();
 
     const departmentDetails = await Promise.all(
       departments.map(async (dept) => {
-        const classes = await Class.find({
+        // Get classes either from dept.classes array or by department field in Class model
+        let classes = await Class.find({
           _id: { $in: dept.classes },
         });
 
-        const uniqueSections = [...new Set(classes.map((cls) => cls.section))];
+        // If no classes found via dept.classes, try finding by department ID
+        if (classes.length === 0) {
+          classes = await Class.find({
+            department: dept._id,
+          });
+        }
+
+        const uniqueSections = [...new Set(classes.map((cls) => cls.section).filter(Boolean))];
 
         return {
           _id: dept._id,
@@ -199,5 +235,18 @@ exports.getAdminClasses = async (req, res) => {
   } catch (err) {
     console.error("Error fetching classes:", err);
     res.status(500).json({ message: "Failed to fetch classes" });
+  }
+};
+
+// Get academic years list
+exports.getAcademicYears = async (req, res) => {
+  try {
+    res.status(200).json({ 
+      years: ACADEMIC_YEARS,
+      count: ACADEMIC_YEARS.length 
+    });
+  } catch (err) {
+    console.error("Error fetching academic years:", err);
+    res.status(500).json({ error: "Failed to fetch academic years" });
   }
 };

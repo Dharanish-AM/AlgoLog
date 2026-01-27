@@ -30,6 +30,7 @@ export default function LoginForm({
           placeholder="Enter your roll number"
           value={rollNo}
           onChange={(e) => setRollNo(e.target.value)}
+          autoComplete="username"
           className="px-4 py-3 rounded-md bg-[#1F2937] text-sm text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
         />
         <div className="relative">
@@ -38,6 +39,7 @@ export default function LoginForm({
             placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
             className="px-4 py-3 w-full rounded-md bg-[#1F2937] text-sm text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
           />
           <div
