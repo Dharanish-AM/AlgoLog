@@ -111,6 +111,7 @@ function App() {
       );
 
       if (response.status === 201 || response.status === 200) {
+        toast.success("Signup successful! Please login.");
         return true;
       }
     } catch (err) {

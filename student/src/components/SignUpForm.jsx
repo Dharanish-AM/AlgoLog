@@ -123,7 +123,7 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
 
   return (
     <div className="bg-black/40 absolute inset-0 z-50 bg-opacity-50 flex flex-col items-center py-8 justify-center min-h-screen w-full">
-      <div className="bg-white dark:bg-gray-800 overflow-auto scrollbar-hide rounded-lg p-6 h-[90vh] sm:w-[55vw] w-[85vw]">
+      <div className="relative bg-white dark:bg-gray-800 overflow-auto scrollbar-hide rounded-lg p-6 h-[90vh] sm:w-[55vw] w-[85vw]">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
             Enter Student Details
@@ -340,6 +340,12 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
             </button>
           </div>
         </form>
+
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-purple-900/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
+            <GridLoader color="#C084FC" size={18} />
+          </div>
+        )}
       </div>
       <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
         Made by{" "}
