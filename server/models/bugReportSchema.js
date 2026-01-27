@@ -2,11 +2,6 @@ const mongoose = require("mongoose");
 
 const bugReportSchema = new mongoose.Schema(
   {
-    studentId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Student",
-      default: null,
-    },
     email: {
       type: String,
       required: true,
@@ -31,11 +26,6 @@ const bugReportSchema = new mongoose.Schema(
       type: String,
       enum: ["open", "in-progress", "resolved", "closed"],
       default: "open",
-    },
-    priority: {
-      type: String,
-      enum: ["low", "medium", "high"],
-      default: "medium",
     },
     adminNotes: {
       type: String,
