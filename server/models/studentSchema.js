@@ -106,14 +106,15 @@ const studentSchema = new mongoose.Schema(
       },
       skillrack: {
         platform: String,
-        rank: Number,
-        programsSolved: Number,
+        // Use Mixed to allow "N/A" placeholders when sources are unavailable
+        rank: mongoose.Schema.Types.Mixed,
+        programsSolved: mongoose.Schema.Types.Mixed,
         languages: {
-          JAVA: Number,
-          C: Number,
-          SQL: Number,
-          PYTHON3: Number,
-          CPP: Number,
+          JAVA: mongoose.Schema.Types.Mixed,
+          C: mongoose.Schema.Types.Mixed,
+          SQL: mongoose.Schema.Types.Mixed,
+          PYTHON3: mongoose.Schema.Types.Mixed,
+          CPP: mongoose.Schema.Types.Mixed,
         },
         certificates: [
           {
