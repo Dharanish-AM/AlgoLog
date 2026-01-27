@@ -104,6 +104,8 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
           github: "",
         });
         onClose();
+      } else {
+        toast.error("Signup failed. Please review the fields and try again.");
       }
     } catch (err) {
       toast.error("Error while adding student");

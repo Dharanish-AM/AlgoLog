@@ -25,12 +25,17 @@ export default function Auth({
     handleLogin(rollNo, password);
   };
 
-  const submitSignup =async (formData) => {
-    const res = await handleSignup(formData);
-    if (res) {
-      setIsSignup(false);
-      setRollNo("");
-      setPassword("");
+  const submitSignup = async (formData) => {
+    try {
+      const res = await handleSignup(formData);
+      if (res) {
+        setIsSignup(false);
+        setRollNo("");
+        setPassword("");
+      }
+      // keep form open with current values when signup fails
+    } catch (err) {
+      console.error("Signup error:", err);
     }
   };
 
