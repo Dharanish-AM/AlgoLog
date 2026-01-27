@@ -110,6 +110,17 @@ exports.addStudent = async (req, res) => {
       });
     }
 
+    // Ensure the selected academic year exists for this department in DB
+    const yearExists = await Class.exists({
+      department: departmentData._id,
+      year,
+    });
+    if (!yearExists) {
+      return res.status(404).json({
+        error: "Academic year not available for this department",
+      });
+    }
+
     const classData = await Class.findOne({
       section,
       year,
