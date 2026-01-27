@@ -7,6 +7,142 @@ const {
   getCodeforcesStats,
 } = require("../config/scraper");
 
+// Default shapes for stats; keeps numbers at 0 when a profile is valid
+// and allows us to swap to "N/A" for missing/error scenarios without
+// leaving holes in the payload.
+const STAT_DEFAULTS = {
+  leetcode: {
+    platform: "LeetCode",
+    username: "",
+    solved: { All: 0, Easy: 0, Medium: 0, Hard: 0 },
+    rating: 0,
+    globalRanking: 0,
+    contestCount: 0,
+    topPercentage: 0,
+    badges: [],
+    contests: [],
+    topicStats: [],
+    languageStats: [],
+    streak: 0,
+    totalActiveDays: 0,
+    activeYears: [],
+  },
+  hackerrank: {
+    platform: "HackerRank",
+    username: "",
+    badges: [],
+  },
+  codechef: {
+    platform: "CodeChef",
+    username: "",
+    rating: 0,
+    highestRating: 0,
+    globalRank: 0,
+    countryRank: 0,
+    fullySolved: 0,
+    updatedAt: null,
+  },
+  codeforces: {
+    platform: "Codeforces",
+    username: "",
+    rating: 0,
+    maxRating: 0,
+    rank: "",
+    maxRank: "",
+    contests: 0,
+    problemsSolved: 0,
+  },
+  skillrack: {
+    platform: "Skillrack",
+    username: "",
+    rank: 0,
+    programsSolved: 0,
+    languages: {
+      JAVA: 0,
+      C: 0,
+      SQL: 0,
+      PYTHON3: 0,
+      CPP: 0,
+    },
+    certificates: [],
+  },
+  github: {
+    platform: "GitHub",
+    username: "",
+    totalCommits: 0,
+    currentYearContributions: 0,
+    lifetimeContributions: 0,
+    totalRepos: 0,
+    longestStreak: 0,
+    topLanguages: [],
+  },
+};
+
+const NA_VALUE = "N/A";
+
+const STAT_NA = Object.fromEntries(
+  Object.entries(STAT_DEFAULTS).map(([key, template]) => [
+    key,
+    transformWithNA(template),
+  ])
+);
+
+function transformWithNA(template) {
+  if (Array.isArray(template)) return [];
+  if (template && typeof template === "object") {
+    return Object.fromEntries(
+      Object.entries(template).map(([k, v]) => [k, transformWithNA(v)])
+    );
+  }
+  if (typeof template === "number") return NA_VALUE;
+  return NA_VALUE;
+}
+
+function mergeDefaults(template, value) {
+  if (Array.isArray(template)) {
+    return Array.isArray(value) ? value : [];
+  }
+  if (template && typeof template === "object") {
+    const merged = {};
+    const source = value && typeof value === "object" ? value : {};
+    for (const [k, v] of Object.entries(template)) {
+      merged[k] = mergeDefaults(v, source[k]);
+    }
+    // Preserve any extra fields from the source (e.g., badges data)
+    for (const [k, v] of Object.entries(source)) {
+      if (merged[k] === undefined) merged[k] = v;
+    }
+    return merged;
+  }
+  if (typeof template === "number") {
+    const numeric = Number.isFinite(value) ? value : 0;
+    return numeric;
+  }
+  return value ?? template;
+}
+
+function normalizePlatformStats(key, raw, identifier) {
+  const defaults = STAT_DEFAULTS[key];
+  if (!defaults) return raw;
+
+  // Profile not found or fetch error → fill with N/A placeholders
+  if (!raw || raw.error) {
+    const naShape = STAT_NA[key];
+    return {
+      ...naShape,
+      platform: defaults.platform,
+      username: raw?.username || identifier || "",
+      error: raw?.error || "Profile not found or unavailable",
+    };
+  }
+
+  // Profile found → ensure all numeric fields are present and defaulted to 0
+  const merged = mergeDefaults(defaults, raw);
+  merged.platform = defaults.platform;
+  if (!merged.username && identifier) merged.username = identifier;
+  return merged;
+}
+
 async function withRetry(
   promiseFn,
   retries = 1, // Reduced default retries
@@ -123,7 +259,11 @@ async function getStatsForStudent(student, oldStats = {}) {
         );
         return [
           key,
-          oldStats[key] || formatError(platformName, value, {}, isUrl),
+          normalizePlatformStats(
+            key,
+            { error: "Invalid or missing identifier", username: value },
+            value
+          ),
         ];
       }
 
@@ -134,23 +274,19 @@ async function getStatsForStudent(student, oldStats = {}) {
           platformName,
           value
         );
-        
-        // If result has error, preserve old stats
-        if (result && result.error) {
-          console.warn(
-            `[${platformName}] ⚠️ Fetch returned error, preserving old stats for ${value}`
-          );
-          return [key, oldStats[key] || result];
-        }
-        
-        return [key, result];
+
+        return [key, normalizePlatformStats(key, result, value)];
       } catch (err) {
         console.warn(
-          `[${platformName}] ❗ Fetch failed, using cached/old stats: ${err.message}`
+          `[${platformName}] ❗ Fetch failed, returning N/A defaults: ${err.message}`
         );
         return [
           key,
-          oldStats[key] || formatError(platformName, value, {}, isUrl),
+          normalizePlatformStats(
+            key,
+            { error: err.message, username: value },
+            value
+          ),
         ];
       }
     })
@@ -176,6 +312,5 @@ async function getStatsForStudent(student, oldStats = {}) {
 
 module.exports = {
   withRetry,
-  formatError,
   getStatsForStudent,
 };
