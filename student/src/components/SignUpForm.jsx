@@ -83,6 +83,7 @@ const SignUpForm = ({ onClose, onSubmit }) => {
         // Do not close here; parent (Auth) toggles view to Login.
       }
     } catch (err) {
+      // Let parent handler display error toast
       console.error(err);
     } finally {
       setIsSubmitting(false);
