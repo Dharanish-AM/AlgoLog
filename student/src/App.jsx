@@ -7,6 +7,7 @@ import axios from "axios";
 import { GridLoader } from "react-spinners";
 import BugReportButton from "./components/BugReportButton";
 import BugReportModal from "./components/BugReportModal";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -284,6 +285,7 @@ function App() {
       </>
 
       <Toaster position="bottom-right" />
+      <Analytics />
       <footer className="fixed bottom-4 right-4 text-sm text-gray-400 bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
         Made by{" "}
         <a

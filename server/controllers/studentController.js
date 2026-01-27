@@ -1107,7 +1107,6 @@ exports.getStudent = async (req, res) => {
 // Student login
 exports.loginStudent = async (req, res) => {
   const { rollNo, password } = req.body;
-  console.log(JSON.stringify(req.body))
 
   if (!rollNo || !password) {
     return res

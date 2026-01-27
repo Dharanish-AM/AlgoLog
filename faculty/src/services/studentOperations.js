@@ -151,12 +151,13 @@ export const getDepartments = async (token, dispatch) => {
   try {
     const response = await axios.get(`${API_URL}/api/departments`);
     if (response.status === 200) {
-      const departments = response.data.departments;
+      const departments = response.data.departments || response.data || [];
       return departments;
     }
+    return [];
   } catch (error) {
     console.error("Error fetching departments:", error);
-    throw error;
+    return [];
   }
 };
 
