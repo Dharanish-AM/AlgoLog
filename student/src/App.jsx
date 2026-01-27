@@ -5,6 +5,8 @@ import toast, { Toaster } from "react-hot-toast";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import axios from "axios";
 import { GridLoader } from "react-spinners";
+import BugReportButton from "./components/BugReportButton";
+import BugReportModal from "./components/BugReportModal";
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = React.useState(false);
@@ -12,6 +14,7 @@ function App() {
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
   const [departments, setDepartments] = React.useState([]);
+  const [isBugReportOpen, setIsBugReportOpen] = React.useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -268,6 +271,18 @@ function App() {
           />
         )}
       </Routes>
+
+      {/* Bug Report Button and Modal - show on all screens */}
+      <>
+        <BugReportButton onClick={() => setIsBugReportOpen(true)} />
+        <BugReportModal
+          isOpen={isBugReportOpen}
+          onClose={() => setIsBugReportOpen(false)}
+          studentId={student?._id}
+          isAuthenticated={isAuthenticated}
+        />
+      </>
+
       <Toaster position="bottom-right" />
       <footer className="fixed bottom-4 right-4 text-sm text-gray-400 bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
         Made by{" "}

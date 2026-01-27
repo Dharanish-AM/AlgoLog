@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from "react";
 import FilterPanel from "../FilterPanel";
 import StudentsTable from "../StudentsTable";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { TrendingUp, Users, Award, Target } from "lucide-react";
+import toast from "react-hot-toast";
+import { handleDeleteStudent } from "../../services/adminOperations";
 
 const StudentsView = () => {
   const [filters, setFilters] = useState({
@@ -12,6 +14,8 @@ const StudentsView = () => {
   });
   const [searchTerm, setSearchTerm] = useState("");
   const allStudents = useSelector((state) => state.admin.allStudents);
+  const dispatch = useDispatch();
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
   const handleFilterChange = (key, value) => {
     console.log("Filter changed:", key, value);
@@ -57,6 +61,24 @@ const StudentsView = () => {
         return numA - numB;
       });
   }, [filters, searchTerm, allStudents]);
+
+  const handleDelete = async (student) => {
+    const confirmed = window.confirm(`Delete ${student.name} (${student.rollNo})?`);
+    if (!confirmed) return;
+    if (!token) {
+      toast.error("Not authenticated");
+      return;
+    }
+    try {
+      const res = await handleDeleteStudent(student._id, token, dispatch);
+      if (res?.status === 200) {
+        toast.success("Student deleted");
+      }
+    } catch (err) {
+      console.error("Failed to delete student", err);
+      toast.error(err?.response?.data?.message || "Failed to delete student");
+    }
+  };
 
   return (
     <div className="h-full flex flex-col">
@@ -143,7 +165,7 @@ const StudentsView = () => {
       </div>
 
       <div className="flex-1 min-h-0">
-        <StudentsTable students={filteredStudents} />
+        <StudentsTable students={filteredStudents} onDelete={handleDelete} />
       </div>
     </div>
   );

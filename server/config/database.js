@@ -4,6 +4,15 @@ const connectDB = async (retries = 5, initialDelay = 1000) => {
   let delay = initialDelay;
   let lastError;
 
+  // Safety guard: never allow tests to hit production/Atlas
+  if (process.env.NODE_ENV === 'test') {
+    const uri = process.env.DB_URI || '';
+    const isLocal = uri.startsWith('mongodb://127.0.0.1') || uri.startsWith('mongodb://localhost');
+    if (!isLocal) {
+      throw new Error('Test environment blocked: DB_URI must point to local MongoDB');
+    }
+  }
+
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       await mongoose.connect(process.env.DB_URI, {

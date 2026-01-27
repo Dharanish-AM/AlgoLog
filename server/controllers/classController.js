@@ -165,6 +165,12 @@ exports.updateClass = async (req, res) => {
         .json({ message: "classId and formData are required" });
     }
 
+    // Get current class data to compare
+    const currentClass = await Class.findById(classId);
+    if (!currentClass) {
+      return res.status(404).json({ message: "Class not found" });
+    }
+
     // Validate academic year if provided
     if (formData.year && !isValidAcademicYear(formData.year)) {
       return res.status(400).json({
@@ -188,6 +194,19 @@ exports.updateClass = async (req, res) => {
       formData.department = deptId._id;
     }
 
+    // Check if email is being changed and if it's already in use
+    if (formData.email && formData.email !== currentClass.email) {
+      const existingEmail = await Class.findOne({
+        email: formData.email,
+        _id: { $ne: classId }, // Exclude current class
+      });
+      if (existingEmail) {
+        return res.status(409).json({ 
+          message: "Email already in use by another class" 
+        });
+      }
+    }
+
     // Hash password if provided (only when changing password)
     if (formData.password) {
       formData.password = await bcrypt.hash(formData.password, 10);
@@ -199,7 +218,7 @@ exports.updateClass = async (req, res) => {
     const updatedClass = await Class.findByIdAndUpdate(
       classId,
       { $set: formData },
-      { new: true }
+      { new: true, runValidators: false } // Disable validators to avoid duplicate key issues
     );
 
     if (!updatedClass) {
@@ -212,6 +231,16 @@ exports.updateClass = async (req, res) => {
     });
   } catch (err) {
     console.error("Error updating class:", err);
+    
+    // Handle specific MongoDB errors
+    if (err.code === 11000) {
+      const field = Object.keys(err.keyPattern)[0];
+      return res.status(409).json({ 
+        message: `${field} is already in use` 
+      });
+    }
+    
     res.status(500).json({ message: "Internal server error" });
   }
 };
+

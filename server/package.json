@@ -5,7 +5,10 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest --config jest.config.js --setupFilesAfterEnv ./tests/setup.js",
+    "test:watch": "jest --watch --config jest.config.js --setupFilesAfterEnv ./tests/setup.js",
+    "test:coverage": "jest --coverage --config jest.config.js --setupFilesAfterEnv ./tests/setup.js",
+    "test:signup": "jest student.signup.test.js --config jest.config.js --setupFilesAfterEnv ./tests/setup.js"
   },
   "keywords": [],
   "author": "",
@@ -30,5 +33,9 @@
     "nodemon": "^3.1.10",
     "p-limit": "^7.2.0",
     "puppeteer": "^24.8.2"
+  },
+  "devDependencies": {
+    "jest": "^30.2.0",
+    "supertest": "^7.2.2"
   }
 }

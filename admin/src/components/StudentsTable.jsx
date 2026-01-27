@@ -1,7 +1,7 @@
 import React from "react";
-import { Trophy, TrendingUp, Users } from "lucide-react";
+import { Trophy, TrendingUp, Users, Trash2 } from "lucide-react";
 
-const StudentsTable = ({ students }) => {
+const StudentsTable = ({ students, onDelete }) => {
   if (students.length === 0) {
     return (
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl border border-slate-700 p-12 sm:p-16 text-center shadow-xl">
@@ -52,6 +52,9 @@ const StudentsTable = ({ students }) => {
               </th>
               <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium text-slate-300 uppercase tracking-wider whitespace-nowrap">
                 Top %
+              </th>
+              <th className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs font-medium text-slate-300 uppercase tracking-wider whitespace-nowrap">
+                Actions
               </th>
             </tr>
           </thead>
@@ -164,6 +167,16 @@ const StudentsTable = ({ students }) => {
                       <TrendingUp className="w-3 h-3 text-green-400" />
                     )}
                   </div>
+                </td>
+                <td className="px-3 sm:px-6 py-3 sm:py-4 whitespace-nowrap text-center">
+                  <button
+                    type="button"
+                    onClick={() => onDelete && onDelete(student)}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs sm:text-sm font-semibold text-white bg-red-600 hover:bg-red-700 rounded-md shadow-sm transition disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete
+                  </button>
                 </td>
               </tr>
             );

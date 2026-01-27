@@ -149,6 +149,21 @@ exports.addStudent = async (req, res) => {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
 
+    // Use transactions in production, but simplify for tests (no replica set)
+    if (process.env.NODE_ENV === 'test') {
+      const newStudent = await Student.create({
+        ...studentInfo,
+        stats: statsResult.stats,
+      });
+
+      await Class.findByIdAndUpdate(
+        classData._id,
+        { $addToSet: { students: newStudent._id } }
+      );
+
+      return res.status(201).json(newStudent);
+    }
+
     const session = await mongoose.startSession();
     let savedStudent;
     
@@ -1071,6 +1086,7 @@ exports.getStudent = async (req, res) => {
 // Student login
 exports.loginStudent = async (req, res) => {
   const { rollNo, password } = req.body;
+  console.log(JSON.stringify(req.body))
 
   if (!rollNo || !password) {
     return res

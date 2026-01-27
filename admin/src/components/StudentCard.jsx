@@ -5,7 +5,12 @@ import toast from "react-hot-toast";
 import { editStudent,handleDeleteStudent } from "../services/adminOperations";
 import { useDispatch } from "react-redux";
 
-const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
+const StudentCard = ({
+  student,
+  onClose,
+  reFetchStudents,
+  setEditLoading = () => {}, // optional for views that don't manage loading state
+}) => {
   const {
     name,
     leetcode,
@@ -36,6 +41,9 @@ const StudentCard = ({ student, onClose, reFetchStudents, setEditLoading }) => {
       const response = await handleDeleteStudent(student._id, token, dispatch);
       if (response?.status === 200) {
         toast.success("Student deleted successfully");
+        // refresh upstream data if provided, then close modal
+        await (reFetchStudents ? reFetchStudents() : Promise.resolve());
+        onClose?.();
       }
     } catch (error) {
       console.error("Error deleting student:", error);
