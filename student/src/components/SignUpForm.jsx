@@ -103,12 +103,10 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
           skillrack: "",
           github: "",
         });
-        onClose();
-      } else {
-        toast.error("Signup failed. Please review the fields and try again.");
+        // Do not close here; parent (Auth) toggles view to Login.
       }
     } catch (err) {
-      toast.error("Error while adding student");
+      // Let parent handler display error toast
       console.error(err);
     } finally {
       setIsSubmitting(false);
