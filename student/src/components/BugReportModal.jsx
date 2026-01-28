@@ -74,7 +74,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
       console.error("Error submitting bug report:", err);
       toast.error(
         "Failed to submit bug report: " +
-          (err.response?.data?.error || err.message)
+        (err.response?.data?.error || err.message)
       );
     } finally {
       setIsSubmitting(false);

@@ -15,6 +15,7 @@ export default function ProfileModal({
   setLoading,
 }) {
   const [data, setData] = useState(student);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -182,13 +183,14 @@ export default function ProfileModal({
                 name={field}
                 value={data[field]}
                 onChange={handleChange}
+                disabled={!isEditing}
                 required
                 placeholder={
                   field === "mobileNumber"
                     ? "Enter mobile number (e.g., 9876543210)"
                     : `Enter ${field}`
                 }
-                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+                className={`mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
               />
             </div>
           ))}
@@ -200,8 +202,9 @@ export default function ProfileModal({
               name="department"
               value={data.department || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select department
@@ -221,8 +224,9 @@ export default function ProfileModal({
               name="section"
               value={data.section || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select section
@@ -242,8 +246,9 @@ export default function ProfileModal({
               name="year"
               value={data.year || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select year
@@ -263,8 +268,9 @@ export default function ProfileModal({
               name="gender"
               value={data.gender || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select gender
@@ -284,8 +290,9 @@ export default function ProfileModal({
               name="accommodation"
               value={data.accommodation || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select accommodation
@@ -305,8 +312,9 @@ export default function ProfileModal({
               name="interest"
               value={data.interest || ""}
               onChange={handleChange}
+              disabled={!isEditing}
               required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+              className={`mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
             >
               <option value="" disabled>
                 Select interest
@@ -335,39 +343,41 @@ export default function ProfileModal({
                 name={field}
                 value={data[field]}
                 onChange={handleChange}
+                disabled={!isEditing}
                 required
                 placeholder={
                   field === "leetcode"
                     ? "Enter leetcode username (e.g., johndoe123)"
                     : field === "hackerrank"
-                    ? "Enter hackerrank username (e.g., johndoe_hr)"
-                    : field === "codechef"
-                    ? "Enter codechef username (e.g., johndoe_cc)"
-                    : field === "codeforces"
-                    ? "Enter codeforces username (e.g., johndoe_cf)"
-                    : field === "skillrack"
-                    ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181...)"
-                    : field === "github"
-                    ? "Enter GitHub username (e.g., johndoe)"
-                    : `Enter ${field}`
+                      ? "Enter hackerrank username (e.g., johndoe_hr)"
+                      : field === "codechef"
+                        ? "Enter codechef username (e.g., johndoe_cc)"
+                        : field === "codeforces"
+                          ? "Enter codeforces username (e.g., johndoe_cf)"
+                          : field === "skillrack"
+                            ? "Enter skillrack profile URL (e.g., https://www.skillrack.com/faces/resume.xhtml?id=484181...)"
+                            : field === "github"
+                              ? "Enter GitHub username (e.g., johndoe)"
+                              : `Enter ${field}`
                 }
-                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+                className={`mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
               />
             </div>
           ))}
           <div className="flex justify-end gap-3 mt-4">
             <button
-              type="submit"
+              type="button"
               onClick={handleChangePassword}
               className="px-4 sm:py-3 py-1 text-sm cursor-pointer w-full bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
               Change Password
             </button>
             <button
-              type="submit"
+              type={isEditing ? "submit" : "button"}
+              onClick={() => !isEditing && setIsEditing(true)}
               className="px-4 py-3 text-sm cursor-pointer w-full bg-blue-600 text-white rounded-md hover:bg-blue-700"
             >
-              Save
+              {isEditing ? "Save" : "Edit"}
             </button>
           </div>
         </form>

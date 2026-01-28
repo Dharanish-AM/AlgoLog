@@ -276,16 +276,16 @@ const SignUpForm = ({ onClose, onSubmit }) => {
                       key === "leetcode"
                         ? "Enter leetcode username (e.g., johndoe123)"
                         : key === "hackerrank"
-                        ? "Enter hackerrank username (e.g., johndoe_hr)"
-                        : key === "codechef"
-                        ? "Enter codechef username (e.g., johndoe_cc)"
-                        : key === "codeforces"
-                        ? "Enter codeforces username (e.g., johndoe_cf)"
-                        : key === "skillrack"
-                        ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47...)"
-                        : key === "github"
-                        ? "Enter GitHub username (e.g., johndoe)"
-                        : `Enter ${label.toLowerCase()}`
+                          ? "Enter hackerrank username (e.g., johndoe_hr)"
+                          : key === "codechef"
+                            ? "Enter codechef username (e.g., johndoe_cc)"
+                            : key === "codeforces"
+                              ? "Enter codeforces username (e.g., johndoe_cf)"
+                              : key === "skillrack"
+                                ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47...)"
+                                : key === "github"
+                                  ? "Enter GitHub username (e.g., johndoe)"
+                                  : `Enter ${label.toLowerCase()}`
                     }
                     onChange={(e) => {
                       let value = e.target.value;

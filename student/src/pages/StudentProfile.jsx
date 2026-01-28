@@ -208,15 +208,15 @@ const StudentProfile = ({
                 Last Updated:{" "}
                 {student
                   ? new Date(student.updatedAt).toLocaleString("en-US", {
-                      weekday: "short", // e.g. 'Tue'
-                      year: "numeric",
-                      month: "short", // e.g. 'May'
-                      day: "numeric", // e.g. '11'
-                      hour: "numeric", // e.g. '1'
-                      minute: "numeric", // e.g. '30'
-                      second: "numeric", // e.g. '45'
-                      hour12: true, // 12-hour time format
-                    })
+                    weekday: "short", // e.g. 'Tue'
+                    year: "numeric",
+                    month: "short", // e.g. 'May'
+                    day: "numeric", // e.g. '11'
+                    hour: "numeric", // e.g. '1'
+                    minute: "numeric", // e.g. '30'
+                    second: "numeric", // e.g. '45'
+                    hour12: true, // 12-hour time format
+                  })
                   : "N/A"}
               </div>
               {isRefreshing ? (
@@ -237,7 +237,7 @@ const StudentProfile = ({
                   <span>Refresh</span>
                 </button>
               )}
-              <button onClick={()=>[
+              <button onClick={() => [
                 setShowDailyProblemModal(true)
               ]} className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
                 <Lightbulb />
@@ -328,7 +328,7 @@ const StudentProfile = ({
               </div>
               <div className="bg-gray-700/70 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600 transition-all">
                 <div className="text-xl font-bold text-purple-400">
-                  {student?.stats?.leetcode?.globalRanking 
+                  {student?.stats?.leetcode?.globalRanking
                     ? `#${student.stats.leetcode.globalRanking.toLocaleString()}`
                     : 'N/A'}
                 </div>
@@ -438,6 +438,31 @@ const StudentProfile = ({
               </div>
             )}
 
+            {student?.stats?.leetcode?.languageStats?.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-white text-lg font-semibold mb-3">
+                  Languages
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-gray-700 rounded-lg p-5 max-h-[200px] overflow-y-auto scrollbar-hide">
+                  {[...student.stats.leetcode.languageStats]
+                    .sort((a, b) => b.problemsSolved - a.problemsSolved)
+                    .map((lang, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 flex justify-between items-center h-12"
+                      >
+                        <span className="text-sm text-white font-medium">
+                          {lang.languageName}
+                        </span>
+                        <span className="text-sm text-green-400 font-bold">
+                          {lang.problemsSolved}
+                        </span>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
+
             {student.stats?.leetcode?.rating ? (
               <div className="mt-6 space-y-4">
                 <div className="flex w-full">
@@ -525,21 +550,19 @@ const StudentProfile = ({
                                       ⏱️ Finish Time:{" "}
                                       {contest.finishTimeInSeconds >= 3600
                                         ? `${Math.floor(
-                                            contest.finishTimeInSeconds / 3600
-                                          )}h ${Math.floor(
-                                            (contest.finishTimeInSeconds %
-                                              3600) /
-                                              60
-                                          )}m ${
-                                            contest.finishTimeInSeconds % 60
-                                          }s`
+                                          contest.finishTimeInSeconds / 3600
+                                        )}h ${Math.floor(
+                                          (contest.finishTimeInSeconds %
+                                            3600) /
+                                          60
+                                        )}m ${contest.finishTimeInSeconds % 60
+                                        }s`
                                         : contest.finishTimeInSeconds >= 60
-                                        ? `${Math.floor(
+                                          ? `${Math.floor(
                                             contest.finishTimeInSeconds / 60
-                                          )}m ${
-                                            contest.finishTimeInSeconds % 60
+                                          )}m ${contest.finishTimeInSeconds % 60
                                           }s`
-                                        : `${contest.finishTimeInSeconds}s`}
+                                          : `${contest.finishTimeInSeconds}s`}
                                     </div>
                                   </div>
                                 </div>
@@ -689,6 +712,18 @@ const StudentProfile = ({
             {/* CodeChef Stats */}
             <div className="space-y-4">
               <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Division</span>
+                <span className="font-semibold text-orange-400">
+                  {student.stats?.codechef?.division ?? "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                <span className="text-sm text-gray-300">Stars</span>
+                <span className="font-semibold text-yellow-400">
+                  {student.stats?.codechef?.stars ? `${student.stats.codechef.stars} ★` : "N/A"}
+                </span>
+              </div>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-300">Rating</span>
                 <span className="font-semibold text-yellow-400">
                   {student.stats?.codechef?.rating ?? "N/A"}
@@ -740,7 +775,7 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.codeforces}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-red-400">
                   {student.stats?.codeforces?.rating || 'N/A'}
@@ -752,6 +787,18 @@ const StudentProfile = ({
                   {student.stats?.codeforces?.rank || 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">Rank</div>
+              </div>
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-lg font-bold text-orange-400">
+                  {student.stats?.codeforces?.maxRating || 'N/A'}
+                </div>
+                <div className="text-sm text-gray-400">Max Rating</div>
+              </div>
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-lg font-bold text-yellow-400">
+                  {student.stats?.codeforces?.maxRank || 'N/A'}
+                </div>
+                <div className="text-sm text-gray-400">Max Rank</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-lg font-bold text-blue-400">
@@ -769,7 +816,7 @@ const StudentProfile = ({
           </div>
 
           {/* Skillrack */}
-          
+
 
           {/* GitHub */}
           <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
@@ -790,18 +837,24 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.github}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-3 gap-4 mb-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-purple-400">
                   {student.stats.github.totalCommits}
                 </div>
-                <div className="text-sm text-gray-400">Total Commits</div>
+                <div className="text-xs sm:text-sm text-gray-400">Commits</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
                   {student.stats.github.totalRepos}
                 </div>
-                <div className="text-sm text-gray-400">Repositories</div>
+                <div className="text-xs sm:text-sm text-gray-400">Repos</div>
+              </div>
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-2xl font-bold text-orange-400">
+                  {student.stats?.github?.longestStreak || 0}
+                </div>
+                <div className="text-xs sm:text-sm text-gray-400">Streak</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -863,7 +916,7 @@ const StudentProfile = ({
           </div>
         </div>
       )}
-      
+
     </div>
   );
 };

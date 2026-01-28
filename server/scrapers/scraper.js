@@ -805,7 +805,7 @@ async function getCodeforcesStats(username) {
   }
 }
 
-// getCodeforcesStats("tourist").then(console.log);
+// getCodeforcesStats("guruvishal_30").then(console.log);
 
 async function getSkillrackStats(resumeUrl) {
   if (!resumeUrl || !resumeUrl.startsWith("http")) {
