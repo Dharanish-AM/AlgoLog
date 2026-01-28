@@ -223,13 +223,7 @@ exports.getAdminDepartments = async (req, res) => {
 
 exports.getAdminClasses = async (req, res) => {
   try {
-    const classes = await Class.find().populate({
-      path: "students",
-      populate: {
-        path: "department",
-        select: "_id name",
-      },
-    });
+    const classes = await Class.find().populate("students");
 
     res.status(200).json({ classes });
   } catch (err) {

@@ -13,6 +13,40 @@ export const ACADEMIC_YEARS = [
 ];
 
 /**
+ * Student Year Constants (Class Year)
+ * Roman numerals for student year: I (1st year), II (2nd year), etc.
+ */
+export const STUDENT_YEARS = ["I", "II", "III", "IV"];
+
+/**
+ * Student Dropdown Options - Enum Values
+ */
+export const DEPARTMENTS = [
+  "AIDS",
+  "AIML",
+  "CIVIL",
+  "CSE",
+  "CSBS",
+  "CYS",
+  "ECE",
+  "EEE",
+  "IT",
+  "MECH"
+];
+
+export const SECTIONS = ["A", "B", "C", "D", "E"];
+
+export const ACCOMMODATION_TYPES = ["Hosteller", "Day Scholar"];
+
+export const GENDERS = ["Male", "Female", "Other"];
+
+export const INTERESTS = [
+  "IT",
+  "CORE(EEE, ECE, MECH)",
+  "Higher Education"
+];
+
+/**
  * Validate if a given year is a valid academic year
  * @param {string} year - Academic year to validate
  * @returns {boolean} - True if valid

@@ -120,6 +120,15 @@ const StudentProfile = ({
     });
   }
 
+  // Safe accessor helper
+  const safeGet = (obj, path, defaultValue = "N/A") => {
+    try {
+      return path.split('.').reduce((current, key) => current?.[key], obj) ?? defaultValue;
+    } catch {
+      return defaultValue;
+    }
+  };
+
   if (!student || loading) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -238,23 +247,13 @@ const StudentProfile = ({
           </div>
 
           {/* Personal Information */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
               <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
                 <User className="w-4 h-4" />
                 <span>Name</span>
               </label>
-
-              <p className="text-white font-medium">{student.name}</p>
-            </div>
-
-            <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
-                <Mail className="w-4 h-4" />
-                <span>Email</span>
-              </label>
-
-              <p className="text-white break-words">{student.email}</p>
+              <p className="text-white font-medium">{student?.name || "N/A"}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
@@ -262,26 +261,15 @@ const StudentProfile = ({
                 <Hash className="w-4 h-4" />
                 <span>Roll Number</span>
               </label>
-
-              <p className="text-white font-mono">{student.rollNo}</p>
+              <p className="text-white font-mono">{student?.rollNo || "N/A"}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
               <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
-                <Building className="w-4 h-4" />
-                <span>Department</span>
+                <Mail className="w-4 h-4" />
+                <span>Email</span>
               </label>
-
-              <p className="text-white">{student.department.name}</p>
-            </div>
-
-            <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
-              <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
-                <Users className="w-4 h-4" />
-                <span>Section</span>
-              </label>
-
-              <p className="text-white">{student.section}</p>
+              <p className="text-white break-words text-sm">{student?.email || "N/A"}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
@@ -289,8 +277,23 @@ const StudentProfile = ({
                 <Calendar className="w-4 h-4" />
                 <span>Year</span>
               </label>
+              <p className="text-white">{student?.year || "N/A"}</p>
+            </div>
 
-              <p className="text-white">{student.year}</p>
+            <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
+              <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
+                <Users className="w-4 h-4" />
+                <span>Section</span>
+              </label>
+              <p className="text-white">{student?.section || "N/A"}</p>
+            </div>
+
+            <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
+              <label className="flex items-center space-x-2 text-sm font-medium text-gray-300">
+                <Building className="w-4 h-4" />
+                <span>Department</span>
+              </label>
+              <p className="text-white">{student?.department || 'N/A'}</p>
             </div>
           </div>
         </div>
@@ -317,18 +320,17 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="mb-4 flex gap-4 items-center justify-between">
-              <div className="text-center w-1/2 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+              <div className="text-center w-1/2 py-4 bg-gray-700/70 rounded-lg hover:bg-gray-600 transition-all">
                 <div className="text-2xl font-bold text-blue-400">
-                  {student.stats?.leetcode?.solved?.All}
+                  {safeGet(student, 'stats.leetcode.solved.All', '0')}
                 </div>
                 <div className="text-sm text-gray-400">Total Solved</div>
               </div>
-              <div className="bg-gray-700 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600">
+              <div className="bg-gray-700/70 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600 transition-all">
                 <div className="text-xl font-bold text-purple-400">
-                  #
-                  {student.stats?.leetcode?.globalRanking
-                    ? student.stats.leetcode.globalRanking.toLocaleString()
-                    : 0}
+                  {student?.stats?.leetcode?.globalRanking 
+                    ? `#${student.stats.leetcode.globalRanking.toLocaleString()}`
+                    : 'N/A'}
                 </div>
                 <div className="text-sm text-gray-400">Global Rank</div>
               </div>
@@ -337,10 +339,11 @@ const StudentProfile = ({
               {student?.stats?.leetcode?.solved &&
                 Object.entries(student.stats.leetcode.solved)
                   .slice(1)
+                  .filter(([_, count]) => count !== undefined && count !== null)
                   .map(([difficulty, count]) => (
                     <div
                       key={difficulty}
-                      className="flex py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-600 justify-between items-center"
+                      className="flex py-3 px-4 bg-gray-700/70 rounded-lg hover:bg-gray-600 transition-all justify-between items-center"
                     >
                       <span
                         className={`rounded-full text-sm font-medium ${getDifficultyColor(
@@ -349,9 +352,15 @@ const StudentProfile = ({
                       >
                         {difficulty}
                       </span>
-                      <span className="text-white font-medium">{count}</span>
+                      <span className="text-white font-semibold">{count || 0}</span>
                     </div>
                   ))}
+              {(!student?.stats?.leetcode?.solved || Object.keys(student.stats.leetcode.solved).length <= 1) && (
+                <div className="text-center py-8 text-gray-400">
+                  <Code className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>No problem data available</p>
+                </div>
+              )}
             </div>
 
             {student?.stats?.leetcode?.topicStats?.length > 0 && (

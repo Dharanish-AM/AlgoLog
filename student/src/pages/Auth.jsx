@@ -28,14 +28,18 @@ export default function Auth({
   const submitSignup = async (formData) => {
     try {
       const res = await handleSignup(formData);
+      console.log("submitSignup received result:", res);
       if (res) {
         setIsSignup(false);
         setRollNo("");
         setPassword("");
+      } else {
+        console.log("submitSignup: keeping modal open, result was false");
       }
-      // keep form open with current values when signup fails
+      return res; // Return the result to SignUpForm
     } catch (err) {
       console.error("Signup error:", err);
+      return false; // Return false on error
     }
   };
 
@@ -56,7 +60,6 @@ export default function Auth({
               onClose={() => setIsSignup(false)}
               isOpen={isSignup}
               onSubmit={submitSignup}
-              departments={departments}
             />
           ) : (
             <LoginForm

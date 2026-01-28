@@ -1,22 +1,36 @@
 const mongoose = require("mongoose");
+const {
+  DEPARTMENTS,
+  SECTIONS,
+  YEARS,
+  ACCOMMODATION_TYPES,
+  GENDERS,
+  INTERESTS,
+} = require("../utils/constants");
 
 const studentSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
     email: { type: String, required: true },
+    mobileNumber: { type: String, required: true },
     rollNo: { type: String, required: true },
     password: { type: String, required: true },
-    classId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Class",
-    },
-    department: {
-      type: mongoose.Schema.ObjectId,
-      ref: "Department",
+    department: { type: String, enum: DEPARTMENTS, required: true },
+    section: { type: String, enum: SECTIONS, required: true },
+    year: { type: String, enum: YEARS, required: true },
+    accommodation: {
+      type: String,
+      enum: ACCOMMODATION_TYPES,
+      default: "Day Scholar",
       required: true,
     },
-    section: { type: String, required: true },
-    year: { type: String, required: true },
+    gender: { type: String, enum: GENDERS, required: true },
+    interest: {
+      type: String,
+      enum: INTERESTS,
+      default: "IT",
+      required: true,
+    },
     leetcode: { type: String, required: true },
     hackerrank: { type: String, required: true },
     codechef: { type: String, required: true },
@@ -90,6 +104,7 @@ const studentSchema = new mongoose.Schema(
         username: String,
         rating: mongoose.Schema.Types.Mixed,
         division: String,
+        stars: String,
         highestRating: mongoose.Schema.Types.Mixed,
         globalRank: mongoose.Schema.Types.Mixed,
         countryRank: mongoose.Schema.Types.Mixed,
@@ -106,7 +121,6 @@ const studentSchema = new mongoose.Schema(
       },
       skillrack: {
         platform: String,
-        // Use Mixed to allow "N/A" placeholders when sources are unavailable
         rank: mongoose.Schema.Types.Mixed,
         programsSolved: mongoose.Schema.Types.Mixed,
         languages: {
@@ -139,15 +153,14 @@ const studentSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // Add indexes for faster queries
-studentSchema.index({ classId: 1 }); // For classId queries
 studentSchema.index({ department: 1 }); // For department queries
+studentSchema.index({ department: 1, section: 1, year: 1 }); // Compound index for class lookup
 studentSchema.index({ email: 1 }, { unique: true }); // Unique email
 studentSchema.index({ rollNo: 1 }, { unique: true }); // Unique rollNo
-studentSchema.index({ classId: 1, section: 1 }); // Compound index for class+section
 studentSchema.index({ updatedAt: -1 }); // For sorting by recent updates
 
 const Student = mongoose.model("Student", studentSchema);

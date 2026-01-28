@@ -4,18 +4,22 @@ import axios from "axios";
 import { GridLoader } from "react-spinners";
 import { X } from "lucide-react";
 import { validateSkillrackUrl } from "../utils/skillrackValidator";
-import { ACADEMIC_YEARS } from "../utils/constants";
+import { STUDENT_YEARS, ACCOMMODATION_TYPES, GENDERS, INTERESTS, SECTIONS, DEPARTMENTS } from "../utils/constants";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
-const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
+const SignUpForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
+    mobileNumber: "",
     rollNo: "",
     year: "",
     section: "",
     department: "",
+    accommodation: "",
+    gender: "",
+    interest: "",
     leetcode: "",
     hackerrank: "",
     codechef: "",
@@ -23,39 +27,15 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
     skillrack: "",
     github: "",
   });
-  const [departments, setDepartments] = useState([]);
-  const [loading, setLoading] = useState(parentDepartments ? false : true);
+  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    if (parentDepartments && Array.isArray(parentDepartments) && parentDepartments.length > 0) {
-      setDepartments(parentDepartments);
-      setLoading(false);
-      return;
-    }
+    // Departments are now loaded from constants, no need to fetch from API
+    setLoading(false);
+  }, []);
 
-    // Only fetch if parent departments not provided
-    if (!parentDepartments || parentDepartments.length === 0) {
-      const fetchDepartments = async () => {
-        try {
-          const res = await axios.get(`${API_URL}/api/get-form-details`);
-          if (res.status == 200) {
-            const deptData = Array.isArray(res.data) ? res.data : [];
-            setDepartments(deptData);
-          }
-        } catch (err) {
-          // Error fetching departments
-        } finally {
-          setLoading(false);
-        }
-      };
-      fetchDepartments();
-    }
-  }, [parentDepartments]);
-
-  const selectedDept = Array.isArray(departments)
-    ? departments.find((d) => d._id === formData.department)
-    : null;
+  const selectedDept = null; // No longer needed since we use DEPARTMENTS constant
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -88,14 +68,21 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
         github: formData.github.trim(),
       };
       const success = await onSubmit(trimmedData);
+      console.log("SignUpForm received success:", success);
       if (success) {
+        console.log("SignUpForm: Clearing form data on success");
+        // Only clear form data on successful signup
         setFormData({
           name: "",
           email: "",
+          mobileNumber: "",
           rollNo: "",
           year: "",
           section: "",
           department: "",
+          accommodation: "",
+          gender: "",
+          interest: "",
           leetcode: "",
           hackerrank: "",
           codechef: "",
@@ -104,10 +91,13 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
           github: "",
         });
         // Do not close here; parent (Auth) toggles view to Login.
+      } else {
+        console.log("SignUpForm: Preserving form data, success was false");
       }
+      // If success is false, keep form data and modal open so user can fix errors
     } catch (err) {
-      // Let parent handler display error toast
-      console.error(err);
+      // Keep form data and modal open on error
+      console.error("SignUpForm error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -135,12 +125,34 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
           {[
             { label: "Name", key: "name", type: "text", required: true },
             { label: "Email", key: "email", type: "email", required: true },
+            { label: "Mobile Number", key: "mobileNumber", type: "tel", required: true },
             { label: "Roll Number", key: "rollNo", required: true },
             {
-              label: "Section",
+              label: "Department & Section",
               key: "section",
               type: "dropdown",
               required: true,
+            },
+            {
+              label: "Gender",
+              key: "gender",
+              type: "dropdown",
+              required: true,
+              options: GENDERS,
+            },
+            {
+              label: "Accommodation",
+              key: "accommodation",
+              type: "dropdown",
+              required: true,
+              options: ACCOMMODATION_TYPES,
+            },
+            {
+              label: "Interest",
+              key: "interest",
+              type: "dropdown",
+              required: true,
+              options: INTERESTS,
             },
             {
               label: "LeetCode Profile ID",
@@ -178,7 +190,7 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
               type: "text",
               required: false,
             },
-          ].map(({ label, key, type = "text", required }) => (
+          ].map(({ label, key, type = "text", required, options }) => (
             <React.Fragment key={key}>
               {key === "section" ? (
                 <>
@@ -197,12 +209,11 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
                       <option value="" disabled>
                         Select department
                       </option>
-                      {departments &&
-                        [...departments].sort((a, b) => a.name.localeCompare(b.name)).map((dpt) => (
-                          <option key={dpt._id} value={dpt._id}>
-                            {dpt.name}
-                          </option>
-                        ))}
+                      {DEPARTMENTS.map((dpt) => (
+                        <option key={dpt} value={dpt}>
+                          {dpt}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
@@ -212,20 +223,15 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
                     <select
                       value={formData.section}
                       required
-                      disabled={
-                        !selectedDept || !selectedDept.sections || selectedDept.sections.length === 0
-                      }
                       onChange={(e) =>
                         setFormData({ ...formData, section: e.target.value })
                       }
                       className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                     >
                       <option value="" disabled>
-                        {selectedDept?.sections?.length
-                          ? "Select section"
-                          : "No sections available"}
+                        Select section
                       </option>
-                      {selectedDept?.sections?.map((sec) => (
+                      {SECTIONS.map((sec) => (
                         <option key={sec} value={sec}>
                           {sec}
                         </option>
@@ -233,6 +239,30 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
                     </select>
                   </div>
                 </>
+              ) : type === "dropdown" && (key === "gender" || key === "interest" || key === "accommodation") ? (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                    {label}
+                  </label>
+                  <select
+                    value={formData[key] || ""}
+                    required={required}
+                    onChange={(e) =>
+                      setFormData({ ...formData, [key]: e.target.value })
+                    }
+                    className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+                  >
+                    <option value="" disabled>
+                      Select {label.toLowerCase()}
+                    </option>
+                    {options &&
+                      options.map((option) => (
+                        <option key={option} value={option}>
+                          {option}
+                        </option>
+                      ))}
+                  </select>
+                </div>
               ) : (
                 <div>
                   <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
@@ -252,7 +282,7 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
                         : key === "codeforces"
                         ? "Enter codeforces username (e.g., johndoe_cf)"
                         : key === "skillrack"
-                        ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47... OR https://www.skillrack.com/faces/resume.xhtml?id=...&key=...)"
+                        ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/384bf14cad47...)"
                         : key === "github"
                         ? "Enter GitHub username (e.g., johndoe)"
                         : `Enter ${label.toLowerCase()}`
@@ -317,9 +347,9 @@ const SignUpForm = ({ onClose, onSubmit, departments: parentDepartments }) => {
                     className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
                   >
                     <option value="" disabled>
-                      Select academic year
+                      Select year
                     </option>
-                    {ACADEMIC_YEARS.map((year) => (
+                    {STUDENT_YEARS.map((year) => (
                       <option key={year} value={year}>
                         {year}
                       </option>

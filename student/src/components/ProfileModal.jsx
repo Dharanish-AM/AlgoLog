@@ -3,7 +3,7 @@ import { X } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { GridLoader } from "react-spinners";
-import { ACADEMIC_YEARS } from "../utils/constants";
+import { STUDENT_YEARS, ACCOMMODATION_TYPES, GENDERS, INTERESTS, DEPARTMENTS, SECTIONS } from "../utils/constants";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -15,21 +15,6 @@ export default function ProfileModal({
   setLoading,
 }) {
   const [data, setData] = useState(student);
-  const [departments, setDepartments] = useState([]);
-
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        const res = await axios.get(`${API_URL}/api/get-form-details`);
-        if (res.status == 200) {
-          setDepartments(Array.isArray(res.data) ? res.data : []);
-        }
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchDepartments();
-  }, []);
 
   useEffect(() => {
     document.body.classList.add("overflow-hidden");
@@ -39,32 +24,18 @@ export default function ProfileModal({
     };
   }, []);
 
-  // Update data when student prop or departments change
+  // Update data when student prop changes
   useEffect(() => {
-    if (departments.length > 0 && student) {
-      // Ensure department is stored as ID string, not object
-      const departmentId =
-        typeof student.department === "object"
-          ? student.department._id
-          : student.department;
+    if (student) {
+      // Department is now stored as a string (name), not an ObjectId
       setData({
         ...student,
-        department: departmentId,
+        // Ensure department is a string value
+        department: typeof student.department === 'string' ? student.department : '',
       });
     }
-  }, [student, departments]);
+  }, [student]);
 
-  useEffect(() => {
-    if (departments.length > 0 && data.department) {
-      const currentDept = departments.find((d) => d._id === data.department);
-      if (currentDept && !currentDept.sections.includes(data.section)) {
-        setData((prev) => ({
-          ...prev,
-          section: "",
-        }));
-      }
-    }
-  }, [departments, data.department]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -199,7 +170,155 @@ export default function ProfileModal({
           {[
             "name",
             "email",
+            "mobileNumber",
             "rollNo",
+          ].map((field) => (
+            <div key={field}>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
+                {field === "mobileNumber" ? "Mobile Number" : field === "rollNo" ? "Roll Number" : field}
+              </label>
+              <input
+                type={field === "mobileNumber" ? "tel" : field === "email" ? "email" : "text"}
+                name={field}
+                value={data[field]}
+                onChange={handleChange}
+                required
+                placeholder={
+                  field === "mobileNumber"
+                    ? "Enter mobile number (e.g., 9876543210)"
+                    : `Enter ${field}`
+                }
+                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+              />
+            </div>
+          ))}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Department
+            </label>
+            <select
+              name="department"
+              value={data.department || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select department
+              </option>
+              {DEPARTMENTS.map((dpt) => (
+                <option key={dpt} value={dpt}>
+                  {dpt}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Section
+            </label>
+            <select
+              name="section"
+              value={data.section || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select section
+              </option>
+              {SECTIONS.map((section) => (
+                <option key={section} value={section}>
+                  {section}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Year
+            </label>
+            <select
+              name="year"
+              value={data.year || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select year
+              </option>
+              {STUDENT_YEARS.map((year) => (
+                <option key={year} value={year}>
+                  {year}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Gender
+            </label>
+            <select
+              name="gender"
+              value={data.gender || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select gender
+              </option>
+              {GENDERS.map((gender) => (
+                <option key={gender} value={gender}>
+                  {gender}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Accommodation
+            </label>
+            <select
+              name="accommodation"
+              value={data.accommodation || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select accommodation
+              </option>
+              {ACCOMMODATION_TYPES.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              Interest
+            </label>
+            <select
+              name="interest"
+              value={data.interest || ""}
+              onChange={handleChange}
+              required
+              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+            >
+              <option value="" disabled>
+                Select interest
+              </option>
+              {INTERESTS.map((interest) => (
+                <option key={interest} value={interest}>
+                  {interest}
+                </option>
+              ))}
+            </select>
+          </div>
+          {[
             "leetcode",
             "hackerrank",
             "codechef",
@@ -209,7 +328,7 @@ export default function ProfileModal({
           ].map((field) => (
             <div key={field}>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 capitalize">
-                {field}
+                {field === "skillrack" ? "SkillRack" : field === "github" ? "GitHub" : field === "leetcode" ? "LeetCode" : field === "hackerrank" ? "HackerRank" : field === "codechef" ? "CodeChef" : field === "codeforces" ? "Codeforces" : field}
               </label>
               <input
                 type="text"
@@ -236,69 +355,6 @@ export default function ProfileModal({
               />
             </div>
           ))}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Department
-            </label>
-            <select
-              name="department"
-              value={data.department || ""}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
-            >
-              <option value="" disabled>
-                Select department
-              </option>
-              {departments.map((dpt) => (
-                <option key={dpt._id} value={dpt._id}>
-                  {dpt.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Year
-            </label>
-            <select
-              name="year"
-              value={data.year}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
-            >
-              <option value="" disabled>
-                Select year
-              </option>
-              {ACADEMIC_YEARS.map((year) => (
-                <option key={year} value={year}>
-                  {year}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-              Section
-            </label>
-            <select
-              name="section"
-              value={data.section}
-              onChange={handleChange}
-              required
-              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
-            >
-              <option value="" disabled>
-                {data.section || "Select section"}
-              </option>
-              {["A", "B", "C", "D"].map((sec) => (
-                <option key={sec} value={sec}>
-                  {sec}
-                </option>
-              ))}
-            </select>
-          </div>
           <div className="flex justify-end gap-3 mt-4">
             <button
               type="submit"

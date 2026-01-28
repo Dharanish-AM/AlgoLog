@@ -112,16 +112,18 @@ function App() {
 
       if (response.status === 201 || response.status === 200) {
         toast.success("Signup successful! Please login.");
+        setIsLoading(false);
         return true;
       }
+      setIsLoading(false);
+      return false;
     } catch (err) {
       console.error("Signup failed:", err?.response?.data || err.message);
-      toast.error(
-        "Signup failed: " + (err.response?.data?.message || err.message)
-      );
-      return false;
-    } finally {
+      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
+      toast.error("Signup failed: " + errorMessage);
       setIsLoading(false);
+      console.log("handleSignup returning false due to error");
+      return false;
     }
   };
 
@@ -142,6 +144,8 @@ function App() {
           },
         }
       );
+      //print student data
+      console.log(response.data.student);
       setStudent(response.data.student);
       setIsAuthenticated(true);
       setIsLoading(false);

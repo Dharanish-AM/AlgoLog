@@ -5,7 +5,7 @@ const https = require("https");
 const dotenv = require("dotenv");
 const path = require("path");
 
-dotenv.config({ path: path.join(__dirname, '..', '.env') });
+dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const Bottleneck = require("bottleneck");
 const crypto = require("crypto");
@@ -38,7 +38,9 @@ function startCacheCleanup() {
       }
     }
     if (deletedCount > 0) {
-      console.log(`🧹 Cache cleanup: removed ${deletedCount} expired entries (${cache.size} remaining)`);
+      console.log(
+        `🧹 Cache cleanup: removed ${deletedCount} expired entries (${cache.size} remaining)`,
+      );
     }
   }, CACHE_TTL); // Run cleanup every CACHE_TTL
 }
@@ -54,11 +56,13 @@ const rateLimitTracker = {
 async function checkRateLimit(platform) {
   const now = Date.now();
   const tracker = rateLimitTracker[platform];
-  
+
   if (tracker && tracker.backoffUntil > now) {
     const waitTime = tracker.backoffUntil - now;
-    console.warn(`[${platform}] Global backoff active. Waiting ${Math.ceil(waitTime / 1000)}s...`);
-    await new Promise(resolve => setTimeout(resolve, waitTime));
+    console.warn(
+      `[${platform}] Global backoff active. Waiting ${Math.ceil(waitTime / 1000)}s...`,
+    );
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
   }
 }
 
@@ -81,7 +85,7 @@ const limiters = Object.fromEntries(
   Object.entries(platformLimits).map(([key, options]) => [
     key,
     new Bottleneck(options),
-  ])
+  ]),
 );
 
 const {
@@ -93,14 +97,14 @@ const {
   codeforces: codeforcesLimiter,
 } = limiters;
 
-const agent = new https.Agent({ 
+const agent = new https.Agent({
   family: 4,
   keepAlive: true,
   keepAliveMsecs: 3000,
   maxSockets: 100,
   maxFreeSockets: 20,
   timeout: 15000,
-  scheduling: 'lifo'
+  scheduling: "lifo",
 });
 
 async function getLeetCodeQuestionOfToday() {
@@ -147,7 +151,7 @@ async function getLeetCodeQuestionOfToday() {
         httpsAgent: agent,
         timeout: 8000,
         decompress: true,
-      }
+      },
     );
 
     const daily = res.data.data.activeDailyCodingChallengeQuestion;
@@ -166,7 +170,7 @@ async function getLeetCodeQuestionOfToday() {
   } catch (error) {
     console.error(
       "Error fetching LeetCode question of today:",
-      error.response?.data || error.message
+      error.response?.data || error.message,
     );
     return null;
   }
@@ -287,7 +291,7 @@ async function getLeetCodeStats(username) {
         httpsAgent: agent,
         timeout: 10000,
         decompress: true,
-      }
+      },
     );
 
     const userData = res.data.data;
@@ -313,7 +317,7 @@ async function getLeetCodeStats(username) {
       ([tagName, problemsSolved]) => ({
         tagName,
         problemsSolved,
-      })
+      }),
     );
     const contestInfo = userData.userContestRanking;
     const contestHistory = userData.userContestRankingHistory || [];
@@ -371,11 +375,12 @@ async function getLeetCodeStats(username) {
     setCache(cacheKey, result);
     return result;
   } catch (error) {
-    const errorMsg = error.response?.status === 404 
-      ? "User not found" 
-      : error.code === 'ECONNABORTED' || error.message.includes('timeout')
-      ? "Request timeout"
-      : "Failed to fetch data";
+    const errorMsg =
+      error.response?.status === 404
+        ? "User not found"
+        : error.code === "ECONNABORTED" || error.message.includes("timeout")
+          ? "Request timeout"
+          : "Failed to fetch data";
     console.error(`[LeetCode] Error for ${username}:`, error.message);
     return { platform: "LeetCode", username, error: errorMsg };
   }
@@ -423,7 +428,7 @@ async function getHackerRankStats(username) {
     } catch (error) {
       console.warn(
         `Attempt ${attempt} failed to fetch HackerRank data for ${username}:`,
-        error.message
+        error.message,
       );
       if (attempt < maxAttempts) await delay(500 * attempt);
       else {
@@ -443,7 +448,7 @@ async function getCodeChefStats(username) {
   if (cached) return cached;
 
   // Check global rate limit
-  await checkRateLimit('codechef');
+  await checkRateLimit("codechef");
 
   const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 3; // Increased attempts
@@ -468,7 +473,7 @@ async function getCodeChefStats(username) {
 
       if (
         data.includes(
-          "The username specified does not exist in our database."
+          "The username specified does not exist in our database.",
         ) ||
         data.includes("404 Page Not Found") ||
         data.includes("not found") ||
@@ -495,22 +500,56 @@ async function getCodeChefStats(username) {
         .trim()
         .replace("?", "");
 
+      // Extract Division (Div X)
+      // The div containing (Div X) is a sibling of .rating-number inside .rating-header
+      let division = "";
+      $("div.rating-header > div").each((i, el) => {
+        const text = $(el).text().trim();
+        if (text.match(/\(Div \d+\)/i)) {
+          division = text.replace(/[()]/g, ""); // Remove parenthesis -> "Div 4"
+        }
+      });
+
+      // Extract Stars (e.g. "1★")
+      // The .rating-star div contains a span with the star character.
+      // Sometimes it has text like "3★" or the background color indicates the stars.
+      // Based on common CodeChef structure, the text inside .rating-star usually is just "★".
+      // But the background color of the span or the numeric rating determines the "Star" level (e.g. 1 Star, 2 Star).
+      // However, usually there is a textual representation or we can map rating to stars.
+      // Let's rely on extracting text first. If it's just "★", maybe we should look for "1★" elsewhere or infer it.
+      // Actually, standard CodeChef profile usually shows "3★" in text.
+      // If the user snippet says `<div class="rating-star"><span ...>★</span></div>`, it might be just visual.
+      // But often the rating color/stars are correlated.
+      // Let's try to find text that looks like "1★", "2★" etc.
+      // In the snippet, it's NOT explicitly "1★".
+      // Let's assume for now we might map it or check if there is other text.
+      // Wait, looking at general CodeChef profiles, the "stars" are often usually just the text "1★", "2★" next to rating or similar.
+      // If not present, we can map:
+      // < 1400: 1★, 1400-1599: 2★, 1600-1799: 3★, 1800-1999: 4★, 2000-2199: 5★, 2200-2499: 6★, >= 2500: 7★
+
+      let stars = "";
+      // Infers star count from rating since explicit text might just be "★" or color-coded.
+      const ratingNum = parseInt(rating, 10);
+      if (!isNaN(ratingNum)) {
+        if (ratingNum < 1400) stars = "1";
+        else if (ratingNum < 1600) stars = "2";
+        else if (ratingNum < 1800) stars = "3";
+        else if (ratingNum < 2000) stars = "4";
+        else if (ratingNum < 2200) stars = "5";
+        else if (ratingNum < 2500) stars = "6";
+        else stars = "7";
+      }
+
       // Extract highest rating from "Highest Rating XXXX"
-      const highestRatingText = $("div.rating-header")
-        .find("small")
-        .text();
+      const highestRatingText = $("div.rating-header").find("small").text();
       const highestRating = highestRatingText.match(/\d+/)?.[0] || null;
 
       // Extract global rank
-      const globalRankElement = $("div.rating-ranks")
-        .find("ul li a")
-        .eq(0);
+      const globalRankElement = $("div.rating-ranks").find("ul li a").eq(0);
       const globalRank = globalRankElement.text().trim();
 
       // Extract country rank
-      const countryRankElement = $("div.rating-ranks")
-        .find("ul li a")
-        .eq(1);
+      const countryRankElement = $("div.rating-ranks").find("ul li a").eq(1);
       const countryRank = countryRankElement.text().trim();
 
       // Extract total problems solved
@@ -525,16 +564,22 @@ async function getCodeChefStats(username) {
       }
 
       console.info(
-        `[CodeChef] ✅ Success for ${username} on attempt ${attempt}`
+        `[CodeChef] ✅ Success for ${username} on attempt ${attempt}`,
       );
 
       const result = {
         platform: "CodeChef",
         username,
         rating: rating ? parseInt(rating, 10) : null,
+        division,
+        stars,
         highestRating: highestRating ? parseInt(highestRating, 10) : null,
-        globalRank: globalRank ? parseInt(globalRank.replace(/,/g, ""), 10) : null,
-        countryRank: countryRank ? parseInt(countryRank.replace(/,/g, ""), 10) : null,
+        globalRank: globalRank
+          ? parseInt(globalRank.replace(/,/g, ""), 10)
+          : null,
+        countryRank: countryRank
+          ? parseInt(countryRank.replace(/,/g, ""), 10)
+          : null,
         fullySolved,
         updatedAt: new Date(),
       };
@@ -549,7 +594,7 @@ async function getCodeChefStats(username) {
 
       if (isEmptyProfile || isNotFound) {
         console.warn(
-          `Skipped CodeChef fetch for ${username}: ${error.message}`
+          `Skipped CodeChef fetch for ${username}: ${error.message}`,
         );
         const result = {
           platform: "CodeChef",
@@ -563,17 +608,22 @@ async function getCodeChefStats(username) {
 
       console.warn(
         `Attempt ${attempt} failed to fetch CodeChef data for ${username}:`,
-        error.message
+        error.message,
       );
 
       if (attempt < maxAttempts) {
         // Exponential backoff for rate limiting (429 errors)
         if (error.response?.status === 429) {
           const waitTime = Math.min(8000 * Math.pow(2, attempt - 1), 30000); // 8s, 16s, 30s max
-          console.warn(`⏳ CodeChef rate limited. Waiting ${waitTime / 1000}s before retry...`);
-          setRateLimitBackoff('codechef', waitTime); // Set global backoff
+          console.warn(
+            `⏳ CodeChef rate limited. Waiting ${waitTime / 1000}s before retry...`,
+          );
+          setRateLimitBackoff("codechef", waitTime); // Set global backoff
           await delay(waitTime);
-        } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        } else if (
+          error.code === "ECONNABORTED" ||
+          error.message.includes("timeout")
+        ) {
           await delay(2000 * attempt); // Timeout - progressive delay
         } else {
           await delay(1500 * attempt); // Other errors
@@ -589,7 +639,7 @@ async function getCodeChefStats(username) {
   }
 }
 
-// getCodeChefStats("aadhi2131").then(console.log);
+//getCodeChefStats("aadhi2131").then(console.log);
 
 const CF_KEY = "bc101866ff73f1c52d47a140da274741148a91cd";
 const CF_SECRET = "82a89e594a95dc4d4ce2d20954cace11de5e990a";
@@ -635,17 +685,21 @@ async function getCodeforcesStats(username) {
   if (cached) return cached;
 
   // Validate username format (Codeforces usernames are alphanumeric, underscores, etc)
-  if (!username || typeof username !== 'string' || username.trim().length === 0) {
+  if (
+    !username ||
+    typeof username !== "string" ||
+    username.trim().length === 0
+  ) {
     console.warn(`[Codeforces] ⚠️ Invalid username format: "${username}"`);
     return {
       platform: "Codeforces",
       username,
-      error: 'Invalid username format',
+      error: "Invalid username format",
     };
   }
 
   // Check global rate limit
-  await checkRateLimit('codeforces');
+  await checkRateLimit("codeforces");
 
   const maxAttempts = 2;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -655,16 +709,20 @@ async function getCodeforcesStats(username) {
       // Fetch info and rating in parallel, submissions separately with limit
       const [info, ratingData] = await Promise.all([
         callCF("user.info", { handles: username }),
-        callCF("user.rating", { handle: username }).catch(() => [])
+        callCF("user.rating", { handle: username }).catch(() => []),
       ]);
-      
+
       // Validate response
       if (!info || !Array.isArray(info) || info.length === 0) {
-        throw new Error('User not found - empty response from Codeforces API');
+        throw new Error("User not found - empty response from Codeforces API");
       }
 
       // Fetch only recent 500 submissions for faster response (reduced from 1000)
-      const submissions = await callCF("user.status", { handle: username, from: 1, count: 500 }).catch(() => []);
+      const submissions = await callCF("user.status", {
+        handle: username,
+        from: 1,
+        count: 500,
+      }).catch(() => []);
 
       const user = info[0];
       const contests = ratingData.length;
@@ -687,38 +745,47 @@ async function getCodeforcesStats(username) {
         problemsSolved: solved.size,
       };
       setCache(cacheKey, result);
-      console.info(`[Codeforces] ✅ Success for ${username} on attempt ${attempt}`);
+      console.info(
+        `[Codeforces] ✅ Success for ${username} on attempt ${attempt}`,
+      );
       return result;
     } catch (err) {
       // Classify error
       const errorStatus = err.response?.status;
-      const errorMessage = err.message || 'Unknown error';
-      let errorType = 'unknown';
+      const errorMessage = err.message || "Unknown error";
+      let errorType = "unknown";
       let isSkippable = false;
 
-      if (errorStatus === 400 || errorMessage.includes('User with handle')) {
-        errorType = 'invalid-profile';
+      if (errorStatus === 400 || errorMessage.includes("User with handle")) {
+        errorType = "invalid-profile";
         isSkippable = true; // Don't retry 400 errors
       } else if (errorStatus === 429) {
-        errorType = 'rate-limit';
+        errorType = "rate-limit";
       } else if (errorStatus === 404) {
-        errorType = 'not-found';
+        errorType = "not-found";
         isSkippable = true;
-      } else if (err.code === 'ECONNABORTED' || errorMessage.includes('timeout')) {
-        errorType = 'timeout';
+      } else if (
+        err.code === "ECONNABORTED" ||
+        errorMessage.includes("timeout")
+      ) {
+        errorType = "timeout";
       }
 
-      console.warn(`[Codeforces] Attempt ${attempt}/${maxAttempts} failed for ${username} [${errorType}]: ${errorMessage}`);
-      
+      console.warn(
+        `[Codeforces] Attempt ${attempt}/${maxAttempts} failed for ${username} [${errorType}]: ${errorMessage}`,
+      );
+
       if (attempt < maxAttempts && !isSkippable) {
         const waitTime = 2000 * attempt; // 2s, 4s progressive delay
-        console.warn(`⏳ Codeforces waiting ${waitTime / 1000}s before retry...`);
-        
+        console.warn(
+          `⏳ Codeforces waiting ${waitTime / 1000}s before retry...`,
+        );
+
         // Set backoff for rate limit or API errors
-        if (errorStatus === 429 || errorMessage.includes('limit')) {
-          setRateLimitBackoff('codeforces', waitTime);
+        if (errorStatus === 429 || errorMessage.includes("limit")) {
+          setRateLimitBackoff("codeforces", waitTime);
         }
-        
+
         await delay(waitTime);
       } else if (isSkippable) {
         // Don't retry on 400/404 errors
@@ -812,7 +879,7 @@ async function getSkillrackStats(resumeUrl) {
     } catch (error) {
       console.error(
         `Attempt ${attempt} failed to fetch Skillrack stats:`,
-        error.message
+        error.message,
       );
       if (attempt < maxAttempts) await delay(500 * attempt);
       else {
@@ -835,7 +902,7 @@ async function getTryHackMeStats(username) {
   const stats = await page.evaluate(() => {
     const getText = (label) => {
       const statBox = Array.from(document.querySelectorAll("div")).find(
-        (div) => div.textContent.trim() === label
+        (div) => div.textContent.trim() === label,
       )?.parentElement;
       return statBox?.querySelector("span")?.textContent?.trim();
     };
@@ -863,12 +930,16 @@ async function getGithubStats(username) {
   if (cached) return cached;
 
   // Validate username format
-  if (!username || typeof username !== 'string' || username.trim().length === 0) {
+  if (
+    !username ||
+    typeof username !== "string" ||
+    username.trim().length === 0
+  ) {
     console.warn(`[GitHub] ⚠️ Invalid username format: "${username}"`);
     return {
       platform: "GitHub",
       username,
-      error: 'Invalid username format',
+      error: "Invalid username format",
       totalCommits: 0,
       totalRepos: 0,
       topLanguages: [],
@@ -876,7 +947,7 @@ async function getGithubStats(username) {
   }
 
   const maxAttempts = 3;
-  const delay = (ms) => new Promise(res => setTimeout(res, ms));
+  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -897,23 +968,29 @@ async function getGithubStats(username) {
           const quickRes = await axios.post(
             "https://api.github.com/graphql",
             { query: quickCheckQuery },
-            { 
+            {
               headers: {
                 ...headers,
                 "Accept-Encoding": "gzip, deflate, br",
-              }, 
+              },
               timeout: 4000,
               decompress: true,
-            }
+            },
           );
-          
+
           if (!quickRes.data?.data?.user) {
             throw new Error(`GitHub user not found: ${username}`);
           }
         } catch (quickErr) {
-          if (quickErr.message.includes('not found') || 
-              quickErr.response?.data?.errors?.some(e => e.message.includes('Could not resolve to a User'))) {
-            console.warn(`[GitHub] ❌ User ${username} does not exist (skipping full fetch)`);
+          if (
+            quickErr.message.includes("not found") ||
+            quickErr.response?.data?.errors?.some((e) =>
+              e.message.includes("Could not resolve to a User"),
+            )
+          ) {
+            console.warn(
+              `[GitHub] ❌ User ${username} does not exist (skipping full fetch)`,
+            );
             return {
               platform: "GitHub",
               username,
@@ -958,18 +1035,20 @@ async function getGithubStats(username) {
       const res = await axios.post(
         "https://api.github.com/graphql",
         { query },
-        { 
+        {
           headers: {
             ...headers,
             "Accept-Encoding": "gzip, deflate, br",
-          }, 
+          },
           timeout: 8000,
           decompress: true,
-        }
+        },
       );
 
       if (!res.data || !res.data.data || !res.data.data.user) {
-        throw new Error(`GitHub user not found or invalid response: ${username}`);
+        throw new Error(
+          `GitHub user not found or invalid response: ${username}`,
+        );
       }
 
       const user = res.data.data.user;
@@ -1009,28 +1088,30 @@ async function getGithubStats(username) {
                 },
                 timeout: 8000,
                 decompress: true,
-              }
+              },
             );
 
             return (
-              yearRes?.data?.data?.user?.contributionsCollection?.contributionCalendar
-                ?.totalContributions || 0
+              yearRes?.data?.data?.user?.contributionsCollection
+                ?.contributionCalendar?.totalContributions || 0
             );
-          })
+          }),
         );
 
         lifetimeContributions = perYearTotals.reduce(
           (sum, v) => sum + (Number(v) || 0),
-          0
+          0,
         );
       }
 
       const currentYearContributions =
-        user.contributionsCollection?.contributionCalendar?.totalContributions || 0;
+        user.contributionsCollection?.contributionCalendar
+          ?.totalContributions || 0;
 
       // We keep the field name totalCommits for backward compatibility,
       // but it now represents lifetime contributions.
-      const totalCommits = lifetimeContributions || currentYearContributions || 0;
+      const totalCommits =
+        lifetimeContributions || currentYearContributions || 0;
 
       const languageBytes = {};
 
@@ -1039,7 +1120,8 @@ async function getGithubStats(username) {
           if (repo && repo.languages && repo.languages.edges) {
             repo.languages.edges.forEach(({ node, size }) => {
               if (node && node.name) {
-                languageBytes[node.name] = (languageBytes[node.name] || 0) + size;
+                languageBytes[node.name] =
+                  (languageBytes[node.name] || 0) + size;
               }
             });
           }
@@ -1061,21 +1143,27 @@ async function getGithubStats(username) {
         longestStreak: 0,
         topLanguages,
       };
-      
+
       setCache(cacheKey, result);
       console.log(`[GitHub] ✅ Success for ${username} on attempt ${attempt}`);
       return result;
     } catch (error) {
-      const isRateLimited = error.response?.status === 403 || error.response?.status === 429;
-      const isNotFound = error.message.includes('not found') || 
-                        error.response?.data?.errors?.some(e => e.message.includes('Could not resolve'));
-      
+      const isRateLimited =
+        error.response?.status === 403 || error.response?.status === 429;
+      const isNotFound =
+        error.message.includes("not found") ||
+        error.response?.data?.errors?.some((e) =>
+          e.message.includes("Could not resolve"),
+        );
+
       console.error(
-        `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username} [${isNotFound ? 'not-found' : isRateLimited ? 'rate-limit' : 'error'}]: ${error.message}`
+        `[GitHub] Attempt ${attempt}/${maxAttempts} failed for ${username} [${isNotFound ? "not-found" : isRateLimited ? "rate-limit" : "error"}]: ${error.message}`,
       );
 
       if (attempt < maxAttempts && !isNotFound) {
-        const waitTime = isRateLimited ? 5000 * Math.pow(2, attempt - 1) : 2000 * attempt;
+        const waitTime = isRateLimited
+          ? 5000 * Math.pow(2, attempt - 1)
+          : 2000 * attempt;
         console.warn(`⏳ Waiting ${waitTime / 1000}s before retry...`);
         await delay(waitTime);
       } else if (isNotFound) {
