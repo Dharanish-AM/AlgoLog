@@ -57,16 +57,16 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
 
   const InputIcon = ({ icon: Icon }) => (
     <div className="absolute top-3 left-3 pointer-events-none">
-      <Icon size={16} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+      <Icon size={16} className="text-gray-500 group-focus-within:text-primary-400 transition-colors" />
     </div>
   );
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-lg bg-dark-100 border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
+      <div className="w-full max-w-lg glass-card rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
 
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-gray-800 bg-dark-200/50">
+        <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/5 backdrop-blur-xl">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
             <span className="text-xl">🐛</span> Report a Bug
           </h2>
@@ -91,7 +91,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Email address"
-                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
                 />
               </div>
             </div>
@@ -105,7 +105,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
                   value={rollNo}
                   onChange={(e) => setRollNo(e.target.value)}
                   placeholder="Roll No"
-                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
                 />
               </div>
             </div>
@@ -120,7 +120,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief title of the bug"
-                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
               />
             </div>
           </div>
@@ -134,7 +134,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Describe what happened, expected behavior, and steps to reproduce..."
                 rows="4"
-                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all resize-none"
+                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
               ></textarea>
             </div>
           </div>
@@ -143,7 +143,7 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg transform active:scale-[0.98] transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-xl shadow-lg transform active:scale-[0.98] transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>

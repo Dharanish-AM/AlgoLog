@@ -15,7 +15,7 @@ export default function LoginForm({
     submitLogin();
   };
   return (
-    <div className="w-full max-w-md p-8 rounded-2xl bg-dark-100 border border-gray-700/50 shadow-2xl animate-fadeIn">
+    <div className="w-full max-w-md p-8 animate-fadeIn">
       <div className="text-center mb-8">
         <h2 className="text-3xl font-bold mb-2 text-white tracking-tight">
           Welcome Back! 👋
@@ -30,7 +30,7 @@ export default function LoginForm({
           <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Roll Number</label>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <User className="h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-primary-400 transition-colors" />
             </div>
             <input
               type="text"
@@ -38,7 +38,7 @@ export default function LoginForm({
               value={rollNo}
               onChange={(e) => setRollNo(e.target.value)}
               autoComplete="username"
-              className="w-full pl-10 pr-4 py-3 rounded-xl bg-dark-100/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 request-transition"
+              className="w-full pl-10 pr-12 py-3 rounded-xl bg-dark-100/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
             />
           </div>
         </div>
@@ -47,7 +47,7 @@ export default function LoginForm({
           <label className="text-xs font-semibold text-gray-400 uppercase tracking-wider ml-1">Password</label>
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+              <Lock className="h-5 w-5 text-gray-500 group-focus-within:text-primary-400 transition-colors" />
             </div>
             <input
               type={showPassword ? "text" : "password"}
@@ -55,7 +55,7 @@ export default function LoginForm({
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="current-password"
-              className="w-full pl-10 pr-12 py-3 rounded-xl bg-dark-100/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+              className="w-full pl-10 pr-12 py-3 rounded-xl bg-dark-100/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all"
             />
             <div
               className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-white transition-colors"
@@ -68,7 +68,7 @@ export default function LoginForm({
 
         <button
           type="submit"
-          className="mt-2 w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-purple-500/25 transform hover:-translate-y-0.5 transition-all duration-200"
+          className="mt-2 w-full bg-primary-600 hover:bg-primary-500 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary-500/25 transform hover:-translate-y-0.5 transition-all duration-200"
         >
           Login to Dashboard
         </button>
@@ -79,7 +79,7 @@ export default function LoginForm({
             <button
               type="button"
               onClick={() => setIsSignup(true)}
-              className="text-purple-400 font-semibold hover:text-purple-300 hover:underline transition-colors focus:outline-none"
+              className="text-primary-400 font-semibold hover:text-primary-300 hover:underline transition-colors focus:outline-none"
             >
               Sign Up
             </button>

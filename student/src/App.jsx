@@ -166,8 +166,7 @@ function App() {
     try {
       setIsRefreshing(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${
-          student._id
+        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${student._id
         }`,
         {
           headers: {
@@ -297,7 +296,7 @@ function App() {
           href="https://github.com/Dharanish-AM"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-purple-400 hover:underline"
+          className="text-primary-400 hover:underline"
         >
           @dharanisham
         </a>

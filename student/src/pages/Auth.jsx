@@ -44,20 +44,21 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen h-screen bg-[#0f172a] bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary-900/40 via-[#0f172a] to-[#0f172a] flex flex-col p-6 relative overflow-hidden">
+    <div className="min-h-screen h-screen flex flex-col p-6 relative overflow-hidden">
       {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute -top-[20%] -left-[10%] w-[50%] h-[50%] bg-purple-500/20 rounded-full blur-[100px] animate-pulse-slow"></div>
-        <div className="absolute top-[40%] -right-[10%] w-[40%] h-[60%] bg-blue-500/10 rounded-full blur-[100px] animate-float"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-600/20 rounded-full blur-[120px] animate-blob mix-blend-screen"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-cyan/20 rounded-full blur-[120px] animate-blob animation-delay-2000 mix-blend-screen"></div>
+        <div className="absolute top-[40%] left-[40%] w-[40%] h-[40%] bg-accent-pink/20 rounded-full blur-[120px] animate-blob animation-delay-4000 mix-blend-screen"></div>
       </div>
 
       <div className="flex w-full items-center z-10 relative">
         <img
           src={logo}
           alt="AlgoLog Logo"
-          className="w-14 h-14 object-contain drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]"
+          className="w-14 h-14 object-contain]"
         />
-        <h1 className="ml-3 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400 tracking-tight">
+        <h1 className="ml-3 text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-accent-pink tracking-tight drop-shadow-lg">
           AlgoLog
         </h1>
       </div>
@@ -66,26 +67,30 @@ export default function Auth({
       <div className="flex flex-1 z-10 relative">
         <div className="w-full sm:w-1/2 flex items-center justify-center p-4">
           {isSignup ? (
-            <SignUpForm
-              onClose={() => setIsSignup(false)}
-              isOpen={isSignup}
-              onSubmit={submitSignup}
-            />
+            <div className="w-full max-w-2xl glass-card p-1 rounded-2xl shadow-2xl animate-fadeIn">
+              <SignUpForm
+                onClose={() => setIsSignup(false)}
+                isOpen={isSignup}
+                onSubmit={submitSignup}
+              />
+            </div>
           ) : (
-            <LoginForm
-              submitLogin={submitLogin}
-              rollNo={rollNo}
-              setRollNo={setRollNo}
-              password={password}
-              setPassword={setPassword}
-              setIsSignup={() => setIsSignup(true)}
-            />
+            <div className="w-full max-w-md glass-card p-1 rounded-2xl shadow-2xl animate-fadeIn">
+              <LoginForm
+                submitLogin={submitLogin}
+                rollNo={rollNo}
+                setRollNo={setRollNo}
+                password={password}
+                setPassword={setPassword}
+                setIsSignup={() => setIsSignup(true)}
+              />
+            </div>
           )}
         </div>
         <div className="w-1/2 hidden sm:flex items-center justify-center p-8">
           <div className="relative w-full h-full flex items-center justify-center">
             {/* Simple glow behind animation */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-full blur-3xl transform scale-75"></div>
+            <div className="absolute inset-0 bg-primary-500/5 rounded-full blur-3xl transform scale-75"></div>
             <Lottie
               animationData={Animation}
               loop

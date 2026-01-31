@@ -5,11 +5,11 @@ export default function DailyProblemModal({ isOpen, onClose, problem }) {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-            <div className="w-full max-w-2xl bg-dark-100 border border-gray-700/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
+            <div className="w-full max-w-2xl glass-card rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
 
                 {/* Header */}
-                <div className="flex justify-between items-center p-6 border-b border-gray-800 bg-dark-200/50">
+                <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5 backdrop-blur-xl">
                     <div>
                         <h2 className="text-xl font-bold flex items-center gap-2 text-white">
                             <span className="text-yellow-400">💡</span> Daily LeetCode Problem
@@ -56,7 +56,7 @@ export default function DailyProblemModal({ isOpen, onClose, problem }) {
                             {/* Tags/Categories if available (Mocked or from API if detailed) */}
                             <div className="p-4 bg-dark-200/50 rounded-xl border border-gray-700/50">
                                 <div className="flex items-center gap-3 text-gray-300 mb-2">
-                                    <Code size={18} className="text-purple-400" />
+                                    <Code size={18} className="text-primary-400" />
                                     <span className="font-semibold text-sm">Problem Link</span>
                                 </div>
                                 <a href={`https://leetcode.com${problem.link}`} target="_blank" className="text-blue-400 hover:text-blue-300 text-sm break-all hover:underline block truncate">
@@ -74,7 +74,7 @@ export default function DailyProblemModal({ isOpen, onClose, problem }) {
                 </div>
 
                 {/* Footer */}
-                <div className="p-4 border-t border-gray-800 bg-dark-200/30 flex justify-end">
+                <div className="p-4 border-t border-white/10 bg-white/5 flex justify-end">
                     <button
                         onClick={onClose}
                         className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"

@@ -97,7 +97,7 @@ export default function ProfileModal({
       <label className="text-xs font-semibold text-gray-400 ml-1">{label}</label>
       <div className="relative group">
         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Icon className="h-4 w-4 text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+          <Icon className="h-4 w-4 text-gray-500 group-focus-within:text-primary-400 transition-colors" />
         </div>
         {children}
       </div>
@@ -105,13 +105,13 @@ export default function ProfileModal({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="relative w-full max-w-4xl bg-dark-100 rounded-2xl shadow-2xl border border-gray-700/50 flex flex-col max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
+      <div className="relative w-full max-w-4xl glass-card rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
 
         {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-gray-800 bg-dark-200/50">
+        <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5 backdrop-blur-xl">
           <div>
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+            <h2 className="text-2xl font-bold text-primary-400">
               Profile Settings
             </h2>
             <p className="text-sm text-gray-400">Update your personal and academic details</p>
@@ -127,26 +127,26 @@ export default function ProfileModal({
 
             {/* Personal Info */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">Personal Information</h3>
+              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Personal Information</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <InputWrapper label="Name" icon={User}>
                   <input type="text" name="name" value={data.name} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
                 </InputWrapper>
                 <InputWrapper label="Email" icon={Mail}>
                   <input type="email" name="email" value={data.email} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
                 </InputWrapper>
                 <InputWrapper label="Mobile Number" icon={Phone}>
                   <input type="tel" name="mobileNumber" value={data.mobileNumber} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
                 </InputWrapper>
                 <InputWrapper label="Gender" icon={User}>
                   <select name="gender" value={data.gender || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select gender</option>
                     {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
@@ -157,16 +157,16 @@ export default function ProfileModal({
 
             {/* Academic Info */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">Academic Details</h3>
+              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Academic Details</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <InputWrapper label="Roll Number" icon={Hash}>
                   <input type="text" name="rollNo" value={data.rollNo} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   />
                 </InputWrapper>
                 <InputWrapper label="Department" icon={BookOpen}>
                   <select name="department" value={data.department || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select department</option>
                     {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
@@ -174,7 +174,7 @@ export default function ProfileModal({
                 </InputWrapper>
                 <InputWrapper label="Section" icon={Users}>
                   <select name="section" value={data.section || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select section</option>
                     {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
@@ -182,7 +182,7 @@ export default function ProfileModal({
                 </InputWrapper>
                 <InputWrapper label="Year" icon={BookOpen}>
                   <select name="year" value={data.year || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select year</option>
                     {STUDENT_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
@@ -190,7 +190,7 @@ export default function ProfileModal({
                 </InputWrapper>
                 <InputWrapper label="Accommodation" icon={Home}>
                   <select name="accommodation" value={data.accommodation || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select accommodation</option>
                     {ACCOMMODATION_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
@@ -198,7 +198,7 @@ export default function ProfileModal({
                 </InputWrapper>
                 <InputWrapper label="Interest" icon={Heart}>
                   <select name="interest" value={data.interest || ""} onChange={handleChange} disabled={!isEditing} required
-                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                    className={`w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                   >
                     <option value="" disabled>Select interest</option>
                     {INTERESTS.map(i => <option key={i} value={i}>{i}</option>)}
@@ -209,7 +209,7 @@ export default function ProfileModal({
 
             {/* Platform Profiles */}
             <div>
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-800 pb-2">Coding Profiles</h3>
+              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Coding Profiles</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 {[
                   { name: 'leetcode', label: 'LeetCode', icon: Code },
@@ -221,7 +221,7 @@ export default function ProfileModal({
                 ].map(item => (
                   <InputWrapper key={item.name} label={item.label} icon={item.icon}>
                     <input type="text" name={item.name} value={data[item.name]} onChange={handleChange} disabled={!isEditing} required
-                      className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
+                      className={`w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm ${!isEditing ? "opacity-60 cursor-not-allowed" : ""}`}
                     />
                   </InputWrapper>
                 ))}
@@ -229,7 +229,7 @@ export default function ProfileModal({
             </div>
 
             {/* Actions */}
-            <div className="flex justify-between items-center pt-4 border-t border-gray-800">
+            <div className="flex justify-between items-center pt-4 border-t border-white/10">
               <button
                 type="button"
                 onClick={handleChangePassword}
@@ -241,7 +241,7 @@ export default function ProfileModal({
               <button
                 type={isEditing ? "submit" : "button"}
                 onClick={() => !isEditing && setIsEditing(true)}
-                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-white shadow-lg transform active:scale-95 transition-all ${isEditing ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500' : 'bg-gray-700 hover:bg-gray-600'}`}
+                className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-medium text-white shadow-lg transform active:scale-95 transition-all ${isEditing ? 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 hover:shadow-primary-500/40' : 'bg-white/10 hover:bg-white/20'}`}
               >
                 {isEditing ? <><Save size={18} /> Save Changes</> : <><User size={18} /> Edit Profile</>}
               </button>

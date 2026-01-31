@@ -17,18 +17,18 @@ export default function ChangePasswordModal({ isOpen, onClose, handleUpdatePassw
 
   const InputIcon = ({ icon: Icon }) => (
     <div className="absolute top-3 left-3 pointer-events-none">
-      <Icon size={16} className="text-gray-500 group-focus-within:text-purple-400 transition-colors" />
+      <Icon size={16} className="text-gray-500 group-focus-within:text-primary-400 transition-colors" />
     </div>
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-      <div className="w-full max-w-md bg-dark-100 rounded-2xl shadow-2xl border border-gray-700/50 flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
+      <div className="w-full max-w-md glass-card rounded-3xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="flex justify-between items-center p-5 border-b border-gray-800 bg-dark-200/50">
+        <div className="flex justify-between items-center p-5 border-b border-white/10 bg-white/5 backdrop-blur-xl">
           <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <KeyRound size={20} className="text-purple-400" />
+            <KeyRound size={20} className="text-primary-400" />
             Change Password
           </h2>
           <button
@@ -88,7 +88,7 @@ export default function ChangePasswordModal({ isOpen, onClose, handleUpdatePassw
                   placeholder="Enter current password"
                   required
                   autoComplete="current-password"
-                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all shadow-inner"
+                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
@@ -111,7 +111,7 @@ export default function ChangePasswordModal({ isOpen, onClose, handleUpdatePassw
                   placeholder="Enter new password"
                   required
                   autoComplete="new-password"
-                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all shadow-inner"
+                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
@@ -134,7 +134,7 @@ export default function ChangePasswordModal({ isOpen, onClose, handleUpdatePassw
                   placeholder="Confirm new password"
                   autoComplete="new-password"
                   required
-                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all shadow-inner"
+                  className="w-full pl-9 pr-10 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all shadow-inner"
                 />
                 <button
                   type="button"
@@ -157,7 +157,7 @@ export default function ChangePasswordModal({ isOpen, onClose, handleUpdatePassw
               </button>
               <button
                 type="submit"
-                className="flex-1 py-2.5 text-sm font-medium bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl shadow-lg transform active:scale-[0.98] transition-all cursor-pointer"
+                className="flex-1 py-2.5 text-sm font-medium bg-primary-600 hover:bg-primary-500 text-white rounded-xl shadow-lg transform active:scale-[0.98] transition-all cursor-pointer"
               >
                 Update Password
               </button>

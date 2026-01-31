@@ -1,7 +1,16 @@
 @import "tailwindcss";
 
 body {
-  background-color: #0f172a;
+  background-color: #141b2a;
+  background-image:
+    radial-gradient(at 0% 0%, rgba(192, 132, 252, 0.05) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
+    radial-gradient(
+      at 100% 100%,
+      rgba(192, 132, 252, 0.05) 0px,
+      transparent 50%
+    ),
+    radial-gradient(at 0% 100%, rgba(56, 189, 248, 0.05) 0px, transparent 50%);
   color: #fff;
   overflow-x: hidden;
 }
@@ -14,11 +23,22 @@ body {
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1);
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
+}
+
+.glass-card-hover {
+  transition: all 0.3s ease;
+}
+
+.glass-card-hover:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(192, 132, 252, 0.3);
+  box-shadow: 0 0 25px rgba(192, 132, 252, 0.15);
+  transform: translateY(-2px);
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -39,11 +59,12 @@ body {
 
 ::-webkit-scrollbar-thumb {
   background: #4b5563;
+  background-image: linear-gradient(to bottom, #4b5563, #374151);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: #8b5cf6;
 }
 
 .scrollbar-custom {

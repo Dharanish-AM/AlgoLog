@@ -134,10 +134,10 @@ const StudentProfile = ({
   }
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white p-4 md:p-8 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-900/20 via-[#0f172a] to-[#0f172a]">
+    <div className="min-h-screen text-white p-4 md:p-8">
 
       {/* Navbar */}
-      <div className="flex justify-between items-center mb-10 w-full bg-dark-100 border border-gray-700/50 px-6 py-3 rounded-full sticky top-4 z-40 shadow-xl">
+      <div className="flex justify-between items-center mb-12 w-full glass-card px-8 py-4 rounded-2xl sticky top-6 z-40 shadow-neo transition-all duration-300">
         <div
           onClick={() => {
             window.location.reload();
@@ -149,7 +149,7 @@ const StudentProfile = ({
             alt="AlgoLog Logo"
             className="w-10 h-10 aspect-square group-hover:rotate-12 transition-transform duration-300"
           />
-          <h1 className="ml-3 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-blue-400">
+          <h1 className="ml-3 text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-400 to-accent-pink tracking-tight">
             AlgoLog
           </h1>
         </div>
@@ -186,13 +186,13 @@ const StudentProfile = ({
 
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Hero Profile Card */}
-        <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-8 relative overflow-hidden group shadow-xl">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-purple-600/20 transition-all duration-700"></div>
+        <div className="glass-card rounded-3xl p-8 relative overflow-hidden group hover:shadow-purple-glow transition-all duration-500">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-primary-600/20 transition-all duration-700"></div>
 
           <div className="flex flex-col md:flex-row md:items-center md:justify-between relative z-10">
             <div className="flex items-center space-x-6 mb-6 md:mb-0">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/20">
-                <span className="text-4xl font-bold text-white">
+              <div className="w-24 h-24 bg-gradient-to-br from-primary-600 to-primary-800 rounded-3xl flex items-center justify-center shadow-lg shadow-primary-500/30 ring-4 ring-primary-500/20 group-hover:scale-105 transition-transform duration-500">
+                <span className="text-5xl font-bold text-white drop-shadow-lg">
                   {student.name[0].toUpperCase()}
                 </span>
               </div>
@@ -222,7 +222,7 @@ const StudentProfile = ({
               <button
                 onClick={handleRefresh}
                 disabled={isRefreshing}
-                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium transition-all duration-300 ${isRefreshing ? 'bg-indigo-600/50 cursor-not-allowed' : 'bg-indigo-600 hover:bg-indigo-500 hover:shadow-lg hover:shadow-indigo-500/25'}`}
+                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold text-white shadow-lg transition-all duration-300 transform hover:-translate-y-1 ${isRefreshing ? 'bg-primary-600/50 cursor-not-allowed' : 'bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 hover:shadow-primary-500/40'}`}
               >
                 <RefreshCwIcon className={`w-5 h-5 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>{isRefreshing ? 'Syncing...' : 'Sync Data'}</span>
@@ -261,12 +261,13 @@ const StudentProfile = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
           {/* LeetCode Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-orange-500/30 transition-all duration-500 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-orange-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={`https://leetcode.com/${student.leetcode}`} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-400 to-yellow-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/20">
                 <Code className="text-white fill-white" size={24} />
               </div>
               <div>
@@ -280,8 +281,8 @@ const StudentProfile = ({
                 <div className="text-3xl font-bold text-orange-400 mb-1">{safeGet(student, 'stats.leetcode.solved.All', '0')}</div>
                 <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Solved</div>
               </div>
-              <div className="flex-1 bg-dark-100/50 rounded-2xl p-6 text-center border border-gray-700/50 hover:border-purple-500/30 transition-colors">
-                <div className="text-2xl font-bold text-purple-400 mb-1">
+              <div className="flex-1 bg-dark-100/50 rounded-2xl p-6 text-center border border-gray-700/50 hover:border-primary-500/30 transition-colors">
+                <div className="text-2xl font-bold text-primary-400 mb-1">
                   {student?.stats?.leetcode?.globalRanking ? `#${student.stats.leetcode.globalRanking.toLocaleString()}` : 'N/A'}
                 </div>
                 <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Global Rank</div>
@@ -321,12 +322,13 @@ const StudentProfile = ({
           </div>
 
           {/* SkillRack Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-purple-500/30 transition-all duration-500 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-primary-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={student.skillrack} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
+              <div className="w-12 h-12 bg-primary-600 rounded-xl flex items-center justify-center shadow-lg shadow-primary-500/20">
                 <FileText className="text-white" size={24} />
               </div>
               <div>
@@ -336,7 +338,7 @@ const StudentProfile = ({
             </div>
 
             <div className="bg-dark-100/50 rounded-2xl p-6 text-center border border-gray-700/50 mb-8">
-              <div className="text-4xl font-bold text-purple-400 mb-1">{student.stats?.skillrack?.programsSolved || 0}</div>
+              <div className="text-4xl font-bold text-primary-400 mb-1">{student.stats?.skillrack?.programsSolved || 0}</div>
               <div className="text-xs text-gray-500 uppercase tracking-widest font-semibold">Programs Solved</div>
             </div>
 
@@ -369,12 +371,13 @@ const StudentProfile = ({
           </div>
 
           {/* HackerRank Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-green-500/30 transition-all duration-500 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-green-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={`https://www.hackerrank.com/profile/${student.hackerrank}`} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
+              <div className="w-12 h-12 bg-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
                 <Trophy className="text-white" size={24} />
               </div>
               <div>
@@ -398,12 +401,13 @@ const StudentProfile = ({
           </div>
 
           {/* CodeChef Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-yellow-500/30 transition-all duration-500 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-yellow-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={`https://www.codechef.com/users/${student.codechef}`} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-500 to-amber-700 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/20">
+              <div className="w-12 h-12 bg-yellow-600 rounded-xl flex items-center justify-center shadow-lg shadow-yellow-500/20">
                 <Award className="text-white" size={24} />
               </div>
               <div>
@@ -415,7 +419,7 @@ const StudentProfile = ({
             <div className="grid grid-cols-2 gap-4">
               {[
                 { label: "Rating", value: student.stats?.codechef?.rating, color: "text-yellow-400" },
-                { label: "Highest", value: student.stats?.codechef?.highestRating, color: "text-purple-400" },
+                { label: "Highest", value: student.stats?.codechef?.highestRating, color: "text-primary-400" },
                 { label: "Global Rank", value: student.stats?.codechef?.globalRank, color: "text-blue-400", prefix: "#" },
                 { label: "Country Rank", value: student.stats?.codechef?.countryRank, color: "text-cyan-400", prefix: "#" },
               ].map((stat, i) => (
@@ -434,12 +438,13 @@ const StudentProfile = ({
           </div>
 
           {/* Codeforces Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-red-500/30 transition-all duration-500 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-red-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={`https://codeforces.com/profile/${student.codeforces}`} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-rose-700 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
+              <div className="w-12 h-12 bg-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-red-500/20">
                 <TrendingUp className="text-white" size={24} />
               </div>
               <div>
@@ -466,12 +471,13 @@ const StudentProfile = ({
           </div>
 
           {/* GitHub Card */}
-          <div className="bg-dark-100 border border-gray-700/50 rounded-3xl p-6 md:p-8 relative hover:border-gray-500/30 transition-all duration-500 hover:shadow-gray-500/10 shadow-xl">
+          <div className="glass-card glass-card-hover border-transparent hover:border-gray-500/50 rounded-3xl p-6 md:p-8 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
             <a href={`https://github.com/${student.github}`} target="_blank" rel="noopener noreferrer" className="absolute top-6 right-6 text-gray-500 hover:text-white transition-colors">
               <ExternalLink size={20} />
             </a>
             <div className="flex items-center gap-4 mb-8">
-              <div className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-900 rounded-xl flex items-center justify-center shadow-lg shadow-gray-500/20">
+              <div className="w-12 h-12 bg-gray-800 rounded-xl flex items-center justify-center shadow-lg shadow-gray-500/20">
                 <Github className="text-white" size={24} />
               </div>
               <div>
