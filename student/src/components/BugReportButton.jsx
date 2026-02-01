@@ -1,14 +1,13 @@
 import React from "react";
-import { Bug } from "lucide-react";
 
 function BugReportButton({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="fixed bottom-6 left-6 w-14 h-14 bg-dark-100 hover:bg-dark-200 text-primary-400 rounded-full border border-primary-500/30 transition-all duration-300 flex items-center justify-center z-40 transform hover:scale-110 active:scale-95 group"
+      className="fixed bottom-8 left-8 w-16 h-16 bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 hover:from-purple-600 hover:via-purple-700 hover:to-purple-800 text-white rounded-full shadow-lg hover:shadow-2xl transition-all duration-200 flex items-center justify-center text-3xl z-40 hover:scale-110 active:scale-95 border border-purple-400/30 backdrop-blur-sm"
       title="Report a bug"
     >
-      <Bug className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+      🐛
     </button>
   );
 }

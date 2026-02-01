@@ -489,97 +489,90 @@ async function getCodeChefStats(username) {
       }
 
       const $ = cheerio.load(data);
+      console.log(`[CodeChef] Page loaded for ${username}. Extracting data...`);
 
       // Extract rating
-      let rating = $("div.rating-number")
-        .contents()
-        .filter(function () {
-          return this.type === "text";
-        })
-        .text()
-        .trim()
-        .replace("?", "");
+      const rating = $(".rating-number").text().trim() || "0";
 
-      // Extract Division (Div X)
-      // The div containing (Div X) is a sibling of .rating-number inside .rating-header
-      let division = "";
-      $("div.rating-header > div").each((i, el) => {
-        const text = $(el).text().trim();
-        if (text.match(/\(Div \d+\)/i)) {
-          division = text.replace(/[()]/g, ""); // Remove parenthesis -> "Div 4"
+      // Extract Div
+      let division = "N/A";
+      // Try to find div in rating header
+      const headerDivs = $(".rating-header div");
+      for (let i = 0; i < headerDivs.length; i++) {
+        const txt = $(headerDivs[i]).text();
+        if (txt.includes("Div")) {
+          division = txt.replace(/[()]/g, "").trim();
+          break;
         }
-      });
-
-      // Extract Stars (e.g. "1★")
-      // The .rating-star div contains a span with the star character.
-      // Sometimes it has text like "3★" or the background color indicates the stars.
-      // Based on common CodeChef structure, the text inside .rating-star usually is just "★".
-      // But the background color of the span or the numeric rating determines the "Star" level (e.g. 1 Star, 2 Star).
-      // However, usually there is a textual representation or we can map rating to stars.
-      // Let's rely on extracting text first. If it's just "★", maybe we should look for "1★" elsewhere or infer it.
-      // Actually, standard CodeChef profile usually shows "3★" in text.
-      // If the user snippet says `<div class="rating-star"><span ...>★</span></div>`, it might be just visual.
-      // But often the rating color/stars are correlated.
-      // Let's try to find text that looks like "1★", "2★" etc.
-      // In the snippet, it's NOT explicitly "1★".
-      // Let's assume for now we might map it or check if there is other text.
-      // Wait, looking at general CodeChef profiles, the "stars" are often usually just the text "1★", "2★" next to rating or similar.
-      // If not present, we can map:
-      // < 1400: 1★, 1400-1599: 2★, 1600-1799: 3★, 1800-1999: 4★, 2000-2199: 5★, 2200-2499: 6★, >= 2500: 7★
-
-      let stars = "";
-      // Infers star count from rating since explicit text might just be "★" or color-coded.
-      const ratingNum = parseInt(rating, 10);
-      if (!isNaN(ratingNum)) {
-        if (ratingNum < 1400) stars = "1";
-        else if (ratingNum < 1600) stars = "2";
-        else if (ratingNum < 1800) stars = "3";
-        else if (ratingNum < 2000) stars = "4";
-        else if (ratingNum < 2200) stars = "5";
-        else if (ratingNum < 2500) stars = "6";
-        else stars = "7";
       }
 
-      // Extract highest rating from "Highest Rating XXXX"
-      const highestRatingText = $("div.rating-header").find("small").text();
-      const highestRating = highestRatingText.match(/\d+/)?.[0] || null;
+      // Extract Stars
+      let stars = "1★"; // Default
+      // Try to find star using background color logic or span
+      // The user provided: <div class="rating-star"><span style="background-color:#666666">★</span></div>
+      // Often the color maps to stars.
+      // 1★: #666666 (Grey)
+      // 2★: #1E7D22 (Green)
+      // 3★: #3366CC (Blue)
+      // 4★: #684273 (Purple)
+      // 5★: #FFBF00 (Yellow)
+      // 6★: #FF7F00 (Orange)
+      // 7★: #D0011B (Red)
 
-      // Extract global rank
-      const globalRankElement = $("div.rating-ranks").find("ul li a").eq(0);
-      const globalRank = globalRankElement.text().trim();
+      const starSpan = $(".rating-star span");
+      const starColor = starSpan.attr("style"); // e.g., "background-color:#666666"
 
-      // Extract country rank
-      const countryRankElement = $("div.rating-ranks").find("ul li a").eq(1);
-      const countryRank = countryRankElement.text().trim();
+      if (starColor) {
+        if (starColor.includes("#666666")) stars = "1★";
+        else if (starColor.includes("#1E7D22")) stars = "2★";
+        else if (starColor.includes("#3366CC")) stars = "3★";
+        else if (starColor.includes("#684273")) stars = "4★";
+        else if (starColor.includes("#FFBF00")) stars = "5★";
+        else if (starColor.includes("#FF7F00")) stars = "6★";
+        else if (starColor.includes("#D0011B")) stars = "7★";
+      } else {
+        // Fallback to numeric logic if color check fails
+        const r = parseInt(rating, 10);
+        if (!isNaN(r)) {
+          if (r < 1400) stars = "1★";
+          else if (r < 1600) stars = "2★";
+          else if (r < 1800) stars = "3★";
+          else if (r < 2000) stars = "4★";
+          else if (r < 2200) stars = "5★";
+          else if (r < 2500) stars = "6★";
+          else stars = "7★";
+        }
+      }
 
-      // Extract total problems solved
-      const solvedText = $("h3")
-        .filter((i, el) => $(el).text().includes("Total Problems Solved"))
+      // Extract highest rating
+      const highestRatingText = $(".rating-header small").text().match(/\d+/);
+      const highestRating = highestRatingText
+        ? parseInt(highestRatingText[0], 10)
+        : 0;
+
+      // Extract Global Rank
+      const globalRank = $(".rating-ranks ul li:first-child a").text().trim();
+
+      // Extract Country Rank
+      const countryRank = $(".rating-ranks ul li:last-child a").text().trim();
+
+      // Extract Total Problems Solved
+      const fullySolvedText = $("h3:contains('Total Problems Solved')")
         .text()
         .match(/\d+/);
-      const fullySolved = solvedText ? parseInt(solvedText[0], 10) : 0;
-
-      if (!rating && fullySolved === 0) {
-        throw new Error("Invalid or empty CodeChef profile page");
-      }
-
-      console.info(
-        `[CodeChef] ✅ Success for ${username} on attempt ${attempt}`,
-      );
+      const fullySolved = fullySolvedText
+        ? parseInt(fullySolvedText[0], 10)
+        : 0;
 
       const result = {
         platform: "CodeChef",
         username,
-        rating: rating ? parseInt(rating, 10) : null,
+        rating: parseInt(rating, 10) || 0,
         division,
         stars,
-        highestRating: highestRating ? parseInt(highestRating, 10) : null,
-        globalRank: globalRank
-          ? parseInt(globalRank.replace(/,/g, ""), 10)
-          : null,
-        countryRank: countryRank
-          ? parseInt(countryRank.replace(/,/g, ""), 10)
-          : null,
+        highestRating,
+        globalRank: parseInt(globalRank || "0", 10),
+        countryRank: parseInt(countryRank || "0", 10),
         fullySolved,
         updatedAt: new Date(),
       };
@@ -639,7 +632,7 @@ async function getCodeChefStats(username) {
   }
 }
 
-//getCodeChefStats("aadhi2131").then(console.log);
+// getCodeChefStats("guruvishal30").then(console.log);
 
 const CF_KEY = "bc101866ff73f1c52d47a140da274741148a91cd";
 const CF_SECRET = "82a89e594a95dc4d4ce2d20954cace11de5e990a";

@@ -112,18 +112,16 @@ function App() {
 
       if (response.status === 201 || response.status === 200) {
         toast.success("Signup successful! Please login.");
-        setIsLoading(false);
         return true;
       }
-      setIsLoading(false);
-      return false;
     } catch (err) {
       console.error("Signup failed:", err?.response?.data || err.message);
-      const errorMessage = err.response?.data?.error || err.response?.data?.message || err.message;
-      toast.error("Signup failed: " + errorMessage);
-      setIsLoading(false);
-      console.log("handleSignup returning false due to error");
+      toast.error(
+        "Signup failed: " + (err.response?.data?.message || err.message)
+      );
       return false;
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -144,9 +142,8 @@ function App() {
           },
         }
       );
-      //print student data
-      console.log(response.data.student);
       setStudent(response.data.student);
+      console.log(response.data.student);
       setIsAuthenticated(true);
       setIsLoading(false);
     } catch (err) {
@@ -166,7 +163,8 @@ function App() {
     try {
       setIsRefreshing(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${student._id
+        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${
+          student._id
         }`,
         {
           headers: {
@@ -296,7 +294,7 @@ function App() {
           href="https://github.com/Dharanish-AM"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-primary-400 hover:underline"
+          className="text-purple-400 hover:underline"
         >
           @dharanisham
         </a>

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { X, Send, Mail, Hash, AlertCircle, FileText } from "lucide-react";
 
 function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
   const [title, setTitle] = useState("");
@@ -9,6 +8,32 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
   const [email, setEmail] = useState("");
   const [rollNo, setRollNo] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleImageSelect = (e) => {
+    const files = Array.from(e.target.files);
+    const newImages = [...images, ...files];
+
+    if (newImages.length > 5) {
+      toast.error("Maximum 5 images allowed");
+      return;
+    }
+
+    setImages(newImages);
+
+    // Generate previews
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        setImagePreviews((prev) => [...prev, event.target.result]);
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -47,7 +72,10 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
       }
     } catch (err) {
       console.error("Error submitting bug report:", err);
-      toast.error("Failed to submit bug report");
+      toast.error(
+        "Failed to submit bug report: " +
+          (err.response?.data?.error || err.message)
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -55,110 +83,116 @@ function BugReportModal({ isOpen, onClose, studentId, isAuthenticated }) {
 
   if (!isOpen) return null;
 
-  const InputIcon = ({ icon: Icon }) => (
-    <div className="absolute top-3 left-3 pointer-events-none">
-      <Icon size={16} className="text-gray-500 group-focus-within:text-primary-400 transition-colors" />
-    </div>
-  );
-
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-fadeIn">
-      <div className="w-full max-w-lg glass-card rounded-3xl shadow-2xl flex flex-col overflow-hidden max-h-[90vh]">
+    <>
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+        onClick={onClose}
+      ></div>
 
+      {/* Modal */}
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 md:top-auto md:bottom-24 md:left-6 md:translate-x-0 md:translate-y-0 w-[90%] md:w-full md:max-w-md max-h-[90vh] md:max-h-[80vh] bg-gradient-to-b from-[#1f2937] to-[#111827] border border-purple-500/40 rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-          <h2 className="text-lg font-bold text-white flex items-center gap-2">
-            <span className="text-xl">🐛</span> Report a Bug
+        <div className="flex items-center justify-between p-4 md:p-5 border-b border-purple-500/20 bg-gradient-to-r from-purple-900/20 to-transparent">
+          <h2 className="text-sm md:text-base font-bold text-white flex items-center gap-2">
+            <span className="text-lg md:text-xl">🐛</span> Report a Bug
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full p-2 transition"
+            className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition"
           >
-            <X size={18} />
+            ✕
           </button>
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto p-5 space-y-4">
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-400">Email</label>
-              <div className="relative group">
-                <InputIcon icon={Mail} />
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email address"
-                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
-                />
-              </div>
+        <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-y-auto">
+          {/* Form Fields */}
+          <div className="p-3 md:p-4 space-y-3 md:space-y-4 flex-1 overflow-y-auto">
+            {/* Email Input */}
+            <div>
+              <label className="block text-xs md:text-sm font-semibold text-gray-200 mb-1.5 md:mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="your.email@example.com"
+                className="w-full bg-[#1f2937] border border-purple-500/30 rounded-lg px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/80 focus:ring-2 focus:ring-purple-500/20 transition"
+              />
             </div>
 
-            <div className="space-y-1">
-              <label className="text-xs font-semibold text-gray-400">Roll Number</label>
-              <div className="relative group">
-                <InputIcon icon={Hash} />
-                <input
-                  type="text"
-                  value={rollNo}
-                  onChange={(e) => setRollNo(e.target.value)}
-                  placeholder="Roll No"
-                  className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
-                />
-              </div>
+            {/* Roll Number Input */}
+            <div>
+              <label className="block text-xs md:text-sm font-semibold text-gray-200 mb-1.5 md:mb-2">
+                Roll Number
+              </label>
+              <input
+                type="text"
+                value={rollNo}
+                onChange={(e) => setRollNo(e.target.value)}
+                placeholder="Your roll number"
+                className="w-full bg-[#1f2937] border border-purple-500/30 rounded-lg px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/80 focus:ring-2 focus:ring-purple-500/20 transition"
+              />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-gray-400">Issue Title</label>
-            <div className="relative group">
-              <InputIcon icon={AlertCircle} />
+            {/* Title Input */}
+            <div>
+              <label className="block text-xs md:text-sm font-semibold text-gray-200 mb-1.5 md:mb-2">
+                Title
+              </label>
               <input
                 type="text"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Brief title of the bug"
-                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
+                className="w-full bg-[#1f2937] border border-purple-500/30 rounded-lg px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/80 focus:ring-2 focus:ring-purple-500/20 transition"
               />
             </div>
-          </div>
 
-          <div className="space-y-1">
-            <label className="text-xs font-semibold text-gray-400">Description</label>
-            <div className="relative group">
-              <InputIcon icon={FileText} />
+            {/* Description Input */}
+            <div>
+              <label className="block text-xs md:text-sm font-semibold text-gray-200 mb-1.5 md:mb-2">
+                Description
+              </label>
               <textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Describe what happened, expected behavior, and steps to reproduce..."
-                rows="4"
-                className="w-full pl-9 pr-3 py-2.5 bg-dark-200/50 border border-gray-700 rounded-xl text-sm text-white placeholder-gray-600 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all resize-none"
+                placeholder="Detailed description of the bug..."
+                rows="3"
+                className="w-full bg-[#1f2937] border border-purple-500/30 rounded-lg px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base text-white placeholder-gray-500 focus:outline-none focus:border-purple-500/80 focus:ring-2 focus:ring-purple-500/20 transition resize-none"
               ></textarea>
             </div>
           </div>
 
-          <div className="pt-2">
+          {/* Footer */}
+          <div className="flex gap-2 md:gap-3 p-3 md:p-5 border-t border-purple-500/20 bg-gradient-to-r from-gray-900/30 to-transparent">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition font-medium"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-500 text-white rounded-xl shadow-lg transform active:scale-[0.98] transition-all font-semibold flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex-1 px-3 md:px-4 py-2 md:py-2.5 text-sm md:text-base bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg transition font-medium flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></span> Submitting...
+                  <span className="animate-spin">⟳</span> Submitting...
                 </>
               ) : (
-                <>
-                  <Send size={18} /> Submit Report
-                </>
+                "✓ Submit Report"
               )}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </>
   );
 }
 

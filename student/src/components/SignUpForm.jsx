@@ -1,12 +1,9 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
-import axios from "axios";
 import { GridLoader } from "react-spinners";
-import { X, User, Mail, Phone, Hash, BookOpen, UserCheck, Home, Heart, Code, Github, Globe } from "lucide-react";
+import { X } from "lucide-react";
 import { validateSkillrackUrl } from "../utils/skillrackValidator";
-import { STUDENT_YEARS, ACCOMMODATION_TYPES, GENDERS, INTERESTS, SECTIONS, DEPARTMENTS } from "../utils/constants";
-
-const API_URL = import.meta.env.VITE_API_URL;
+import { YEARS, ACCOMMODATION_TYPES, GENDERS, INTERESTS, DEPARTMENTS, SECTIONS } from "../utils/constants";
 
 const SignUpForm = ({ onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
@@ -14,11 +11,11 @@ const SignUpForm = ({ onClose, onSubmit }) => {
     email: "",
     mobileNumber: "",
     rollNo: "",
+    gender: "",
+    accommodation: "",
+    department: "",
     year: "",
     section: "",
-    department: "",
-    accommodation: "",
-    gender: "",
     interest: "",
     leetcode: "",
     hackerrank: "",
@@ -27,12 +24,7 @@ const SignUpForm = ({ onClose, onSubmit }) => {
     skillrack: "",
     github: "",
   });
-  const [loading, setLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  useEffect(() => {
-    setLoading(false);
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -45,6 +37,7 @@ const SignUpForm = ({ onClose, onSubmit }) => {
       return;
     }
 
+    // Validate Skillrack URL
     const skillrackUrl = formData.skillrack.trim();
     const skillrackValidation = validateSkillrackUrl(skillrackUrl);
     if (!skillrackValidation.valid) {
@@ -56,6 +49,7 @@ const SignUpForm = ({ onClose, onSubmit }) => {
     try {
       const trimmedData = {
         ...formData,
+        mobileNumber: formData.mobileNumber.trim(),
         leetcode: formData.leetcode.trim(),
         hackerrank: formData.hackerrank.trim(),
         codechef: formData.codechef.trim(),
@@ -63,18 +57,21 @@ const SignUpForm = ({ onClose, onSubmit }) => {
         skillrack: skillrackUrl,
         github: formData.github.trim(),
       };
+
+      // Pass to parent
       const success = await onSubmit(trimmedData);
+
       if (success) {
         setFormData({
           name: "",
           email: "",
           mobileNumber: "",
           rollNo: "",
+          gender: "",
+          accommodation: "",
+          department: "",
           year: "",
           section: "",
-          department: "",
-          accommodation: "",
-          gender: "",
           interest: "",
           leetcode: "",
           hackerrank: "",
@@ -83,236 +80,265 @@ const SignUpForm = ({ onClose, onSubmit }) => {
           skillrack: "",
           github: "",
         });
+        // Do not close here; parent (Auth) toggles view to Login.
       }
     } catch (err) {
-      console.error("SignUpForm error:", err);
+      console.error(err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (loading) {
-    return (
-      <div className="absolute inset-0 z-50 flex justify-center items-center h-screen bg-dark-200/80 backdrop-blur-sm">
-        <GridLoader color="#C084FC" size={20} />
-      </div>
-    );
-  }
-
-  const InputIcon = ({ icon: Icon }) => (
-    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-      <Icon className="h-4 w-4 text-gray-400 group-focus-within:text-primary-400 transition-colors" />
-    </div>
-  );
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fadeIn">
-      <div className="relative w-full max-w-4xl glass-card rounded-3xl shadow-2xl flex flex-col max-h-[90vh] overflow-hidden">
-
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b border-white/10 bg-white/5 backdrop-blur-xl">
-          <div>
-            <h2 className="text-2xl font-bold text-primary-400">
-              Create Account
-            </h2>
-            <p className="text-sm text-gray-400">Enter your details to register</p>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-800 text-gray-400 hover:text-white transition-colors"
-          >
-            <X size={20} />
-          </button>
+    <div className="bg-black/40 absolute inset-0 z-50 bg-opacity-50 flex flex-col items-center py-8 justify-center min-h-screen w-full">
+      <div className="relative bg-white dark:bg-gray-800 overflow-auto scrollbar-hide rounded-lg p-6 h-[90vh] sm:w-[55vw] w-[85vw]">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            Enter Student Details
+          </h2>
+          <X onClick={onClose} className="text-gray-400 cursor-pointer" />
         </div>
 
-        {/* Scrollable Form Area */}
-        <div className="overflow-y-auto p-6 scrollbar-custom">
-          <form onSubmit={handleSubmit} className="space-y-6">
-
-            {/* Personal Info Section */}
-            <div>
-              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Personal Information</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Name</label>
-                  <div className="relative group">
-                    <InputIcon icon={User} />
-                    <input type="text" placeholder="Full Name" required
-                      value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Email</label>
-                  <div className="relative group">
-                    <InputIcon icon={Mail} />
-                    <input type="email" placeholder="student@sece.ac.in" required
-                      value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Mobile Number</label>
-                  <div className="relative group">
-                    <InputIcon icon={Phone} />
-                    <input type="tel" placeholder="Phone Number" required
-                      value={formData.mobileNumber} onChange={e => setFormData({ ...formData, mobileNumber: e.target.value })}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Gender</label>
-                  <div className="relative group">
-                    <InputIcon icon={UserCheck} />
-                    <select required value={formData.gender} onChange={e => setFormData({ ...formData, gender: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Gender</option>
-                      {GENDERS.map(g => <option key={g} value={g}>{g}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b pb-2">Personal Information</h3>
+          {/* Personal Info */}
+          {[
+            { label: "Name", key: "name", type: "text", required: true },
+            { label: "Email", key: "email", type: "email", required: true },
+            { label: "Mobile Number", key: "mobileNumber", type: "tel", required: true },
+            { label: "Roll Number", key: "rollNo", required: true },
+          ].map(({ label, key, type = "text", required }) => (
+            <div key={key}>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                {label}
+              </label>
+              <input
+                type={type}
+                value={formData[key]}
+                required={required}
+                placeholder={`Enter ${label.toLowerCase()}`}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    [key]: key === "rollNo" ? e.target.value.toUpperCase() : e.target.value,
+                  })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
             </div>
+          ))}
 
-            {/* Academic Info Section */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Academic Details</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Roll Number</label>
-                  <div className="relative group">
-                    <InputIcon icon={Hash} />
-                    <input type="text" placeholder="Roll Number" required
-                      value={formData.rollNo} onChange={e => setFormData({ ...formData, rollNo: e.target.value.toUpperCase() })}
-                      className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Department</label>
-                  <div className="relative group">
-                    <InputIcon icon={BookOpen} />
-                    <select required value={formData.department} onChange={e => setFormData({ ...formData, department: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Department</option>
-                      {DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Year</label>
-                  <div className="relative group">
-                    <InputIcon icon={BookOpen} /> {/* Reusing icon */}
-                    <select required value={formData.year} onChange={e => setFormData({ ...formData, year: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Year</option>
-                      {STUDENT_YEARS.map(y => <option key={y} value={y}>{y}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Section</label>
-                  <div className="relative group">
-                    <InputIcon icon={BookOpen} /> {/* Reusing icon */}
-                    <select required value={formData.section} onChange={e => setFormData({ ...formData, section: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Section</option>
-                      {SECTIONS.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Accommodation</label>
-                  <div className="relative group">
-                    <InputIcon icon={Home} />
-                    <select required value={formData.accommodation} onChange={e => setFormData({ ...formData, accommodation: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Accommodation</option>
-                      {ACCOMMODATION_TYPES.map(a => <option key={a} value={a}>{a}</option>)}
-                    </select>
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <label className="text-xs font-semibold text-gray-400 ml-1">Interest</label>
-                  <div className="relative group">
-                    <InputIcon icon={Heart} />
-                    <select required value={formData.interest} onChange={e => setFormData({ ...formData, interest: e.target.value })}
-                      className="w-full pl-9 pr-8 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all appearance-none text-sm"
-                    >
-                      <option value="" disabled>Select Interest</option>
-                      {INTERESTS.map(i => <option key={i} value={i}>{i}</option>)}
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Platform Profiles Section */}
-            <div>
-              <h3 className="text-sm font-semibold text-primary-300 uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Coding Profiles</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                {[
-                  { key: "leetcode", label: "LeetCode ID", ph: "username", icon: Code },
-                  { key: "hackerrank", label: "HackerRank ID", ph: "username", icon: Code },
-                  { key: "codechef", label: "CodeChef ID", ph: "username", icon: Code },
-                  { key: "codeforces", label: "Codeforces ID", ph: "username", icon: Code },
-                  { key: "skillrack", label: "SkillRack URL", ph: "Profile URL", icon: Globe },
-                  { key: "github", label: "GitHub ID", ph: "username", icon: Github },
-                ].map(({ key, label, ph, icon }) => (
-                  <div key={key} className="space-y-1">
-                    <label className="text-xs font-semibold text-gray-400 ml-1">{label}</label>
-                    <div className="relative group">
-                      <InputIcon icon={icon} />
-                      <input type="text" placeholder={ph} required={key !== "github"}
-                        value={formData[key]}
-                        onChange={(e) => {
-                          // Existing logic from previous file usually wrapped here
-                          // Copying logic for simple assignment for now, can be sophisticated as before
-                          // Keeping it simple for the artifact, but should consider the URL parsing logic if needed
-                          // Re-implementing URL parsing logic briefly:
-                          let val = e.target.value.trimStart();
-                          // Simplified URL parsing reuse
-                          if (val.startsWith("http")) {
-                            try {
-                              const url = new URL(val);
-                              if (key === "leetcode" && url.pathname.startsWith("/u/")) val = url.pathname.split("/u/")[1].replace(/\/$/, "");
-                              else if (key === "hackerrank" && url.pathname.startsWith("/profile/")) val = url.pathname.split("/profile/")[1].replace(/\/$/, "");
-                              else if (key === "codechef" && url.pathname.startsWith("/users/")) val = url.pathname.split("/users/")[1].replace(/\/$/, "");
-                              else if (key === "codeforces" && url.pathname.startsWith("/profile/")) val = url.pathname.split("/profile/")[1].replace(/\/$/, "");
-                              else if (key === "github") val = url.pathname.split("/")[1].replace(/\/$/, "") || val;
-                            } catch (e) { }
-                          }
-                          setFormData({ ...formData, [key]: val });
-                        }}
-                        className="w-full pl-9 pr-4 py-2.5 rounded-lg bg-dark-200/50 border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all text-sm"
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="pt-4">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-primary-600 to-primary-500 hover:from-primary-500 hover:to-primary-400 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg hover:shadow-primary-500/40 transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Gender
+              </label>
+              <select
+                value={formData.gender}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, gender: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
               >
-                {isSubmitting ? "Creating Account..." : "Complete Registration"}
-              </button>
+                <option value="" disabled>Select Gender</option>
+                {GENDERS.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
             </div>
-          </form>
-        </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Accommodation
+              </label>
+              <select
+                value={formData.accommodation}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, accommodation: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="" disabled>Select Accommodation</option>
+                {ACCOMMODATION_TYPES.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b pb-2 pt-4">Academic Information</h3>
+          {/* Academic Info */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Department
+              </label>
+              <select
+                value={formData.department}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, department: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="" disabled>Select Department</option>
+                {DEPARTMENTS.sort().map((dpt) => (
+                  <option key={dpt} value={dpt}>
+                    {dpt}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Year
+              </label>
+              <select
+                value={formData.year}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, year: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="" disabled>Select Year</option>
+                {YEARS.map((year) => (
+                  <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Section
+              </label>
+              <select
+                value={formData.section}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, section: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="" disabled>Select Section</option>
+                {SECTIONS.map((sec) => (
+                  <option key={sec} value={sec}>{sec}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                Area of Interest
+              </label>
+              <select
+                value={formData.interest}
+                required
+                onChange={(e) =>
+                  setFormData({ ...formData, interest: e.target.value })
+                }
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="" disabled>Select Interest</option>
+                {INTERESTS.map((int) => (
+                  <option key={int} value={int}>{int}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <h3 className="text-lg font-semibold text-gray-800 dark:text-gray-200 border-b pb-2 pt-4">Platform Handles</h3>
+          {/* Platform Handles */}
+          {[
+            { label: "LeetCode Profile ID", key: "leetcode", required: true },
+            { label: "HackerRank Profile ID", key: "hackerrank", required: true },
+            { label: "CodeChef Profile ID", key: "codechef", required: true },
+            { label: "Codeforces Profile ID", key: "codeforces", required: true },
+            { label: "SkillRack Profile URL", key: "skillrack", required: true },
+            { label: "GitHub Profile Username", key: "github", required: true },
+          ].map(({ label, key, required }) => (
+            <div key={key}>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+                {label}
+              </label>
+              <input
+                type="text"
+                value={formData[key]}
+                required={required}
+                placeholder={
+                  key === "leetcode"
+                    ? "Enter leetcode username (e.g., johndoe123)"
+                    : key === "hackerrank"
+                      ? "Enter hackerrank username (e.g., johndoe_hr)"
+                      : key === "codechef"
+                        ? "Enter codechef username (e.g., johndoe_cc)"
+                        : key === "codeforces"
+                          ? "Enter codeforces username (e.g., johndoe_cf)"
+                          : key === "skillrack"
+                            ? "Enter skillrack URL (e.g., https://www.skillrack.com/profile/484170/...)"
+                            : key === "github"
+                              ? "Enter GitHub username (e.g., johndoe)"
+                              : `Enter ${label.toLowerCase()}`
+                }
+                onChange={(e) => {
+                  let value = e.target.value;
+                  value = value.trimStart();
+                  if (key === "skillrack" && value.startsWith("http://")) {
+                    value = "https://" + value.slice(7);
+                  }
+                  // Clean logic for platform handles
+                  try {
+                    if (value.startsWith("http")) {
+                      const url = new URL(value);
+                      if (key === "leetcode" && url.pathname.startsWith("/u/")) {
+                        value = url.pathname.split("/u/")[1].replace(/\/$/, "");
+                      } else if (key === "hackerrank" && url.pathname.startsWith("/profile/")) {
+                        value = url.pathname.split("/profile/")[1].replace(/\/$/, "");
+                      } else if (key === "codechef" && url.pathname.startsWith("/users/")) {
+                        value = url.pathname.split("/users/")[1].replace(/\/$/, "");
+                      } else if (key === "codeforces" && url.pathname.startsWith("/profile/")) {
+                        value = url.pathname.split("/profile/")[1].replace(/\/$/, "");
+                      } else if (key === "github") {
+                        value = url.pathname.split("/")[1].replace(/\/$/, "") || value;
+                      }
+                    }
+                  } catch (e) {
+                    // Ignore
+                  }
+                  setFormData({ ...formData, [key]: value });
+                }}
+                className="text-sm w-full px-3 py-2.5 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white"
+              />
+            </div>
+          ))}
+
+          <div className="flex justify-end gap-4 mt-6">
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="text-sm font-semibold w-full px-4 py-2 bg-purple-600 text-white rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? "Submitting..." : "Submit"}
+            </button>
+          </div>
+        </form>
+
+        {isSubmitting && (
+          <div className="absolute inset-0 bg-purple-900/60 backdrop-blur-sm flex items-center justify-center rounded-lg">
+            <GridLoader color="#C084FC" size={18} />
+          </div>
+        )}
       </div>
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+        Made by{" "}
+        <a
+          href="https://github.com/Dharanish-AM"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-blue-600 dark:text-purple-400 hover:underline"
+        >
+          @dharanisham
+        </a>
+      </footer>
       <Toaster position="bottom-right" />
     </div>
   );
