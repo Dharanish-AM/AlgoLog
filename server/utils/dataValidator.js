@@ -31,10 +31,14 @@ class DataValidator {
 
         if (!validation.valid) {
           results.valid = false;
-          results.errors.push(...validation.errors.map(e => `${platform}: ${e}`));
+          results.errors.push(
+            ...validation.errors.map((e) => `${platform}: ${e}`),
+          );
         }
         if (validation.warnings?.length > 0) {
-          results.warnings.push(...validation.warnings.map(w => `${platform}: ${w}`));
+          results.warnings.push(
+            ...validation.warnings.map((w) => `${platform}: ${w}`),
+          );
         }
       }
     }
@@ -53,37 +57,46 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (!data.platform || data.platform !== 'LeetCode') {
-      errors.push('Invalid platform identifier');
+    if (!data.platform || data.platform !== "LeetCode") {
+      errors.push("Invalid platform identifier");
     }
 
-    if (!data.solved || typeof data.solved !== 'object') {
-      errors.push('Missing or invalid solved object');
+    if (!data.solved || typeof data.solved !== "object") {
+      errors.push("Missing or invalid solved object");
     } else {
       const { All, Easy, Medium, Hard } = data.solved;
-      
-      if (typeof All !== 'number' || All < 0) {
-        errors.push('Invalid total problems solved count');
+
+      if (typeof All !== "number" || All < 0) {
+        errors.push("Invalid total problems solved count");
       }
-      
+
       if (All !== Easy + Medium + Hard) {
         warnings.push(`Sum mismatch: ${Easy + Medium + Hard} vs ${All}`);
       }
 
       if (All < 0 || Easy < 0 || Medium < 0 || Hard < 0) {
-        errors.push('Negative problem counts detected');
+        errors.push("Negative problem counts detected");
       }
     }
 
-    if (data.rating && (typeof data.rating !== 'number' || data.rating < 0 || data.rating > 5000)) {
+    if (
+      data.rating &&
+      (typeof data.rating !== "number" || data.rating < 0 || data.rating > 5000)
+    ) {
       warnings.push(`Unusual rating: ${data.rating}`);
     }
 
-    if (data.contestCount && (typeof data.contestCount !== 'number' || data.contestCount < 0)) {
-      errors.push('Invalid contest count');
+    if (
+      data.contestCount &&
+      (typeof data.contestCount !== "number" || data.contestCount < 0)
+    ) {
+      errors.push("Invalid contest count");
     }
 
-    if (data.streak && (typeof data.streak !== 'number' || data.streak < 0 || data.streak > 3650)) {
+    if (
+      data.streak &&
+      (typeof data.streak !== "number" || data.streak < 0 || data.streak > 3650)
+    ) {
       warnings.push(`Unusual streak: ${data.streak} days`);
     }
 
@@ -106,18 +119,22 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (!data.platform || data.platform !== 'HackerRank') {
-      errors.push('Invalid platform identifier');
+    if (!data.platform || data.platform !== "HackerRank") {
+      errors.push("Invalid platform identifier");
     }
 
     if (!Array.isArray(data.badges)) {
-      errors.push('Badges must be an array');
+      errors.push("Badges must be an array");
     } else {
       data.badges.forEach((badge, idx) => {
-        if (!badge.name || typeof badge.name !== 'string') {
+        if (!badge.name || typeof badge.name !== "string") {
           errors.push(`Badge ${idx}: Missing or invalid name`);
         }
-        if (typeof badge.stars !== 'number' || badge.stars < 0 || badge.stars > 5) {
+        if (
+          typeof badge.stars !== "number" ||
+          badge.stars < 0 ||
+          badge.stars > 5
+        ) {
           errors.push(`Badge ${idx}: Invalid star count (${badge.stars})`);
         }
       });
@@ -142,13 +159,13 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (!data.platform || data.platform !== 'CodeChef') {
-      errors.push('Invalid platform identifier');
+    if (!data.platform || data.platform !== "CodeChef") {
+      errors.push("Invalid platform identifier");
     }
 
     // Validate username
-    if (!data.username || typeof data.username !== 'string') {
-      warnings.push('Missing or invalid username');
+    if (!data.username || typeof data.username !== "string") {
+      warnings.push("Missing or invalid username");
     }
 
     // Validate rating
@@ -168,8 +185,8 @@ class DataValidator {
     }
 
     // Validate division
-    if (data.division && typeof data.division !== 'string') {
-      warnings.push('Invalid division format');
+    if (data.division && typeof data.division !== "string") {
+      warnings.push("Invalid division format");
     }
 
     // Validate global rank
@@ -190,8 +207,8 @@ class DataValidator {
 
     // Validate problems solved
     if (data.fullySolved !== null && data.fullySolved !== undefined) {
-      if (typeof data.fullySolved !== 'number' || data.fullySolved < 0) {
-        errors.push('Invalid problems solved count');
+      if (typeof data.fullySolved !== "number" || data.fullySolved < 0) {
+        errors.push("Invalid problems solved count");
       }
     }
 
@@ -214,11 +231,11 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (!data.platform || data.platform !== 'Codeforces') {
-      errors.push('Invalid platform identifier');
+    if (!data.platform || data.platform !== "Codeforces") {
+      errors.push("Invalid platform identifier");
     }
 
-    if (data.rating && data.rating !== 'Unrated') {
+    if (data.rating && data.rating !== "Unrated") {
       const rating = parseInt(data.rating, 10);
       if (isNaN(rating) || rating < 0 || rating > 5000) {
         errors.push(`Invalid rating: ${data.rating}`);
@@ -226,14 +243,14 @@ class DataValidator {
     }
 
     if (data.contests !== undefined) {
-      if (typeof data.contests !== 'number' || data.contests < 0) {
-        errors.push('Invalid contest count');
+      if (typeof data.contests !== "number" || data.contests < 0) {
+        errors.push("Invalid contest count");
       }
     }
 
     if (data.problemsSolved !== undefined) {
-      if (typeof data.problemsSolved !== 'number' || data.problemsSolved < 0) {
-        errors.push('Invalid problems solved count');
+      if (typeof data.problemsSolved !== "number" || data.problemsSolved < 0) {
+        errors.push("Invalid problems solved count");
       }
     }
 
@@ -256,16 +273,23 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (typeof data.totalCommits !== 'number' || data.totalCommits < 0) {
-      errors.push('Invalid total commits count');
+    if (typeof data.totalCommits !== "number" || data.totalCommits < 0) {
+      errors.push("Invalid total commits count");
     }
 
-    if (typeof data.totalRepos !== 'number' || data.totalRepos < 0) {
-      errors.push('Invalid total repos count');
+    if (typeof data.totalRepos !== "number" || data.totalRepos < 0) {
+      errors.push("Invalid total repos count");
+    }
+
+    if (
+      data.currentStreak &&
+      (typeof data.currentStreak !== "number" || data.currentStreak < 0)
+    ) {
+      errors.push("Invalid current streak");
     }
 
     if (!Array.isArray(data.topLanguages)) {
-      errors.push('Top languages must be an array');
+      errors.push("Top languages must be an array");
     }
 
     if (data.totalCommits > 50000) {
@@ -291,24 +315,27 @@ class DataValidator {
       return { valid: false, errors: [data.error], warnings };
     }
 
-    if (!data.platform || data.platform !== 'Skillrack') {
-      errors.push('Invalid platform identifier');
+    if (!data.platform || data.platform !== "Skillrack") {
+      errors.push("Invalid platform identifier");
     }
 
-    if (data.rank !== undefined && (typeof data.rank !== 'number' || data.rank < 0)) {
-      errors.push('Invalid rank');
+    if (
+      data.rank !== undefined &&
+      (typeof data.rank !== "number" || data.rank < 0)
+    ) {
+      errors.push("Invalid rank");
     }
 
-    if (typeof data.programsSolved !== 'number' || data.programsSolved < 0) {
-      errors.push('Invalid programs solved count');
+    if (typeof data.programsSolved !== "number" || data.programsSolved < 0) {
+      errors.push("Invalid programs solved count");
     }
 
-    if (data.languages && typeof data.languages !== 'object') {
-      errors.push('Languages must be an object');
+    if (data.languages && typeof data.languages !== "object") {
+      errors.push("Languages must be an object");
     }
 
     if (!Array.isArray(data.certificates)) {
-      errors.push('Certificates must be an array');
+      errors.push("Certificates must be an array");
     }
 
     return {
@@ -337,18 +364,20 @@ class DataValidator {
     if (!oldStats || !newStats) return anomalies;
 
     switch (platform) {
-      case 'leetcode':
+      case "leetcode":
         if (oldStats.solved?.All && newStats.solved?.All) {
           const diff = newStats.solved.All - oldStats.solved.All;
           if (diff < 0) {
             anomalies.push(`Problems solved decreased by ${Math.abs(diff)}`);
           } else if (diff > 100) {
-            anomalies.push(`Problems solved increased by ${diff} (unusual spike)`);
+            anomalies.push(
+              `Problems solved increased by ${diff} (unusual spike)`,
+            );
           }
         }
         break;
 
-      case 'github':
+      case "github":
         if (oldStats.totalCommits && newStats.totalCommits) {
           const diff = newStats.totalCommits - oldStats.totalCommits;
           if (diff < 0) {
@@ -357,7 +386,7 @@ class DataValidator {
         }
         break;
 
-      case 'codechef':
+      case "codechef":
         if (oldStats.fullySolved && newStats.fullySolved) {
           const diff = newStats.fullySolved - oldStats.fullySolved;
           if (diff < 0) {

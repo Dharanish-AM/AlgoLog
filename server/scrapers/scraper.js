@@ -1065,6 +1065,12 @@ async function getGithubStats(username) {
                   contributionsCollection(from: "${from}", to: "${to}") {
                     contributionCalendar {
                       totalContributions
+                      weeks {
+                        contributionDays {
+                          contributionCount
+                          date
+                        }
+                      }
                     }
                   }
                 }
@@ -1084,17 +1090,90 @@ async function getGithubStats(username) {
               },
             );
 
-            return (
+            const calendar =
               yearRes?.data?.data?.user?.contributionsCollection
-                ?.contributionCalendar?.totalContributions || 0
-            );
+                ?.contributionCalendar;
+            return {
+              total: calendar?.totalContributions || 0,
+              weeks: calendar?.weeks || [],
+            };
           }),
         );
 
-        lifetimeContributions = perYearTotals.reduce(
-          (sum, v) => sum + (Number(v) || 0),
-          0,
-        );
+        let allDays = [];
+        lifetimeContributions = perYearTotals.reduce((sum, v) => {
+          if (v.weeks) {
+            v.weeks.forEach((week) => {
+              week.contributionDays.forEach((day) => {
+                allDays.push(day);
+              });
+            });
+          }
+          return sum + (Number(v.total) || 0);
+        }, 0);
+
+        // Calculate Longest Streak & Current Streak
+        // Deduplicate days based on date and sort
+        allDays = Array.from(new Map(allDays.map((d) => [d.date, d])).values());
+        allDays.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        let currentRun = 0;
+        let maxStreak = 0;
+
+        for (const day of allDays) {
+          if (day.contributionCount > 0) {
+            currentRun++;
+          } else {
+            if (currentRun > maxStreak) maxStreak = currentRun;
+            currentRun = 0;
+          }
+        }
+        if (currentRun > maxStreak) maxStreak = currentRun;
+        longestStreak = maxStreak;
+
+        // Calculate Current Streak (streak ending today/yesterday)
+        let calculatedCurrentStreak = 0;
+        let lastDate = null;
+
+        for (let j = allDays.length - 1; j >= 0; j--) {
+          const day = allDays[j];
+          const count = day.contributionCount;
+
+          if (count > 0) {
+            // If we have a previous date (which is technically "tomorrow" relative to this day), check gap
+            if (lastDate) {
+              const diff =
+                (lastDate - new Date(day.date)) / (1000 * 60 * 60 * 24);
+              if (diff > 1.5) break; // Gap larger than 1 day (allow slight timezone fuzz)
+            }
+            calculatedCurrentStreak++;
+            lastDate = new Date(day.date);
+          } else {
+            // If we encounter a 0, and we haven't started a streak yet, it might just be that today has 0 commits.
+            // If we HAVE started a streak, a 0 breaks it.
+            // However, if we haven't started, we just ignore zeroes at the end (future/today)?
+            // No, if yesterday was 0, streak is 0.
+
+            // Let's rely on the simple backward loop:
+            // Find the latest day with contribution.
+            // If that day is Today or Yesterday, start counting back.
+            // If the latest contribution was 2 days ago, current streak is 0.
+            if (calculatedCurrentStreak > 0) break;
+          }
+        }
+
+        // If the last active day was more than 1 day ago (e.g. 2 days ago), reset to 0
+        if (lastDate) {
+          const now = new Date();
+          const diffTime = Math.abs(now - lastDate);
+          const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+          // If last contribution was > 2 days ago (today is day 0, yesterday day 1), then streak is broken?
+          // Actually, simply: if I committed yesterday, streak is alive. If only day before yesterday, streak broken (unless today is committed).
+          // If diffDays > 2, streak is definitely 0.
+          if (diffDays > 2) calculatedCurrentStreak = 0;
+        }
+
+        currentStreak = calculatedCurrentStreak;
       }
 
       const currentYearContributions =
@@ -1133,7 +1212,8 @@ async function getGithubStats(username) {
         currentYearContributions,
         lifetimeContributions,
         totalRepos,
-        longestStreak: 0,
+        longestStreak: longestStreak || 0,
+        currentStreak: currentStreak || 0,
         topLanguages,
       };
 
@@ -1184,7 +1264,7 @@ async function getGithubStats(username) {
 }
 
 // getGithubStats("Dharanish-AM").then((e) =>
-//   console.log(JSON.stringify(e, null, 2))
+//   console.log(JSON.stringify(e, null, 2)),
 // );
 
 const limitedGetCodeChefStats = codechefLimiter.wrap(getCodeChefStats);

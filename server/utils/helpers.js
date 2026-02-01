@@ -74,6 +74,7 @@ const STAT_DEFAULTS = {
     lifetimeContributions: 0,
     totalRepos: 0,
     longestStreak: 0,
+    currentStreak: 0,
     topLanguages: [],
   },
 };
@@ -84,14 +85,14 @@ const STAT_NA = Object.fromEntries(
   Object.entries(STAT_DEFAULTS).map(([key, template]) => [
     key,
     transformWithNA(template),
-  ])
+  ]),
 );
 
 function transformWithNA(template) {
   if (Array.isArray(template)) return [];
   if (template && typeof template === "object") {
     return Object.fromEntries(
-      Object.entries(template).map(([k, v]) => [k, transformWithNA(v)])
+      Object.entries(template).map(([k, v]) => [k, transformWithNA(v)]),
     );
   }
   if (typeof template === "number") return NA_VALUE;
@@ -147,32 +148,32 @@ async function withRetry(
   promiseFn,
   retries = 1, // Reduced default retries
   platform = "Unknown",
-  identifier = "N/A"
+  identifier = "N/A",
 ) {
   for (let attempt = 1; attempt <= retries + 1; attempt++) {
     try {
       const result = await promiseFn();
-      
+
       // Check if result contains an error (failed fetch that returned error object)
       if (result && result.error) {
         console.warn(
-          `[${platform}] ❌ Failed for ${identifier}: ${result.error}`
+          `[${platform}] ❌ Failed for ${identifier}: ${result.error}`,
         );
       } else {
         if (attempt > 1) {
           console.info(
-            `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`
+            `[${platform}] ✅ Success for ${identifier} on attempt ${attempt}`,
           );
         }
       }
       return result;
     } catch (err) {
       console.warn(
-        `[${platform}] ❌ Attempt ${attempt} failed for ${identifier}: ${err.message}`
+        `[${platform}] ❌ Attempt ${attempt} failed for ${identifier}: ${err.message}`,
       );
       if (attempt > retries) throw err;
       // Faster retry delay
-      await new Promise(resolve => setTimeout(resolve, 300 * attempt));
+      await new Promise((resolve) => setTimeout(resolve, 300 * attempt));
     }
   }
 }
@@ -185,8 +186,8 @@ function formatError(platform, identifier, extraFields = {}, isUrl = false) {
         : "Invalid URL"
       : "Failed to fetch"
     : isUrl
-    ? "URL missing"
-    : "Username missing";
+      ? "URL missing"
+      : "Username missing";
 
   return {
     platform,
@@ -255,14 +256,14 @@ async function getStatsForStudent(student, oldStats = {}) {
 
       if (!value || (isUrl && !value.startsWith("http"))) {
         console.warn(
-          `[${platformName}] ⚠️ Skipping due to invalid or missing identifier.`
+          `[${platformName}] ⚠️ Skipping due to invalid or missing identifier.`,
         );
         return [
           key,
           normalizePlatformStats(
             key,
             { error: "Invalid or missing identifier", username: value },
-            value
+            value,
           ),
         ];
       }
@@ -272,28 +273,28 @@ async function getStatsForStudent(student, oldStats = {}) {
           () => fetchFn(value),
           1, // Single retry only
           platformName,
-          value
+          value,
         );
 
         return [key, normalizePlatformStats(key, result, value)];
       } catch (err) {
         console.warn(
-          `[${platformName}] ❗ Fetch failed, returning N/A defaults: ${err.message}`
+          `[${platformName}] ❗ Fetch failed, returning N/A defaults: ${err.message}`,
         );
         return [
           key,
           normalizePlatformStats(
             key,
             { error: err.message, username: value },
-            value
+            value,
           ),
         ];
       }
-    })
+    }),
   );
 
   const finalStats = Object.fromEntries(
-    statsEntries.map((entry) => entry.value)
+    statsEntries.map((entry) => entry.value),
   );
 
   console.log(`✅ Completed fetch for: ${name} (${rollNo})`);

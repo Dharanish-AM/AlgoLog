@@ -143,6 +143,7 @@ const studentSchema = new mongoose.Schema(
         totalCommits: Number,
         totalRepos: Number,
         longestStreak: Number,
+        currentStreak: Number,
         topLanguages: [
           {
             name: String,

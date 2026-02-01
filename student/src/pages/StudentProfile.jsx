@@ -21,6 +21,9 @@ import {
   ExternalLink,
   RefreshCwIcon,
   Lightbulb,
+  Flame,
+  Zap,
+
 } from "lucide-react";
 import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
@@ -119,6 +122,30 @@ const StudentProfile = ({
       day: "numeric",
     });
   }
+
+  const getSkillrackDisplayId = (urlOrId) => {
+    if (!urlOrId) return "N/A";
+    // If it's not a URL, return as is (assuming it's already an ID/username)
+    if (!urlOrId.toString().startsWith("http")) return urlOrId;
+
+    try {
+      // Handle Resume URL format: .../resume.xhtml?id=123456&key=...
+      if (urlOrId.includes("resume.xhtml")) {
+        const urlObj = new URL(urlOrId);
+        return urlObj.searchParams.get("id") || "User";
+      }
+      // Handle Profile URL format: .../profile/123456/...
+      if (urlOrId.includes("/profile/")) {
+        const parts = urlOrId.split("/profile/");
+        if (parts[1]) {
+          return parts[1].split("/")[0];
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse Skillrack URL:", e);
+    }
+    return "User"; // Fallback if parsing fails
+  };
 
   if (!student || loading) {
     return (
@@ -317,9 +344,10 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="mb-4 flex gap-4 items-center justify-between">
+
               <div className="text-center w-1/2 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
-                  {student.stats?.leetcode?.solved?.All}
+                  {student.stats?.leetcode?.solved?.All || 0}
                 </div>
                 <div className="text-sm text-gray-400">Total Solved</div>
               </div>
@@ -575,21 +603,27 @@ const StudentProfile = ({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Skillrack</h3>
-                <p className="text-sm text-gray-400">
-                  Rank #{student.stats?.skillrack?.rank || 'N/A'}
-                </p>
+                <p className="text-sm text-gray-400">@{getSkillrackDisplayId(student.skillrack)}</p>
               </div>
             </div>
-            <div className="flex items-center justify-center flex-col mb-4 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-              <div className="text-2xl font-bold text-purple-400 mb-1">
-                {student.stats?.skillrack?.programsSolved || 0}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-2xl font-bold text-purple-400">
+                  {student.stats?.skillrack?.programsSolved || 0}
+                </div>
+                <div className="text-sm text-gray-400">Programs Solved</div>
               </div>
-              <div className="text-sm text-gray-400">Programs Solved</div>
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-2xl font-bold text-blue-400">
+                  #{student.stats?.skillrack?.rank || "N/A"}
+                </div>
+                <div className="text-sm text-gray-400">Rank</div>
+              </div>
             </div>
             <div className="space-y-2 mb-4">
               <h4 className="font-semibold text-white">Top Languages</h4>
-              {student &&
-                Object.entries(student?.stats?.skillrack?.languages || {})
+              {student?.stats?.skillrack?.languages &&
+                Object.entries(student.stats.skillrack.languages)
                   .slice(0, 3)
                   .map(([lang, count]) => (
                     <div
@@ -736,7 +770,7 @@ const StudentProfile = ({
               <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-300">Problems Solved</span>
                 <span className="font-semibold text-green-400">
-                  {student.stats?.codechef?.fullySolved ?? "N/A"}
+                  {student.stats?.codechef?.fullySolved?.toLocaleString() ?? "N/A"}
                 </span>
               </div>
             </div>
@@ -814,22 +848,40 @@ const StudentProfile = ({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-purple-400">
-                  {student.stats.github.totalCommits}
+                  {student.stats?.github?.totalCommits || 0}
                 </div>
                 <div className="text-sm text-gray-400">Total Commits</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
-                  {student.stats.github.totalRepos}
+                  {student.stats?.github?.totalRepos || 0}
                 </div>
                 <div className="text-sm text-gray-400">Repositories</div>
+              </div>
+
+              {/* Current Streak */}
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-400">
+                  <Zap className="w-6 h-6 fill-yellow-400" />
+                  {student.stats?.github?.currentStreak || 0}
+                </div>
+                <div className="text-sm text-gray-400">Current Streak</div>
+              </div>
+
+              {/* Longest Streak */}
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-orange-400">
+                  <Flame className="w-6 h-6 fill-orange-400" />
+                  {student.stats?.github?.longestStreak || 0}
+                </div>
+                <div className="text-sm text-gray-400">Longest Streak</div>
               </div>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-white">Top Languages</h4>
               <div className="flex flex-wrap gap-2">
-                {student.stats.github.topLanguages
-                  .slice(0, 6)
+                {student.stats?.github?.topLanguages
+                  ?.slice(0, 6)
                   .map((lang, index) => (
                     <span
                       key={index}
