@@ -14,3 +14,34 @@ body {
   scrollbar-width: thin;
   scrollbar-color: #4a5568 transparent;
 }
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Smooth transitions */
+* {
+  @apply transition-colors duration-200;
+}
+
+button:hover {
+  @apply shadow-lg;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  @apply ring-2 ring-purple-500 ring-opacity-50;
+}

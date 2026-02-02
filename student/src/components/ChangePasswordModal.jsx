@@ -14,15 +14,15 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
   };
 
   return (
-    <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50">
-      <div className="bg-white scrollbar-hide dark:bg-gray-800 p-6 rounded-lg shadow-lg sm:w-full max-w-xl sm:max-h-[90h] w-[90%] overflow-y-auto">
+    <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Change Password
           </h2>
           <X
             onClick={() => onClose()}
-            className="text-gray-400 cursor-pointer"
+            className="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-200"
           />
         </div>
         <div>
@@ -77,11 +77,11 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   placeholder="Enter your old password"
                   required
                   autoComplete="current-password"
-                  className="mt-1 block w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
+                  className="mt-1 block w-full text-sm px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-10 transition-all duration-200"
                 />
                 <span
                   onClick={() => toggleVisibility("old")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
                 >
                   {showPasswords.old ? (
                     <EyeOff className="w-5 h-5" />
@@ -104,11 +104,11 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   placeholder="Enter your new password"
                   required
                   autoComplete="new-password"
-                  className="mt-1 text-sm block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
+                  className="mt-1 text-sm block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-10 transition-all duration-200"
                 />
                 <span
                   onClick={() => toggleVisibility("new")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
                 >
                   {showPasswords.new ? (
                     <EyeOff className="w-5 h-5" />
@@ -131,11 +131,11 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
                   placeholder="Enter your confirm password"
                   autoComplete="new-password"
                   required
-                  className="mt-1 block text-sm w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 dark:bg-gray-700 dark:text-white pr-10"
+                  className="mt-1 block text-sm w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-700 dark:text-white pr-10 transition-all duration-200"
                 />
                 <span
                   onClick={() => toggleVisibility("confirm")}
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 cursor-pointer"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 dark:text-gray-400 cursor-pointer hover:text-gray-700 dark:hover:text-gray-300 transition-colors duration-200"
                 >
                   {showPasswords.confirm ? (
                     <EyeOff className="w-5 h-5" />
@@ -147,17 +147,17 @@ export default function ChangePasswordModal({ onClose, handleUpdatePassword }) {
             </div>
 
             {/* Buttons */}
-            <div className="flex justify-end space-x-3 pt-4">
+            <div className="flex justify-end space-x-3 pt-4 border-t border-gray-300 dark:border-gray-700 mt-4">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-4 py-2 text-sm cursor-pointer bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-700"
+                className="px-4 py-2 text-sm cursor-pointer bg-gray-300 dark:bg-gray-600 text-gray-800 dark:text-white rounded-md hover:bg-gray-400 dark:hover:bg-gray-700 transition-all duration-200"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 text-sm cursor-pointer bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                className="px-4 py-2 text-sm cursor-pointer bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-all duration-200 transform hover:scale-105"
               >
                 Change Password
               </button>

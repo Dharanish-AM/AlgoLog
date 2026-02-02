@@ -59,7 +59,7 @@ const StudentProfile = ({
         if (response.status === 200) {
           setLeetcodeDailyProblem(response.data);
         }
-      } catch (error) {
+      } catch {
         // Error fetching daily LeetCode problem, continue without it
       }
     };
@@ -157,29 +157,29 @@ const StudentProfile = ({
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white p-4 md:p-8">
-      <div className="flex justify-between items-center mb-8 w-full">
+      <div className="flex justify-between items-center mb-8 w-full gap-4">
         <div
           onClick={() => {
             window.location.reload();
           }}
-          className="flex cursor-pointer items-center"
+          className="flex cursor-pointer items-center hover:opacity-80 transition-opacity"
         >
           <img
             src={logo}
             alt="AlgoLog Logo"
             className="w-10 h-10 aspect-square"
           />
-          <h1 className="ml-3 text-2xl font-bold text-purple-600 dark:text-purple-400">
+          <h1 className="ml-3 text-xl md:text-2xl font-bold text-purple-600 dark:text-purple-400">
             AlgoLog
           </h1>
         </div>
         <div className="flex items-center relative gap-4">
           <button
             onClick={() => setIsShowModalOptions(true)}
-            className="flex border cursor-pointer border-gray-500 items-center gap-2 p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600"
+            className="flex border cursor-pointer border-gray-500 items-center gap-2 p-2 md:p-3 bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-full hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
           >
             <User
-              size={"1.5rem"}
+              size={"1.25rem"}
               className="text-gray-400 dark:text-gray-300"
             />
           </button>
@@ -187,17 +187,23 @@ const StudentProfile = ({
             <div
               ref={modalOptionsRed}
               onMouseLeave={() => setIsShowModalOptions(false)}
-              className="absolute right-4 top-14 w-48 bg-gray-800 rounded-xl shadow-lg ring-1 ring-black/10 z-50 p-2"
+              className="absolute right-0 md:right-4 top-14 w-48 bg-gray-800 rounded-xl shadow-lg ring-1 ring-black/10 z-50 p-2 animate-fadeIn"
             >
               <button
-                onClick={() => setIsProfileModalOpen(true)}
-                className="w-full cursor-pointer text-left px-4 py-2 text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                onClick={() => {
+                  setIsProfileModalOpen(true);
+                  setIsShowModalOptions(false);
+                }}
+                className="w-full cursor-pointer text-left px-4 py-2 text-md text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150"
               >
                 Profile
               </button>
               <button
-                onClick={() => handleLogout()}
-                className="w-full cursor-pointer text-left px-4 py-2 text-md text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md"
+                onClick={() => {
+                  handleLogout();
+                  setIsShowModalOptions(false);
+                }}
+                className="w-full cursor-pointer text-left px-4 py-2 text-md text-red-600 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors duration-150"
               >
                 Logout
               </button>
@@ -207,59 +213,53 @@ const StudentProfile = ({
       </div>
       <div className="max-w-7xl mx-auto">
         <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 md:p-8 mb-8">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6">
-            <div className="flex items-center space-x-4 mb-4 md:mb-0">
-              <div className="w-16 aspect-square h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-                <span className="text-2xl font-bold ">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-6 gap-4">
+            <div className="flex items-center space-x-4">
+              <div className="w-14 md:w-16 aspect-square h-14 md:h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center flex-shrink-0">
+                <span className="text-xl md:text-2xl font-bold">
                   {student.name[0].toUpperCase()}
                 </span>
               </div>
-              <div>
-                <h1 className="text-2xl flex-wrap font-bold text-white">
+              <div className="min-w-0">
+                <h1 className="text-xl md:text-2xl font-bold text-white truncate">
                   {student.name}
                 </h1>
-                <p className="text-gray-400">Student Performance Dashboard</p>
+                <p className="text-xs md:text-sm text-gray-400">Student Performance Dashboard</p>
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-6">
-              <div className="text-sm text-gray-400">
-                Last Updated:{" "}
-                {student
+            <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2 sm:gap-4">
+              <div className="text-xs md:text-sm text-gray-400 bg-gray-700/50 px-3 py-2 rounded-lg whitespace-nowrap">
+                Updated: {student
                   ? new Date(student.updatedAt).toLocaleString("en-US", {
-                    weekday: "short", // e.g. 'Tue'
-                    year: "numeric",
-                    month: "short", // e.g. 'May'
-                    day: "numeric", // e.g. '11'
-                    hour: "numeric", // e.g. '1'
-                    minute: "numeric", // e.g. '30'
-                    second: "numeric", // e.g. '45'
-                    hour12: true, // 12-hour time format
+                    month: "short",
+                    day: "numeric",
+                    hour: "numeric",
+                    minute: "numeric",
+                    hour12: true,
                   })
                   : "N/A"}
               </div>
               {isRefreshing ? (
                 <button
                   disabled
-                  onClick={handleRefresh}
-                  className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg"
+                  className="flex cursor-not-allowed justify-center items-center w-full sm:w-auto space-x-2 px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white text-sm md:text-base rounded-lg opacity-75"
                 >
-                  <RefreshCwIcon className="w-5 h-5 animate-spin" />
-                  <span>Refreshing...</span>
+                  <RefreshCwIcon className="w-4 h-4 md:w-5 md:h-5 animate-spin" />
+                  <span className="hidden md:inline">Refreshing...</span>
                 </button>
               ) : (
                 <button
                   onClick={handleRefresh}
-                  className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-200 transform hover:scale-105"
+                  className="flex cursor-pointer justify-center items-center w-full sm:w-auto space-x-2 px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 text-white text-sm md:text-base rounded-lg transition-all duration-200"
                 >
-                  <RefreshCwIcon className="w-5 h-5" />
+                  <RefreshCwIcon className="w-4 h-4 md:w-5 md:h-5" />
                   <span>Refresh</span>
                 </button>
               )}
-              <button onClick={() => [
-                setShowDailyProblemModal(true)
-              ]} className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
-                <Lightbulb />
-                <span> View Daily Problem</span>
+              <button onClick={() => setShowDailyProblemModal(true)} className="flex cursor-pointer justify-center items-center w-full sm:w-auto space-x-2 px-4 py-2 md:px-6 md:py-3 bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-600 hover:to-orange-700 text-white text-sm md:text-base rounded-lg transition-all duration-200">
+                <Lightbulb className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="hidden md:inline">View Daily</span>
+                <span className="md:hidden">Daily</span>
               </button>
             </div>
           </div>
@@ -323,7 +323,7 @@ const StudentProfile = ({
         </div>
 
         {/* Platform Statistics */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8">
           {/* LeetCode */}
           <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
             <a
@@ -343,22 +343,21 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.leetcode}</p>
               </div>
             </div>
-            <div className="mb-4 flex gap-4 items-center justify-between">
-
-              <div className="text-center w-1/2 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-blue-400">
+            <div className="mb-4 grid grid-cols-2 gap-3">
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-xl md:text-2xl font-bold text-blue-400">
                   {student.stats?.leetcode?.solved?.All || 0}
                 </div>
-                <div className="text-sm text-gray-400">Total Solved</div>
+                <div className="text-xs md:text-sm text-gray-400">Total Solved</div>
               </div>
-              <div className="bg-gray-700 w-1/2 p-4 rounded-lg text-center hover:bg-gray-600">
-                <div className="text-xl font-bold text-purple-400">
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-xl font-bold text-purple-400">
                   #
                   {student.stats?.leetcode?.globalRanking
                     ? student.stats.leetcode.globalRanking.toLocaleString()
                     : 0}
                 </div>
-                <div className="text-sm text-gray-400">Global Rank</div>
+                <div className="text-xs md:text-sm text-gray-400">Global Rank</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -368,7 +367,7 @@ const StudentProfile = ({
                   .map(([difficulty, count]) => (
                     <div
                       key={difficulty}
-                      className="flex py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-600 justify-between items-center"
+                      className="flex py-3 px-4 bg-gray-700 rounded-lg hover:bg-gray-600 justify-between items-center transition-colors duration-200"
                     >
                       <span
                         className={`rounded-full text-sm font-medium ${getDifficultyColor(
@@ -384,21 +383,21 @@ const StudentProfile = ({
 
             {student?.stats?.leetcode?.topicStats?.length > 0 && (
               <div className="mt-6">
-                <h4 className="text-white text-lg font-semibold mb-3">
+                <h4 className="text-white text-base md:text-lg font-semibold mb-3">
                   Problem Tags
                 </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-gray-700 rounded-lg p-5 max-h-[200px] overflow-y-auto scrollbar-hide">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 md:gap-3 border border-gray-700 rounded-lg p-4 md:p-5 max-h-[200px] overflow-y-auto scrollbar-hide">
                   {[...student.stats.leetcode.topicStats]
                     .sort((a, b) => b.problemsSolved - a.problemsSolved)
                     .map((topic, index) => (
                       <div
                         key={index}
-                        className="bg-gray-700 hover:bg-gray-600 rounded-lg px-4 py-2 flex justify-between items-center h-12 sm:h-12"
+                        className="bg-gray-700 hover:bg-gray-600 rounded-lg px-3 py-2 flex justify-between items-center transition-colors duration-200"
                       >
-                        <span className="text-sm text-white font-medium">
+                        <span className="text-xs md:text-sm text-white font-medium truncate">
                           {topic.tagName}
                         </span>
-                        <span className="text-sm text-blue-400 font-bold">
+                        <span className="text-xs md:text-sm text-blue-400 font-bold ml-2">
                           {topic.problemsSolved}
                         </span>
                       </div>
@@ -441,18 +440,18 @@ const StudentProfile = ({
               </div>
             )}
             {student?.stats?.leetcode?.streak && (
-              <div className="mt-6 grid grid-cols-2 gap-4">
-                <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                  <div className="text-xl font-bold text-orange-400">
+              <div className="mt-6 grid grid-cols-2 gap-3 md:gap-4">
+                <div className="bg-gray-700 p-3 md:p-4 rounded-lg text-center hover:bg-gray-600 transition-colors duration-200">
+                  <div className="text-lg md:text-xl font-bold text-orange-400">
                     🔥 {student.stats?.leetcode?.streak || 0}
                   </div>
-                  <div className="text-sm text-gray-400">Current Streak</div>
+                  <div className="text-xs md:text-sm text-gray-400">Current Streak</div>
                 </div>
-                <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                  <div className="text-xl font-bold text-green-400">
+                <div className="bg-gray-700 p-3 md:p-4 rounded-lg text-center hover:bg-gray-600 transition-colors duration-200">
+                  <div className="text-lg md:text-xl font-bold text-green-400">
                     🏁 {student.stats?.leetcode?.totalActiveDays || 0}
                   </div>
-                  <div className="text-sm text-gray-400">Active Days</div>
+                  <div className="text-xs md:text-sm text-gray-400">Active Days</div>
                 </div>
               </div>
             )}
@@ -475,29 +474,29 @@ const StudentProfile = ({
             )}
 
             {student.stats?.leetcode?.rating ? (
-              <div className="mt-6 space-y-4">
+              <div className="mt-6 space-y-3 md:space-y-4">
                 <div className="flex w-full">
-                  <div className="bg-gray-700 w-full p-4 rounded-lg text-center hover:bg-gray-600">
-                    <div className="text-xl font-bold text-blue-400">
+                  <div className="bg-gray-700 w-full p-3 md:p-4 rounded-lg text-center hover:bg-gray-600 transition-colors duration-200">
+                    <div className="text-lg md:text-xl font-bold text-blue-400">
                       {Math.round(student.stats.leetcode.rating)}
                     </div>
-                    <div className="text-sm text-gray-400">Contest Rating</div>
+                    <div className="text-xs md:text-sm text-gray-400">Rating</div>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                    <div className="text-xl font-bold text-white">
+                <div className="grid grid-cols-2 gap-3 md:gap-4">
+                  <div className="bg-gray-700 p-3 md:p-4 rounded-lg text-center hover:bg-gray-600 transition-colors duration-200">
+                    <div className="text-lg md:text-xl font-bold text-white">
                       {student.stats?.leetcode?.contestCount || 0}
                     </div>
-                    <div className="text-sm text-gray-400">
-                      Contests Attended
+                    <div className="text-xs md:text-sm text-gray-400">
+                      Contests
                     </div>
                   </div>
-                  <div className="bg-gray-700 p-4 rounded-lg text-center hover:bg-gray-600">
-                    <div className="text-xl font-bold text-white">
+                  <div className="bg-gray-700 p-3 md:p-4 rounded-lg text-center hover:bg-gray-600 transition-colors duration-200">
+                    <div className="text-lg md:text-xl font-bold text-white">
                       {student.stats?.leetcode?.topPercentage || 0}%
                     </div>
-                    <div className="text-sm text-gray-400">Top Percentage</div>
+                    <div className="text-xs md:text-sm text-gray-400">Top %</div>
                   </div>
                 </div>
 
@@ -505,9 +504,9 @@ const StudentProfile = ({
                   <div className="mt-4">
                     <button
                       onClick={() => setShowHistory(!showHistory)}
-                      className="w-full cursor-pointer bg-purple-600 text-sm hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all"
+                      className="w-full cursor-pointer bg-purple-600 text-xs md:text-sm hover:bg-purple-700 text-white font-semibold py-2 md:py-3 px-4 rounded-lg transition-all duration-200"
                     >
-                      {showHistory ? "Hide" : "Show"} Contest History
+                      {showHistory ? "Hide" : "Show"} History
                     </button>
 
                     {showHistory && (
@@ -606,18 +605,18 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{getSkillrackDisplayId(student.skillrack)}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-purple-400">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-2xl font-bold text-purple-400">
                   {student.stats?.skillrack?.programsSolved || 0}
                 </div>
-                <div className="text-sm text-gray-400">Programs Solved</div>
+                <div className="text-xs md:text-sm text-gray-400">Solved</div>
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-blue-400">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-2xl font-bold text-blue-400">
                   #{student.stats?.skillrack?.rank || "N/A"}
                 </div>
-                <div className="text-sm text-gray-400">Rank</div>
+                <div className="text-xs md:text-sm text-gray-400">Rank</div>
               </div>
             </div>
             <div className="space-y-2 mb-4">
@@ -683,14 +682,14 @@ const StudentProfile = ({
               </div>
             </div>
 
-            <div className="space-y-3">
+              <div className="space-y-2">
               {student.stats?.hackerrank?.badges?.length > 0 ? (
                 student.stats.hackerrank.badges.map((badge, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600"
+                    className="flex items-center justify-between p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200"
                   >
-                    <span className="text-gray-200 font-medium">
+                    <span className="text-gray-200 font-medium text-sm">
                       {badge.name}
                     </span>
                     <div className="flex items-center space-x-1">
@@ -727,9 +726,9 @@ const StudentProfile = ({
             </div>
 
             {/* CodeChef Stats */}
-            <div className="space-y-4">
-              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                <span className="text-sm text-gray-300">Rating</span>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <span className="text-xs md:text-sm text-gray-300">Rating</span>
                 <div className="flex items-center gap-2">
                   <span className="font-semibold text-yellow-400">
                     {student.stats?.codechef?.rating ?? "N/A"}
@@ -742,33 +741,33 @@ const StudentProfile = ({
                 </div>
               </div>
               {student.stats?.codechef?.division && (
-                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                  <span className="text-sm text-gray-300">Division</span>
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                  <span className="text-xs md:text-sm text-gray-300">Division</span>
                   <span className="font-semibold text-white">
                     {student.stats.codechef.division}
                   </span>
                 </div>
               )}
-              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                <span className="text-sm text-gray-300">Highest Rating</span>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <span className="text-xs md:text-sm text-gray-300">Highest</span>
                 <span className="font-semibold text-purple-400">
                   {student.stats?.codechef?.highestRating ?? "N/A"}
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                <span className="text-sm text-gray-300">Global Rank</span>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <span className="text-xs md:text-sm text-gray-300">Global Rank</span>
                 <span className="font-semibold text-blue-400">
                   {student.stats?.codechef?.globalRank ? `#${student.stats.codechef.globalRank.toLocaleString()}` : "N/A"}
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                <span className="text-sm text-gray-300">Country Rank</span>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <span className="text-xs md:text-sm text-gray-300">Country Rank</span>
                 <span className="font-semibold text-cyan-400">
                   {student.stats?.codechef?.countryRank ? `#${student.stats.codechef.countryRank.toLocaleString()}` : "N/A"}
                 </span>
               </div>
-              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
-                <span className="text-sm text-gray-300">Problems Solved</span>
+              <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <span className="text-xs md:text-sm text-gray-300">Solved</span>
                 <span className="font-semibold text-green-400">
                   {student.stats?.codechef?.fullySolved?.toLocaleString() ?? "N/A"}
                 </span>
@@ -795,30 +794,30 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.codeforces}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-lg font-bold text-red-400">
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-xl font-bold text-red-400">
                   {student.stats?.codeforces?.rating || 'N/A'}
                 </div>
-                <div className="text-sm text-gray-400">Rating</div>
+                <div className="text-xs md:text-sm text-gray-400">Rating</div>
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-lg font-bold text-white">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-xl font-bold text-white">
                   {student.stats?.codeforces?.rank || 'N/A'}
                 </div>
-                <div className="text-sm text-gray-400">Rank</div>
+                <div className="text-xs md:text-sm text-gray-400">Rank</div>
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-lg font-bold text-blue-400">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-xl font-bold text-blue-400">
                   {student.stats?.codeforces?.contests || 0}
                 </div>
-                <div className="text-sm text-gray-400">Contests</div>
+                <div className="text-xs md:text-sm text-gray-400">Contests</div>
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-lg font-bold text-green-400">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-xl font-bold text-green-400">
                   {student.stats?.codeforces?.problemsSolved || 0}
                 </div>
-                <div className="text-sm text-gray-400">Problems</div>
+                <div className="text-xs md:text-sm text-gray-400">Problems</div>
               </div>
             </div>
           </div>
@@ -845,36 +844,34 @@ const StudentProfile = ({
                 <p className="text-sm text-gray-400">@{student.github}</p>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-purple-400">
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-2xl font-bold text-purple-400">
                   {student.stats?.github?.totalCommits || 0}
                 </div>
-                <div className="text-sm text-gray-400">Total Commits</div>
+                <div className="text-xs md:text-sm text-gray-400">Commits</div>
               </div>
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="text-2xl font-bold text-blue-400">
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="text-lg md:text-2xl font-bold text-blue-400">
                   {student.stats?.github?.totalRepos || 0}
                 </div>
-                <div className="text-sm text-gray-400">Repositories</div>
+                <div className="text-xs md:text-sm text-gray-400">Repos</div>
               </div>
-
-              {/* Current Streak */}
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-400">
-                  <Zap className="w-6 h-6 fill-yellow-400" />
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="flex items-center justify-center gap-1 text-lg md:text-2xl font-bold text-yellow-400">
+                  <Zap className="w-4 h-4 md:w-6 md:h-6 fill-yellow-400" />
                   {student.stats?.github?.currentStreak || 0}
                 </div>
-                <div className="text-sm text-gray-400">Current Streak</div>
+                <div className="text-xs md:text-sm text-gray-400">Streak</div>
               </div>
 
               {/* Longest Streak */}
-              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-orange-400">
-                  <Flame className="w-6 h-6 fill-orange-400" />
+              <div className="text-center py-3 md:py-4 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors duration-200">
+                <div className="flex items-center justify-center gap-1 text-lg md:text-2xl font-bold text-orange-400">
+                  <Flame className="w-4 h-4 md:w-6 md:h-6 fill-orange-400" />
                   {student.stats?.github?.longestStreak || 0}
                 </div>
-                <div className="text-sm text-gray-400">Longest Streak</div>
+                <div className="text-xs md:text-sm text-gray-400">Longest</div>
               </div>
             </div>
             <div className="space-y-2">
@@ -917,20 +914,20 @@ const StudentProfile = ({
         />
       )}
       {showDailyProblemModal && leetcodeDailyProblem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg relative">
-            <button onClick={() => setShowDailyProblemModal(false)} className="absolute top-2 right-2 text-gray-300 hover:text-white"><X /></button>
-            <h2 className="text-2xl font-bold text-white mb-2">{leetcodeDailyProblem.problem.question.title}</h2>
-            <p className={`mb-2 ${getDifficultyColor(leetcodeDailyProblem.problem.question.difficulty)}`}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-fadeIn">
+          <div className="bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-lg relative max-h-[90vh] overflow-y-auto">
+            <button onClick={() => setShowDailyProblemModal(false)} className="absolute top-4 right-4 text-gray-300 hover:text-white transition-colors duration-200"><X className="w-6 h-6" /></button>
+            <h2 className="text-xl md:text-2xl font-bold text-white mb-2 pr-8">{leetcodeDailyProblem.problem.question.title}</h2>
+            <p className={`mb-2 text-sm md:text-base ${getDifficultyColor(leetcodeDailyProblem.problem.question.difficulty)}`}>
               Difficulty: {leetcodeDailyProblem.problem.question.difficulty}
             </p>
-            <p className="text-gray-400 mb-4">Acceptance: {leetcodeDailyProblem.problem.question.acRate.toFixed(2)}%</p>
+            <p className="text-gray-400 mb-4 text-sm md:text-base">Acceptance: {leetcodeDailyProblem.problem.question.acRate.toFixed(2)}%</p>
             <div className="flex flex-wrap gap-2 mb-4">
               {leetcodeDailyProblem.problem.question.topicTags.map((tag, idx) => (
                 <span key={idx} className="px-3 py-1 bg-gray-700 text-gray-200 text-xs rounded-full">{tag.name}</span>
               ))}
             </div>
-            <a href={leetcodeDailyProblem.problem.fullLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-semibold">
+            <a href={leetcodeDailyProblem.problem.fullLink} target="_blank" rel="noopener noreferrer" className="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white py-2 px-4 rounded-lg font-semibold transition-colors duration-200">
               Solve on LeetCode
             </a>
           </div>

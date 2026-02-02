@@ -148,15 +148,15 @@ export default function ProfileModal({
   };
 
   return (
-    <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50">
-      <div className="bg-white scrollbar-hide dark:bg-gray-800 p-6 rounded-lg shadow-lg sm:w-full max-w-xl sm:max-h-[90h] h-[90%] w-[90%] overflow-y-auto">
+    <div className="fixed bg-black/50 inset-0 flex items-center justify-center z-50 p-4 animate-fadeIn">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-xl w-full max-h-[90vh] overflow-y-auto scrollbar-hide">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             Edit Student
           </h2>
           <X
             onClick={() => onClose()}
-            className="text-gray-400 cursor-pointer"
+            className="text-gray-400 cursor-pointer hover:text-gray-600 dark:hover:text-gray-200 transition-colors duration-200"
           />
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -180,7 +180,7 @@ export default function ProfileModal({
                 onChange={handleChange}
                 required={required}
                 placeholder={`Enter ${label.toLowerCase()} `}
-                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 text-sm transition-all duration-200"
               />
             </div>
           ))}
@@ -195,7 +195,7 @@ export default function ProfileModal({
                 value={data.gender || ""}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>Select Gender</option>
                 {GENDERS.map((g) => (
@@ -212,7 +212,7 @@ export default function ProfileModal({
                 value={data.accommodation || ""}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>Select Accommodation</option>
                 {ACCOMMODATION_TYPES.map((a) => (
@@ -234,7 +234,7 @@ export default function ProfileModal({
                 value={data.department || ""}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>
                   Select department
@@ -255,7 +255,7 @@ export default function ProfileModal({
                 value={data.year}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>
                   Select year
@@ -276,7 +276,7 @@ export default function ProfileModal({
                 value={data.section}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>
                   {data.section || "Select section"}
@@ -297,7 +297,7 @@ export default function ProfileModal({
                 value={data.interest || ""}
                 onChange={handleChange}
                 required
-                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 py-2.5 px-3 text-sm"
+                className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 py-2.5 transition-all duration-200 px-3 text-sm"
               >
                 <option value="" disabled>Select Interest</option>
                 {INTERESTS.map((int) => (
@@ -341,7 +341,7 @@ export default function ProfileModal({
                               ? "Enter GitHub username (e.g., johndoe)"
                               : `Enter ${field}`
                 }
-                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50 text-sm"
+                className="mt-1 py-2.5 px-3 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-500 focus:ring-opacity-50 text-sm transition-all duration-200"
               />
             </div>
           ))}
@@ -350,21 +350,14 @@ export default function ProfileModal({
             <button
               type="button"
               onClick={handleChangePassword}
-              className="px-4 py-2 text-sm cursor-pointer border border-blue-600 text-blue-600 rounded-md hover:bg-blue-50 darl:text-blue-400 dark:border-blue-400 dark:hover:bg-blue-900/30"
+              className="px-4 py-2 text-sm cursor-pointer border border-purple-600 text-purple-600 rounded-md hover:bg-purple-50 dark:text-purple-400 dark:border-purple-400 dark:hover:bg-purple-900/30 transition-all duration-200"
             >
               Change Password
             </button>
             <button
               type="submit"
-              disabled={setLoading === true} // Wait, setLoading is a function. Checking equality to true is wrong if it's a function.
-              // But wait, the original code had `disabled={setLoading === true}`?
-              // No, original code just had disabled probably based on local state or something.
-              // Let's look at Step 252 Line 402: `<button type="submit" ...>` It didn't have disabled.
-              // Step 172 line 398 in ProfileModal had `disabled={setLoading === true}`? No.
-              // I'll just remove disabled or use a local 'saving' state if I want.
-              // But since invalidating input is done via alert/toast, and `handleUpdate` is awaited...
-              // I'll just leave it standard.
-              className="px-4 py-2 text-sm cursor-pointer bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+              disabled={setLoading === true}
+              className="px-4 py-2 text-sm cursor-pointer bg-purple-600 text-white rounded-md hover:bg-purple-700 disabled:opacity-50 transition-all duration-200 transform hover:scale-105"
             >
               Save Changes
             </button>
