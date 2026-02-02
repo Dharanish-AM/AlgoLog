@@ -710,8 +710,8 @@ async function getCodeforcesStats(username) {
       const result = {
         platform: "Codeforces",
         username,
-        rating: user.rating || "Unrated",
-        maxRating: user.maxRating || "N/A",
+        rating: user.rating || 0,
+        maxRating: user.maxRating || 0,
         rank: user.rank || "Unranked",
         maxRank: user.maxRank || "N/A",
         contests,
