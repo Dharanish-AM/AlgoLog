@@ -21,6 +21,9 @@ import {
   ExternalLink,
   RefreshCwIcon,
   Lightbulb,
+  Flame,
+  Zap,
+
 } from "lucide-react";
 import logo from "/algolog.png";
 import ProfileModal from "../components/ProfileModal";
@@ -120,6 +123,30 @@ const StudentProfile = ({
     });
   }
 
+  const getSkillrackDisplayId = (urlOrId) => {
+    if (!urlOrId) return "N/A";
+    // If it's not a URL, return as is (assuming it's already an ID/username)
+    if (!urlOrId.toString().startsWith("http")) return urlOrId;
+
+    try {
+      // Handle Resume URL format: .../resume.xhtml?id=123456&key=...
+      if (urlOrId.includes("resume.xhtml")) {
+        const urlObj = new URL(urlOrId);
+        return urlObj.searchParams.get("id") || "User";
+      }
+      // Handle Profile URL format: .../profile/123456/...
+      if (urlOrId.includes("/profile/")) {
+        const parts = urlOrId.split("/profile/");
+        if (parts[1]) {
+          return parts[1].split("/")[0];
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to parse Skillrack URL:", e);
+    }
+    return "User"; // Fallback if parsing fails
+  };
+
   if (!student || loading) {
     return (
       <div className="bg-[#161F2D] flex justify-center items-center h-screen">
@@ -199,15 +226,15 @@ const StudentProfile = ({
                 Last Updated:{" "}
                 {student
                   ? new Date(student.updatedAt).toLocaleString("en-US", {
-                      weekday: "short", // e.g. 'Tue'
-                      year: "numeric",
-                      month: "short", // e.g. 'May'
-                      day: "numeric", // e.g. '11'
-                      hour: "numeric", // e.g. '1'
-                      minute: "numeric", // e.g. '30'
-                      second: "numeric", // e.g. '45'
-                      hour12: true, // 12-hour time format
-                    })
+                    weekday: "short", // e.g. 'Tue'
+                    year: "numeric",
+                    month: "short", // e.g. 'May'
+                    day: "numeric", // e.g. '11'
+                    hour: "numeric", // e.g. '1'
+                    minute: "numeric", // e.g. '30'
+                    second: "numeric", // e.g. '45'
+                    hour12: true, // 12-hour time format
+                  })
                   : "N/A"}
               </div>
               {isRefreshing ? (
@@ -228,7 +255,7 @@ const StudentProfile = ({
                   <span>Refresh</span>
                 </button>
               )}
-              <button onClick={()=>[
+              <button onClick={() => [
                 setShowDailyProblemModal(true)
               ]} className="flex cursor-pointer justify-center items-center w-full sm:w-fit sm:h-fit space-x-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg transition-all duration-200 transform hover:scale-105">
                 <Lightbulb />
@@ -272,7 +299,7 @@ const StudentProfile = ({
                 <span>Department</span>
               </label>
 
-              <p className="text-white">{student.department.name}</p>
+              <p className="text-white">{student.department}</p>
             </div>
 
             <div className="space-y-2 border border-gray-700 p-4 rounded-lg">
@@ -317,9 +344,10 @@ const StudentProfile = ({
               </div>
             </div>
             <div className="mb-4 flex gap-4 items-center justify-between">
+
               <div className="text-center w-1/2 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
-                  {student.stats?.leetcode?.solved?.All}
+                  {student.stats?.leetcode?.solved?.All || 0}
                 </div>
                 <div className="text-sm text-gray-400">Total Solved</div>
               </div>
@@ -428,6 +456,23 @@ const StudentProfile = ({
                 </div>
               </div>
             )}
+            {student?.stats?.leetcode?.activeYears?.length > 0 && (
+              <div className="mt-6">
+                <h4 className="text-white text-lg font-semibold mb-3">
+                  Active Years
+                </h4>
+                <div className="flex flex-wrap gap-2">
+                  {student.stats.leetcode.activeYears.map((year, index) => (
+                    <span
+                      key={index}
+                      className="bg-gray-700 text-gray-200 px-3 py-1 rounded-full text-sm font-medium"
+                    >
+                      {year}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {student.stats?.leetcode?.rating ? (
               <div className="mt-6 space-y-4">
@@ -516,21 +561,19 @@ const StudentProfile = ({
                                       ⏱️ Finish Time:{" "}
                                       {contest.finishTimeInSeconds >= 3600
                                         ? `${Math.floor(
-                                            contest.finishTimeInSeconds / 3600
-                                          )}h ${Math.floor(
-                                            (contest.finishTimeInSeconds %
-                                              3600) /
-                                              60
-                                          )}m ${
-                                            contest.finishTimeInSeconds % 60
-                                          }s`
+                                          contest.finishTimeInSeconds / 3600
+                                        )}h ${Math.floor(
+                                          (contest.finishTimeInSeconds %
+                                            3600) /
+                                          60
+                                        )}m ${contest.finishTimeInSeconds % 60
+                                        }s`
                                         : contest.finishTimeInSeconds >= 60
-                                        ? `${Math.floor(
+                                          ? `${Math.floor(
                                             contest.finishTimeInSeconds / 60
-                                          )}m ${
-                                            contest.finishTimeInSeconds % 60
+                                          )}m ${contest.finishTimeInSeconds % 60
                                           }s`
-                                        : `${contest.finishTimeInSeconds}s`}
+                                          : `${contest.finishTimeInSeconds}s`}
                                     </div>
                                   </div>
                                 </div>
@@ -560,21 +603,27 @@ const StudentProfile = ({
               </div>
               <div>
                 <h3 className="text-xl font-bold text-white">Skillrack</h3>
-                <p className="text-sm text-gray-400">
-                  Rank #{student.stats?.skillrack?.rank || 'N/A'}
-                </p>
+                <p className="text-sm text-gray-400">@{getSkillrackDisplayId(student.skillrack)}</p>
               </div>
             </div>
-            <div className="flex items-center justify-center flex-col mb-4 py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
-              <div className="text-2xl font-bold text-purple-400 mb-1">
-                {student.stats?.skillrack?.programsSolved || 0}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-2xl font-bold text-purple-400">
+                  {student.stats?.skillrack?.programsSolved || 0}
+                </div>
+                <div className="text-sm text-gray-400">Programs Solved</div>
               </div>
-              <div className="text-sm text-gray-400">Programs Solved</div>
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="text-2xl font-bold text-blue-400">
+                  #{student.stats?.skillrack?.rank || "N/A"}
+                </div>
+                <div className="text-sm text-gray-400">Rank</div>
+              </div>
             </div>
             <div className="space-y-2 mb-4">
               <h4 className="font-semibold text-white">Top Languages</h4>
-              {student &&
-                Object.entries(student?.stats?.skillrack?.languages || {})
+              {student?.stats?.skillrack?.languages &&
+                Object.entries(student.stats.skillrack.languages)
                   .slice(0, 3)
                   .map(([lang, count]) => (
                     <div
@@ -681,10 +730,25 @@ const StudentProfile = ({
             <div className="space-y-4">
               <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-300">Rating</span>
-                <span className="font-semibold text-yellow-400">
-                  {student.stats?.codechef?.rating ?? "N/A"}
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold text-yellow-400">
+                    {student.stats?.codechef?.rating ?? "N/A"}
+                  </span>
+                  {student.stats?.codechef?.stars && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/50 text-yellow-400 border border-yellow-700/50">
+                      {student.stats.codechef.stars}
+                    </span>
+                  )}
+                </div>
               </div>
+              {student.stats?.codechef?.division && (
+                <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
+                  <span className="text-sm text-gray-300">Division</span>
+                  <span className="font-semibold text-white">
+                    {student.stats.codechef.division}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-300">Highest Rating</span>
                 <span className="font-semibold text-purple-400">
@@ -706,7 +770,7 @@ const StudentProfile = ({
               <div className="flex justify-between items-center p-3 bg-gray-700 rounded-lg">
                 <span className="text-sm text-gray-300">Problems Solved</span>
                 <span className="font-semibold text-green-400">
-                  {student.stats?.codechef?.fullySolved ?? "N/A"}
+                  {student.stats?.codechef?.fullySolved?.toLocaleString() ?? "N/A"}
                 </span>
               </div>
             </div>
@@ -760,7 +824,7 @@ const StudentProfile = ({
           </div>
 
           {/* Skillrack */}
-          
+
 
           {/* GitHub */}
           <div className="bg-[#1e293b] rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300 relative w-full">
@@ -784,22 +848,40 @@ const StudentProfile = ({
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-purple-400">
-                  {student.stats.github.totalCommits}
+                  {student.stats?.github?.totalCommits || 0}
                 </div>
                 <div className="text-sm text-gray-400">Total Commits</div>
               </div>
               <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
                 <div className="text-2xl font-bold text-blue-400">
-                  {student.stats.github.totalRepos}
+                  {student.stats?.github?.totalRepos || 0}
                 </div>
                 <div className="text-sm text-gray-400">Repositories</div>
+              </div>
+
+              {/* Current Streak */}
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-yellow-400">
+                  <Zap className="w-6 h-6 fill-yellow-400" />
+                  {student.stats?.github?.currentStreak || 0}
+                </div>
+                <div className="text-sm text-gray-400">Current Streak</div>
+              </div>
+
+              {/* Longest Streak */}
+              <div className="text-center py-4 bg-gray-700 rounded-lg hover:bg-gray-600">
+                <div className="flex items-center justify-center gap-2 text-2xl font-bold text-orange-400">
+                  <Flame className="w-6 h-6 fill-orange-400" />
+                  {student.stats?.github?.longestStreak || 0}
+                </div>
+                <div className="text-sm text-gray-400">Longest Streak</div>
               </div>
             </div>
             <div className="space-y-2">
               <h4 className="font-semibold text-white">Top Languages</h4>
               <div className="flex flex-wrap gap-2">
-                {student.stats.github.topLanguages
-                  .slice(0, 6)
+                {student.stats?.github?.topLanguages
+                  ?.slice(0, 6)
                   .map((lang, index) => (
                     <span
                       key={index}
@@ -854,7 +936,7 @@ const StudentProfile = ({
           </div>
         </div>
       )}
-      
+
     </div>
   );
 };

@@ -143,6 +143,7 @@ function App() {
         }
       );
       setStudent(response.data.student);
+      console.log(response.data.student);
       setIsAuthenticated(true);
       setIsLoading(false);
     } catch (err) {

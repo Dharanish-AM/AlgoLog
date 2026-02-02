@@ -30,10 +30,33 @@ export const getCurrentAcademicYear = () => {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth(); // 0-11
-  
+
   // If current month is June or later, it's the new academic year
   const startYear = month >= 5 ? year : year - 1; // June is month 5
   const endYear = startYear + 4;
-  
+
   return `${startYear}-${endYear}`;
 };
+
+export const DEPARTMENTS = [
+  "AIDS",
+  "AIML",
+  "CIVIL",
+  "CSE",
+  "CSBS",
+  "CYS",
+  "ECE",
+  "EEE",
+  "IT",
+  "MECH",
+];
+
+export const SECTIONS = ["A", "B", "C", "D", "E"];
+
+export const ACCOMMODATION_TYPES = ["Hosteller", "Day Scholar"];
+
+export const GENDERS = ["Male", "Female", "Other"];
+
+export const INTERESTS = ["IT", "CORE(EEE, ECE, MECH)", "Higher Education"];
+
+export const YEARS = ["I", "II", "III", "IV"];
