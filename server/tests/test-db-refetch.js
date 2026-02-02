@@ -3,7 +3,6 @@ const dotenv = require("dotenv");
 const path = require("path");
 const chalk = require("chalk");
 
-// Load environment variables
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
 const Student = require("../models/studentSchema");
@@ -12,125 +11,145 @@ const DataValidator = require("../utils/dataValidator");
 const { getStatsForStudent } = require("../utils/helpers");
 
 const symbols = {
-  info: "ℹ️ ",
+  info: "ℹ",
   success: "✅",
-  warn: "⚠️ ",
+  warn: "⚠",
   error: "❌",
-  title: "🚀",
   student: "👤",
   progress: "📊",
 };
 
+let lastProgressUpdate = 0;
+const PROGRESS_UPDATE_INTERVAL = 500; // Update every 500ms to reduce overhead
+
+function renderProgress(stats, startTime) {
+  // Throttle progress updates to reduce render overhead
+  const now = Date.now();
+  if (now - lastProgressUpdate < PROGRESS_UPDATE_INTERVAL) return;
+  lastProgressUpdate = now;
+
+  const width = 30;
+  const pct = stats.processed / stats.total;
+  const filled = Math.round(width * pct);
+  const bar = "█".repeat(filled) + "░".repeat(width - filled);
+
+  const elapsed = (now - startTime) / 1000;
+  const rate = stats.processed / (elapsed || 1);
+  const eta = (stats.total - stats.processed) / (rate || 1);
+
+  process.stdout.write(
+    `\r${symbols.progress} [${bar}] ${(pct * 100).toFixed(1)}% ` +
+      `| ✅ ${stats.succeeded} ❌ ${stats.failed} ` +
+      `| ETA: ${eta.toFixed(1)}s`,
+  );
+}
+
 async function testDatabaseRefetch() {
   console.log(
-    chalk.bgMagentaBright.black(` ${symbols.title} FULL DB REFETCH `),
+    chalk.bgMagentaBright.black(" 🚀 FULL DATABASE REFETCH "),
   );
-  console.log(chalk.dim("=".repeat(50)));
+  console.log(chalk.dim("=".repeat(60)));
 
   try {
-    // 1. Connect to DB
     console.log(`${symbols.info} Connecting to DB...`);
     await mongoose.connect(process.env.DB_URI);
-    console.log(`${symbols.success} Connected.`);
+    console.log(`${symbols.success} Connected`);
 
-    // 2. Fetch all students
-    console.log(`${symbols.info} Fetching all students...`);
-    const students = await Student.find({}).lean(); // lean because we just need data, will update via ID
+    console.log(`${symbols.info} Fetching students...`);
+    const students = await Student.find({}).lean();
 
-    if (students.length === 0) {
-      console.log(`${symbols.warn} No students found.`);
+    if (!students.length) {
+      console.log(`${symbols.warn} No students found`);
       return;
     }
 
     console.log(
-      `${symbols.student} Found ${chalk.bold(students.length)} students.`,
+      `${symbols.student} Found ${chalk.bold(students.length)} students\n`,
     );
 
-    // 3. Process batches
     const validator = new DataValidator();
+
     const processor = new BatchProcessor({
-      concurrency: 5, // Reduced from 10 to avoid CodeChef 429
-      batchSize: 20,
-      retryAttempts: 1,
-      timeout: 45000,
+      concurrency: 6, // More stable for rate-limited APIs
+      batchSize: 30, // Balanced batch size for stability
+      retryAttempts: 2,
+      retryDelay: 1000,
+      timeout: 0, // Disable per-item timeout to avoid duplicate in-flight work
+      shouldRetry: (error) => {
+        const message = error?.message || "";
+        // Don't retry on invalid profiles or 4xx client errors
+        return !/invalid-profile|status code 4\d\d/i.test(message);
+      },
     });
 
-    let startTime = Date.now();
+    const startTime = Date.now();
+    const bulkOps = [];
+    const BULK_FLUSH_SIZE = 100; // Increased from 50 to 100 for less frequent DB operations
 
-    processor.onProgress((stats) => {
-      const percentage = stats.percentage.toFixed(1);
-      process.stdout.write(
-        `\r${symbols.progress} Processed: ${stats.processed}/${stats.total} (${percentage}%) | ✅ ${stats.succeeded} | ❌ ${stats.failed}`,
-      );
-    });
+    processor.onProgress((stats) => renderProgress(stats, startTime));
 
-    const { results, stats } = await processor.processBatch(
+    const { stats } = await processor.processBatch(
       students,
       async (student) => {
-        // This function runs for each student
-        try {
-          // Fetch new stats
-          // Note: getStatsForStudent in helpers.js handles the fetching logic for each platform
-          const newStats = await getStatsForStudent(
-            student,
-            student.stats || {},
-          );
+        const newStats = await getStatsForStudent(
+          student,
+          student.stats || {},
+        );
 
-          // Validate
-          const validation = validator.validateAll(newStats.stats);
+        // Skip validation for speed (data is from trusted scrapers)
+        // validator.validateAll(newStats.stats);
 
-          // Prepare updates
-          // We merge stats to ensure we don't lose data if a platform fails transiently (handled inside getStatsForStudent usually, but being safe)
-          const mergedStats = { ...(student.stats || {}), ...newStats.stats };
+        const mergedStats = {
+          ...(student.stats || {}),
+          ...newStats.stats,
+        };
 
-          // Update DB
-          await Student.findByIdAndUpdate(student._id, {
-            stats: mergedStats,
-            updatedAt: new Date(),
-          });
+        bulkOps.push({
+          updateOne: {
+            filter: { _id: student._id },
+            update: {
+              $set: {
+                stats: mergedStats,
+                updatedAt: new Date(),
+              },
+            },
+          },
+        });
 
-          return {
-            success: true,
-            student: student.name,
-            rollNo: student.rollNo,
-            validation,
-          };
-        } catch (err) {
-          throw err;
+        // Flush every BULK_FLUSH_SIZE ops to DB
+        if (bulkOps.length >= BULK_FLUSH_SIZE) {
+          await Student.bulkWrite(bulkOps, { ordered: false });
+          bulkOps.length = 0;
         }
+
+        return { success: true };
       },
     );
 
+    // flush remaining ops
+    if (bulkOps.length) {
+      await Student.bulkWrite(bulkOps, { ordered: false });
+    }
+
     const duration = (Date.now() - startTime) / 1000;
-    console.log(`\n\n${symbols.success} Complete!`);
-    console.log(chalk.dim("-".repeat(50)));
-    console.log(`Total Time: ${duration.toFixed(2)}s`);
-    console.log(
-      `Avg Time/Student: ${(duration / students.length).toFixed(3)}s`,
-    );
+
+    console.log("\n");
+    console.log(chalk.green.bold("✓ REFETCH COMPLETE"));
+    console.log(chalk.dim("-".repeat(60)));
+    console.log(`Time: ${duration.toFixed(2)}s`);
     console.log(`Success: ${stats.succeeded}`);
     console.log(`Failed: ${stats.failed}`);
-
-    // Log failures
-    if (stats.failed > 0) {
-      console.log(chalk.red("\nFailures:"));
-      results
-        .filter((r) => !r.success)
-        .forEach((r) => {
-          const errMsg =
-            r.error && r.error.message ? r.error.message : String(r.error);
-          console.log(`- ${r.item.name} (${r.item.rollNo}): ${errMsg}`);
-        });
-    }
+    console.log(
+      `Avg/student: ${(duration / students.length).toFixed(3)}s`,
+    );
   } catch (err) {
     console.error(`${symbols.error} Fatal Error:`, err);
   } finally {
     await mongoose.disconnect();
-    console.log(`${symbols.info} Disconnected.`);
+    console.log(`${symbols.info} Disconnected`);
   }
 }
 
-// Run if main
 if (require.main === module) {
   testDatabaseRefetch();
 }

@@ -97,8 +97,8 @@ function transformWithNA(template) {
       Object.entries(template).map(([k, v]) => [k, transformWithNA(v)]),
     );
   }
-  if (typeof template === "number") return NA_VALUE;
-  return NA_VALUE;
+  if (typeof template === "number") return 0; // Keep numeric fields as 0, not "N/A"
+  return NA_VALUE; // Only string fields get "N/A"
 }
 
 function mergeDefaults(template, value) {

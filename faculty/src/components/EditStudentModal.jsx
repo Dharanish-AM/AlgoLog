@@ -179,11 +179,11 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             <option value="" disabled={!formData.department}>
               {loading ? "Loading departments..." : "Select department"}
             </option>
-            {departments?.map((dpt) => (
+            {departments.map((dpt) => (
               <option key={dpt._id} value={dpt._id}>
                 {dpt.name}
               </option>
-            )) || null}
+            ))}
           </select>
         </div>
         <div>
@@ -200,11 +200,11 @@ export default function EditStudentModal({ isOpen, onClose, onSave, student }) {
             <option value="" disabled>
               Select year
             </option>
-            {ACADEMIC_YEARS?.map((year) => (
+            {ACADEMIC_YEARS.map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>
-            )) || null}
+            ))}
           </select>
         </div>
         <div>
