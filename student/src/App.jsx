@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import StudentProfile from "./pages/StudentProfile";
 import Auth from "./pages/Auth";
 import toast, { Toaster } from "react-hot-toast";
@@ -14,7 +14,7 @@ function App() {
   const [student, setStudent] = React.useState(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isRefreshing, setIsRefreshing] = React.useState(false);
-  const [departments, setDepartments] = React.useState([]);
+
   const [isBugReportOpen, setIsBugReportOpen] = React.useState(false);
 
   useEffect(() => {
@@ -39,18 +39,7 @@ function App() {
     return () => clearInterval(tokenRefreshInterval);
   }, [isAuthenticated, student]);
 
-  const fetchDepartments = useCallback(async () => {
-    try {
-      const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/get-form-details`
-      );
-      const deptData = Array.isArray(response.data) ? response.data : [];
-      setDepartments(deptData);
-    } catch (err) {
-      console.error("Error fetching departments:", err);
-      toast.error("Failed to fetch departments.");
-    }
-  }, []);
+
 
   const refreshToken = async () => {
     const token = localStorage.getItem("token");
@@ -163,8 +152,7 @@ function App() {
     try {
       setIsRefreshing(true);
       const response = await axios.get(
-        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${
-          student._id
+        `${import.meta.env.VITE_API_URL}/api/students/refetch/single?id=${student._id
         }`,
         {
           headers: {
@@ -252,9 +240,7 @@ function App() {
             element={
               <Auth
                 handleSignup={handleSignup}
-                fetchDepartments={fetchDepartments}
                 handleLogin={handleLogin}
-                departments={departments}
               />
             }
           />

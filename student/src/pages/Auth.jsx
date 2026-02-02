@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import logo from "/algolog.png";
 import Lottie from "lottie-react";
 import Animation from "../assets/Animation - 1747407322934.json";
@@ -8,18 +8,11 @@ import LoginForm from "../components/LoginForm";
 export default function Auth({
   handleLogin,
   handleSignup,
-  fetchDepartments,
-  departments
 }) {
   const [rollNo, setRollNo] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isSignup, setIsSignup] = React.useState(false);
 
-  useEffect(() => {
-    if (isSignup) {
-      fetchDepartments();
-    }
-  }, [fetchDepartments, isSignup]);
 
   const submitLogin = async () => {
     handleLogin(rollNo, password);
@@ -56,7 +49,6 @@ export default function Auth({
               onClose={() => setIsSignup(false)}
               isOpen={isSignup}
               onSubmit={submitSignup}
-              departments={departments}
             />
           ) : (
             <LoginForm

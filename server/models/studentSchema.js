@@ -118,6 +118,7 @@ const studentSchema = new mongoose.Schema(
         maxRating: Number,
         contests: Number,
         problemsSolved: Number,
+        maxRank: String,
       },
       skillrack: {
         platform: String,
@@ -141,6 +142,8 @@ const studentSchema = new mongoose.Schema(
       github: {
         platform: String,
         totalCommits: Number,
+        currentYearContributions: Number,
+        lifetimeContributions: Number,
         totalRepos: Number,
         longestStreak: Number,
         currentStreak: Number,

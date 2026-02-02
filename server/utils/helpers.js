@@ -41,6 +41,8 @@ const STAT_DEFAULTS = {
     countryRank: 0,
     fullySolved: 0,
     updatedAt: null,
+    division: "N/A",
+    stars: "1★",
   },
   codeforces: {
     platform: "Codeforces",

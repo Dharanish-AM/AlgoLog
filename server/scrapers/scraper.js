@@ -73,7 +73,7 @@ function setRateLimitBackoff(platform, durationMs) {
 }
 
 const platformLimits = {
-  codechef: { minTime: 3000, maxConcurrent: 2 }, // Reduced from 2.5s, keeping at 2
+  codechef: { minTime: 5000, maxConcurrent: 1 }, // Strict limit: 1 request every 5s
   leetcode: { minTime: 300, maxConcurrent: 6 }, // Reduced from 8 to 6
   hackerrank: { minTime: 600, maxConcurrent: 4 }, // Reduced from 5 to 4
   github: { minTime: 200, maxConcurrent: 10 }, // Reduced from 15 to 10 (still high for fetch checks)
@@ -451,7 +451,7 @@ async function getCodeChefStats(username) {
   await checkRateLimit("codechef");
 
   const url = `https://www.codechef.com/users/${username}`;
-  const maxAttempts = 3; // Increased attempts
+  const maxAttempts = 3;
   const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -459,15 +459,15 @@ async function getCodeChefStats(username) {
       const { data } = await axios.get(url, {
         headers: {
           "User-Agent":
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36",
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
           Accept: "text/html,application/xhtml+xml,application/xml;q=0.9",
           "Accept-Language": "en-US,en;q=0.9",
-          "Accept-Encoding": "gzip, deflate, br",
-          Connection: "keep-alive",
-          Referer: url,
+          "Cache-Control": "no-cache",
+          Pragma: "no-cache",
+          Referer: "https://www.codechef.com/",
         },
         httpsAgent: agent,
-        timeout: 8000,
+        timeout: 10000,
         decompress: true,
       });
 
@@ -480,19 +480,27 @@ async function getCodeChefStats(username) {
         data.trim().length < 1000
       ) {
         console.warn(`User ${username} not found or invalid CodeChef page.`);
-        return {
+        // Return default structure with nulls to indicate found but empty/invalid
+        const result = {
           platform: "CodeChef",
           username,
-          rating: null,
-          fullySolved: null,
+          rating: 0,
+          division: "N/A",
+          stars: "1★",
+          highestRating: 0,
+          globalRank: 0,
+          countryRank: 0,
+          fullySolved: 0,
         };
+        setCache(cacheKey, result);
+        return result;
       }
 
       const $ = cheerio.load(data);
-      console.log(`[CodeChef] Page loaded for ${username}. Extracting data...`);
 
       // Extract rating
-      const rating = $(".rating-number").text().trim() || "0";
+      const ratingText = $(".rating-number").text().trim();
+      const rating = parseInt(ratingText, 10) || 0;
 
       // Extract Div
       let division = "N/A";
@@ -507,20 +515,9 @@ async function getCodeChefStats(username) {
       }
 
       // Extract Stars
-      let stars = "1★"; // Default
-      // Try to find star using background color logic or span
-      // The user provided: <div class="rating-star"><span style="background-color:#666666">★</span></div>
-      // Often the color maps to stars.
-      // 1★: #666666 (Grey)
-      // 2★: #1E7D22 (Green)
-      // 3★: #3366CC (Blue)
-      // 4★: #684273 (Purple)
-      // 5★: #FFBF00 (Yellow)
-      // 6★: #FF7F00 (Orange)
-      // 7★: #D0011B (Red)
-
+      let stars = "1★";
       const starSpan = $(".rating-star span");
-      const starColor = starSpan.attr("style"); // e.g., "background-color:#666666"
+      const starColor = starSpan.attr("style");
 
       if (starColor) {
         if (starColor.includes("#666666")) stars = "1★";
@@ -530,18 +527,14 @@ async function getCodeChefStats(username) {
         else if (starColor.includes("#FFBF00")) stars = "5★";
         else if (starColor.includes("#FF7F00")) stars = "6★";
         else if (starColor.includes("#D0011B")) stars = "7★";
-      } else {
-        // Fallback to numeric logic if color check fails
-        const r = parseInt(rating, 10);
-        if (!isNaN(r)) {
-          if (r < 1400) stars = "1★";
-          else if (r < 1600) stars = "2★";
-          else if (r < 1800) stars = "3★";
-          else if (r < 2000) stars = "4★";
-          else if (r < 2200) stars = "5★";
-          else if (r < 2500) stars = "6★";
-          else stars = "7★";
-        }
+      } else if (rating > 0) {
+        if (rating < 1400) stars = "1★";
+        else if (rating < 1600) stars = "2★";
+        else if (rating < 1800) stars = "3★";
+        else if (rating < 2000) stars = "4★";
+        else if (rating < 2200) stars = "5★";
+        else if (rating < 2500) stars = "6★";
+        else stars = "7★";
       }
 
       // Extract highest rating
@@ -567,7 +560,7 @@ async function getCodeChefStats(username) {
       const result = {
         platform: "CodeChef",
         username,
-        rating: parseInt(rating, 10) || 0,
+        rating,
         division,
         stars,
         highestRating,
@@ -577,55 +570,42 @@ async function getCodeChefStats(username) {
         updatedAt: new Date(),
       };
       setCache(cacheKey, result);
+      console.log(`[CodeChef] ✅ Success for ${username}`);
       return result;
     } catch (error) {
-      const isEmptyProfile =
-        error.message &&
-        error.message.includes("Invalid or empty CodeChef profile page");
-
-      const isNotFound = error.response && error.response.status === 404;
-
-      if (isEmptyProfile || isNotFound) {
-        console.warn(
-          `Skipped CodeChef fetch for ${username}: ${error.message}`,
-        );
-        const result = {
-          platform: "CodeChef",
-          username,
-          rating: null,
-          fullySolved: null,
-        };
-        setCache(cacheKey, result);
-        return result;
-      }
+      const isRateLink = error.response?.status === 429;
 
       console.warn(
-        `Attempt ${attempt} failed to fetch CodeChef data for ${username}:`,
-        error.message,
+        `[CodeChef] Attempt ${attempt} failed for ${username}: ${error.message}`,
       );
 
       if (attempt < maxAttempts) {
-        // Exponential backoff for rate limiting (429 errors)
-        if (error.response?.status === 429) {
-          const waitTime = Math.min(8000 * Math.pow(2, attempt - 1), 30000); // 8s, 16s, 30s max
+        let waitTime = 5000;
+
+        if (isRateLink) {
+          // Exponential backoff + Jitter
+          // Base: 10s, 20s, 40s...
+          const base = 10000 * Math.pow(2, attempt - 1);
+          const jitter = Math.random() * 5000; // 0-5s jitter
+          waitTime = base + jitter;
+
           console.warn(
-            `⏳ CodeChef rate limited. Waiting ${waitTime / 1000}s before retry...`,
+            `⏳ CodeChef 429 Hit. Waiting ${(waitTime / 1000).toFixed(1)}s...`,
           );
-          setRateLimitBackoff("codechef", waitTime); // Set global backoff
-          await delay(waitTime);
+          setRateLimitBackoff("codechef", waitTime);
         } else if (
           error.code === "ECONNABORTED" ||
           error.message.includes("timeout")
         ) {
-          await delay(2000 * attempt); // Timeout - progressive delay
-        } else {
-          await delay(1500 * attempt); // Other errors
+          waitTime = 3000 * attempt;
         }
+
+        await delay(waitTime);
       } else {
         return {
           platform: "CodeChef",
           username,
-          error: "Failed to fetch data after multiple attempts",
+          error: isRateLink ? "Rate Limited (429)" : error.message,
         };
       }
     }
