@@ -43,5 +43,5 @@ button:hover {
 input:focus,
 textarea:focus,
 select:focus {
-  @apply ring-2 ring-purple-500 ring-opacity-50;
+  @apply ring-2 ring-purple-500/50;
 }
