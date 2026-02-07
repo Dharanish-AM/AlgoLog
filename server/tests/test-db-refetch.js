@@ -93,6 +93,19 @@ const log = {
   },
 };
 
+const ENABLE_PLATFORM_CACHE = process.env.ENABLE_PLATFORM_CACHE !== 'false';
+const PLATFORM_CACHE_TTL_MS = Number(process.env.PLATFORM_CACHE_TTL_MS) || 10 * 60 * 1000;
+
+function shouldUseCachedStats(student, oldStats) {
+  if (!ENABLE_PLATFORM_CACHE) return false;
+  if (!oldStats || Object.keys(oldStats).length === 0) return false;
+  if (!student?.updatedAt) return false;
+
+  const updatedAtMs = new Date(student.updatedAt).getTime();
+  if (!Number.isFinite(updatedAtMs)) return false;
+  return Date.now() - updatedAtMs < PLATFORM_CACHE_TTL_MS;
+}
+
 /* -------------------------------------------------------------------------- */
 /*                     Fetch stats for a single student                       */
 /* -------------------------------------------------------------------------- */
@@ -111,6 +124,14 @@ async function getStatsForStudent(student, oldStats = {}) {
     skillrack,
     github,
   } = student;
+
+  if (shouldUseCachedStats(student, oldStats)) {
+    const ageSeconds = Math.ceil((Date.now() - new Date(student.updatedAt).getTime()) / 1000);
+    log.info(
+      `Using cached stats for ${name} (last updated ${ageSeconds}s ago)`
+    );
+    return { stats: oldStats, cacheHit: true };
+  }
 
   console.log(
     '\n' +
@@ -166,7 +187,7 @@ async function getStatsForStudent(student, oldStats = {}) {
       .map(e => e.value)
   );
 
-  return finalStats;
+  return { stats: finalStats, cacheHit: false };
 }
 
 /* -------------------------------------------------------------------------- */
@@ -351,7 +372,19 @@ async function testDatabaseRefetch() {
           async (student, index) => {
             try {
               // Fetch new stats
-              const newStats = await getStatsForStudent(student, student.stats || {});
+              const { stats: newStats, cacheHit } = await getStatsForStudent(
+                student,
+                student.stats || {}
+              );
+
+              if (cacheHit) {
+                return {
+                  success: true,
+                  name: student.name,
+                  updatedPlatforms: 0,
+                  errorPlatforms: 0,
+                };
+              }
 
               // Validate stats
               const validation = validator.validateAll(newStats);

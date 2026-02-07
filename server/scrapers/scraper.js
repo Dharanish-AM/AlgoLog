@@ -11,7 +11,9 @@ const Bottleneck = require("bottleneck");
 const crypto = require("crypto");
 
 const cache = new Map();
-const CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+const CACHE_TTL = Number(process.env.PLATFORM_CACHE_TTL_MS) || 15 * 60 * 1000; // 15 minutes
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function getCached(key) {
   const item = cache.get(key);
@@ -51,6 +53,16 @@ const rateLimitTracker = {
   codeforces: { lastRequest: 0, backoffUntil: 0 },
 };
 
+const circuitBreakers = {
+  codechef: {
+    state: "CLOSED", // CLOSED, OPEN, HALF_OPEN
+    failures: 0,
+    threshold: 3,
+    resetTimeout: 20000,
+    openUntil: 0,
+  },
+};
+
 async function checkRateLimit(platform) {
   const now = Date.now();
   const tracker = rateLimitTracker[platform];
@@ -58,18 +70,72 @@ async function checkRateLimit(platform) {
   if (tracker && tracker.backoffUntil > now) {
     const waitTime = tracker.backoffUntil - now;
     console.warn(`[${platform}] Global backoff active. Waiting ${Math.ceil(waitTime / 1000)}s...`);
-    await new Promise(resolve => setTimeout(resolve, waitTime));
+    await delay(waitTime);
+  }
+
+  const breaker = circuitBreakers[platform];
+  if (breaker && breaker.state === "OPEN") {
+    const circuitWait = breaker.openUntil - Date.now();
+    if (circuitWait > 0) {
+      console.warn(`[${platform}] Circuit OPEN. Waiting ${Math.ceil(circuitWait / 1000)}s...`);
+      await delay(circuitWait);
+    }
+    breaker.state = "HALF_OPEN";
   }
 }
 
 function setRateLimitBackoff(platform, durationMs) {
   if (rateLimitTracker[platform]) {
-    rateLimitTracker[platform].backoffUntil = Date.now() + durationMs;
+    const next = Date.now() + durationMs;
+    rateLimitTracker[platform].backoffUntil = Math.max(
+      rateLimitTracker[platform].backoffUntil,
+      next
+    );
+  }
+}
+
+function getJitteredBackoff(baseMs, attempt, maxMs, jitterRatio = 0.3) {
+  const exp = Math.min(baseMs * Math.pow(2, attempt - 1), maxMs);
+  const jitter = exp * jitterRatio * (Math.random() - 0.5) * 2;
+  return Math.max(0, Math.floor(exp + jitter));
+}
+
+function recordCircuitFailure(platform, delayMs) {
+  const breaker = circuitBreakers[platform];
+  if (!breaker) return;
+
+  breaker.failures += 1;
+  if (breaker.failures >= breaker.threshold) {
+    breaker.state = "OPEN";
+    breaker.openUntil = Date.now() + delayMs;
+    console.warn(
+      `[${platform}] Circuit opened for ${Math.ceil(delayMs / 1000)}s after ${breaker.failures} failures`
+    );
+    if (platform === "codechef") {
+      slowDownCodechefLimiter();
+    }
+  }
+}
+
+function recordCircuitSuccess(platform) {
+  const breaker = circuitBreakers[platform];
+  if (!breaker) return;
+  if (breaker.state === "HALF_OPEN") {
+    console.info(`[${platform}] Circuit closed after successful probe`);
+  }
+  breaker.state = "CLOSED";
+  breaker.failures = 0;
+  breaker.openUntil = 0;
+  if (platform === "codechef") {
+    resetCodechefLimiter();
   }
 }
 
 const platformLimits = {
-  codechef: { minTime: 3000, maxConcurrent: 2 }, // Reduced from 2.5s, keeping at 2
+  codechef: {
+    minTime: Number(process.env.CODECHEF_MIN_TIME_MS) || 4500,
+    maxConcurrent: Number(process.env.CODECHEF_MAX_CONCURRENT) || 1,
+  },
   leetcode: { minTime: 300, maxConcurrent: 6 }, // Reduced from 8 to 6
   hackerrank: { minTime: 600, maxConcurrent: 4 }, // Reduced from 5 to 4
   github: { minTime: 200, maxConcurrent: 10 }, // Reduced from 15 to 10 (still high for fetch checks)
@@ -92,6 +158,26 @@ const {
   skillrack: skillrackLimiter,
   codeforces: codeforcesLimiter,
 } = limiters;
+
+const codechefLimiterDefaults = {
+  minTime: platformLimits.codechef.minTime,
+  maxConcurrent: platformLimits.codechef.maxConcurrent,
+};
+
+function slowDownCodechefLimiter() {
+  const nextMinTime = Math.min(codechefLimiterDefaults.minTime + 2000, 10000);
+  codechefLimiter.updateSettings({
+    minTime: nextMinTime,
+    maxConcurrent: 1,
+  });
+}
+
+function resetCodechefLimiter() {
+  codechefLimiter.updateSettings({
+    minTime: codechefLimiterDefaults.minTime,
+    maxConcurrent: codechefLimiterDefaults.maxConcurrent,
+  });
+}
 
 const agent = new https.Agent({ 
   family: 4,
@@ -447,7 +533,6 @@ async function getCodeChefStats(username) {
 
   const url = `https://www.codechef.com/users/${username}`;
   const maxAttempts = 3; // Increased attempts
-  const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
@@ -538,6 +623,7 @@ async function getCodeChefStats(username) {
         fullySolved,
         updatedAt: new Date(),
       };
+      recordCircuitSuccess("codechef");
       setCache(cacheKey, result);
       return result;
     } catch (error) {
@@ -546,6 +632,7 @@ async function getCodeChefStats(username) {
         error.message.includes("Invalid or empty CodeChef profile page");
 
       const isNotFound = error.response && error.response.status === 404;
+      const status = error.response?.status;
 
       if (isEmptyProfile || isNotFound) {
         console.warn(
@@ -567,13 +654,18 @@ async function getCodeChefStats(username) {
       );
 
       if (attempt < maxAttempts) {
-        // Exponential backoff for rate limiting (429 errors)
-        if (error.response?.status === 429) {
-          const waitTime = Math.min(8000 * Math.pow(2, attempt - 1), 30000); // 8s, 16s, 30s max
+        // Exponential backoff with jitter for rate limiting (429 errors)
+        if (status === 429) {
+          const waitTime = getJitteredBackoff(8000, attempt, 30000);
           console.warn(`⏳ CodeChef rate limited. Waiting ${waitTime / 1000}s before retry...`);
-          setRateLimitBackoff('codechef', waitTime); // Set global backoff
+          setRateLimitBackoff("codechef", waitTime);
+          recordCircuitFailure("codechef", Math.max(waitTime, 20000));
           await delay(waitTime);
-        } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        } else if (status && status >= 500) {
+          const waitTime = getJitteredBackoff(3000, attempt, 15000);
+          recordCircuitFailure("codechef", Math.max(waitTime, 20000));
+          await delay(waitTime);
+        } else if (error.code === "ECONNABORTED" || error.message.includes("timeout")) {
           await delay(2000 * attempt); // Timeout - progressive delay
         } else {
           await delay(1500 * attempt); // Other errors
