@@ -87,7 +87,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen p-8  scrollbar-hide bg-linear-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
+    <div className="min-h-screen p-8  scrollbar-hide bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 transition-colors duration-200">
       <Header />
       <div className="mt-8">
         {!selectedDepartment && (

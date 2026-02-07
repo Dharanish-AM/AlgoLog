@@ -40,7 +40,6 @@ class BatchProcessor {
     this.retryAttempts = options.retryAttempts || 1; // Reduced from 2
     this.retryDelay = options.retryDelay || 500; // Faster retry
     this.timeout = options.timeout || 25000; // Faster timeout
-    this.shouldRetry = options.shouldRetry || null;
     this.stats = {
       total: 0,
       processed: 0,
@@ -341,33 +340,22 @@ class BatchProcessor {
 
     for (let attempt = 0; attempt <= this.retryAttempts; attempt++) {
       try {
-        let result;
-        if (this.timeout && this.timeout > 0) {
-          const timeoutPromise = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error('Timeout')), this.timeout)
-          );
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Timeout')), this.timeout)
+        );
 
-          result = await Promise.race([
-            processFn(item, index),
-            timeoutPromise,
-          ]);
-        } else {
-          result = await processFn(item, index);
-        }
+        const result = await Promise.race([
+          processFn(item, index),
+          timeoutPromise,
+        ]);
 
         return { success: true, data: result };
       } catch (error) {
         lastError = error;
 
-        const retryAllowed = typeof this.shouldRetry === 'function'
-          ? this.shouldRetry(error, item, attempt, index)
-          : true;
-
-        if (attempt < this.retryAttempts && retryAllowed) {
+        if (attempt < this.retryAttempts) {
           console.warn(`⚠️  Retry ${attempt + 1}/${this.retryAttempts} for item ${index + 1}`);
           await this.delay(this.retryDelay * (attempt + 1));
-        } else if (attempt < this.retryAttempts && !retryAllowed) {
-          break;
         }
 
         if (this.callbacks.onError) {

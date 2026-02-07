@@ -38,46 +38,8 @@ const getCurrentAcademicYear = () => {
   return `${startYear}-${endYear}`;
 };
 
-/**
- * Student Schema Enum Constants
- */
-
-//alphabetic order
-const DEPARTMENTS = [
-  "AIDS",
-  "AIML",
-  "CIVIL",
-  "CSE",
-  "CSBS",
-  "CYS",
-  "ECE",
-  "EEE",
-  "IT",
-  "MECH"
-];
-
-const SECTIONS = ["A", "B", "C", "D", "E"];
-
-const YEARS = ["I", "II", "III", "IV"];
-
-const ACCOMMODATION_TYPES = ["Hosteller", "Day Scholar"];
-
-const GENDERS = ["Male", "Female", "Other"];
-
-const INTERESTS = [
-  "IT",
-  "CORE(EEE, ECE, MECH)",
-  "Higher Education"
-];
-
 module.exports = {
   ACADEMIC_YEARS,
   isValidAcademicYear,
   getCurrentAcademicYear,
-  DEPARTMENTS,
-  SECTIONS,
-  YEARS,
-  ACCOMMODATION_TYPES,
-  GENDERS,
-  INTERESTS,
 };

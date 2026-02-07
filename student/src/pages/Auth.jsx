@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import logo from "/algolog.png";
 import Lottie from "lottie-react";
 import Animation from "../assets/Animation - 1747407322934.json";
@@ -8,11 +8,18 @@ import LoginForm from "../components/LoginForm";
 export default function Auth({
   handleLogin,
   handleSignup,
+  fetchDepartments,
+  departments
 }) {
   const [rollNo, setRollNo] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [isSignup, setIsSignup] = React.useState(false);
 
+  useEffect(() => {
+    if (isSignup) {
+      fetchDepartments();
+    }
+  }, [fetchDepartments, isSignup]);
 
   const submitLogin = async () => {
     handleLogin(rollNo, password);
@@ -33,22 +40,23 @@ export default function Auth({
   };
 
   return (
-    <div className="min-h-screen h-screen bg-[#141B2A] flex flex-col p-4 md:p-6 relative overflow-hidden">
+    <div className="min-h-screen h-screen bg-[#141B2A] flex flex-col p-6 relative overflow-hidden">
       <div className="flex w-full items-center">
         <img
           src={logo}
           alt="AlgoLog Logo"
-          className="w-12 md:w-14 h-12 md:h-14 object-contain"
+          className="w-14 h-14 object-contain"
         />
-        <h1 className="ml-2 md:ml-3 text-xl md:text-2xl font-bold text-purple-400">AlgoLog</h1>
+        <h1 className="ml-3 text-2xl font-bold text-purple-400">AlgoLog</h1>
       </div>
-      <div className="flex flex-col-reverse md:flex-row w-full h-full">
-        <div className="w-full md:w-1/2 flex items-center justify-center min-h-[50%] md:min-h-full py-8 md:py-0">
+      <div className="flex">
+        <div className="w-full sm:h-full h-[35rem] sm:w-1/2 flex items-center justify-center ">
           {isSignup ? (
             <SignUpForm
               onClose={() => setIsSignup(false)}
               isOpen={isSignup}
               onSubmit={submitSignup}
+              departments={departments}
             />
           ) : (
             <LoginForm
@@ -61,16 +69,16 @@ export default function Auth({
             />
           )}
         </div>
-        <div className="w-full md:w-1/2 hidden md:flex items-center justify-center min-h-[50%] md:min-h-full py-8 md:py-0">
+        <div className="w-1/2 hidden sm:flex items-center justify-center">
           <Lottie
             animationData={Animation}
             loop
             autoplay
-            className="w-full h-full max-w-md md:max-w-full"
+            className="w-full h-full"
           />
         </div>
       </div>
-      <footer className="fixed bottom-4 right-4 text-xs md:text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
+      <footer className="fixed bottom-4 right-4 text-sm text-gray-500 dark:text-gray-400 bg-white/70 dark:bg-gray-800/70 px-3 py-1 rounded-xl shadow-md backdrop-blur-sm">
         Made by{" "}
         <a
           href="https://github.com/Dharanish-AM"

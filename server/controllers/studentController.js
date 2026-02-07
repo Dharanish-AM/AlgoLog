@@ -6,7 +6,7 @@ const bcrypt = require("bcryptjs");
 const { generateToken } = require("../utils/jwt");
 const { getStatsForStudent } = require("../utils/helpers");
 const { validateSkillrackUrl } = require("../utils/skillrackValidator");
-const { DEPARTMENTS, SECTIONS, YEARS } = require("../utils/constants");
+const { ACADEMIC_YEARS, isValidAcademicYear } = require("../utils/constants");
 const BatchProcessor = require("../utils/batchProcessor");
 const DataValidator = require("../utils/dataValidator");
 const chalk = require("chalk");
@@ -22,25 +22,11 @@ const {
 // Get students by class ID
 exports.getStudentsByClass = async (req, res) => {
   try {
-    const { classId, department, section, year } = req.query;
-    
-    let query = {};
-    if (classId) {
-      // Legacy support if classId is still passed
-      const classData = await Class.findById(classId);
-      if (classData) {
-        query = { department: classData.department, section: classData.section, year: classData.year };
-      }
-    } else {
-      // Use direct filters
-      if (department) query.department = department;
-      if (section) query.section = section;
-      if (year) query.year = year;
-    }
-    
-    const students = await Student.find(query)
+    const classId = req.query.classId;
+    const students = await Student.find({ classId })
       .lean()
-      .select("-password -__v"); // Exclude unnecessary fields
+      .select("-password -__v") // Exclude unnecessary fields
+      .populate("department", "name _id"); // Include _id for dropdown
     
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
@@ -60,7 +46,8 @@ exports.getAllStudents = async (req, res) => {
   try {
     const students = await Student.find({})
       .lean()
-      .select("-password -__v");
+      .select("-password -__v")
+      .populate("department", "name _id"); // Include _id for dropdown
     
     if (!students || students.length === 0) {
       return res.status(200).json({ students: [] });
@@ -81,14 +68,10 @@ exports.addStudent = async (req, res) => {
     const {
       name,
       email,
-      mobileNumber,
       rollNo,
       year,
       department,
       section,
-      accommodation,
-      gender,
-      interest,
       leetcode,
       hackerrank,
       codechef,
@@ -97,33 +80,19 @@ exports.addStudent = async (req, res) => {
       github,
     } = req.body;
 
-    if (!name || !email || !rollNo || !mobileNumber) {
+    if (!name || !email || !rollNo) {
       return res
         .status(400)
-        .json({ error: "Name, email, mobile number, and roll number are required" });
+        .json({ error: "Name, email, and roll number are required" });
     }
 
-    // Validate year
-    if (!year || !YEARS.includes(year)) {
+    // Validate academic year
+    if (!year || !isValidAcademicYear(year)) {
       return res
         .status(400)
         .json({ 
-          error: `Invalid year. Please select from: ${YEARS.join(', ')}` 
+          error: `Invalid academic year. Please select from: ${ACADEMIC_YEARS.join(', ')}` 
         });
-    }
-
-    // Validate department
-    if (!department || !DEPARTMENTS.includes(department)) {
-      return res.status(400).json({ 
-        error: `Invalid department. Please select from: ${DEPARTMENTS.join(', ')}` 
-      });
-    }
-
-    // Validate section
-    if (!section || !SECTIONS.includes(section)) {
-      return res.status(400).json({ 
-        error: `Invalid section. Please select from: ${SECTIONS.join(', ')}` 
-      });
     }
 
     // Validate Skillrack URL if provided
@@ -134,26 +103,53 @@ exports.addStudent = async (req, res) => {
       }
     }
 
+    const departmentData = await Department.findById(department);
+    if (!departmentData) {
+      return res.status(404).json({
+        error: "Department not found. Cannot proceed with class lookup.",
+      });
+    }
+
+    // Ensure the selected academic year exists for this department in DB
+    const yearExists = await Class.exists({
+      department: departmentData._id,
+      year,
+    });
+    if (!yearExists) {
+      return res.status(404).json({
+        error: "Academic year not available for this department",
+      });
+    }
+
+    const classData = await Class.findOne({
+      section,
+      year,
+      department: departmentData._id,
+    });
+
+    if (!classData) {
+      return res.status(404).json({
+        error: "Class not found for the given section/year/department.",
+      });
+    }
+
     const password = "sece@123";
     const hashPass = await bcrypt.hash(password, 10);
 
     const studentInfo = {
       name,
       email,
-      mobileNumber,
       rollNo,
       year,
-      department,
+      department: departmentData._id,
       section,
-      accommodation: accommodation || "Day Scholar",
-      gender,
-      interest: interest || "IT",
       leetcode,
       hackerrank,
       codechef,
       codeforces,
       skillrack,
       github,
+      classId: classData._id,
       password: hashPass,
     };
 
@@ -164,13 +160,43 @@ exports.addStudent = async (req, res) => {
       console.warn("Stats fetch failed, proceeding with empty stats:", err);
     }
 
-    // Create new student with stats
-    const newStudent = await Student.create({
-      ...studentInfo,
-      stats: statsResult.stats,
-    });
+    // Use transactions in production, but simplify for tests (no replica set)
+    if (process.env.NODE_ENV === 'test') {
+      const newStudent = await Student.create({
+        ...studentInfo,
+        stats: statsResult.stats,
+      });
 
-    return res.status(201).json(newStudent);
+      await Class.findByIdAndUpdate(
+        classData._id,
+        { $addToSet: { students: newStudent._id } }
+      );
+
+      return res.status(201).json(newStudent);
+    }
+
+    const session = await mongoose.startSession();
+    let savedStudent;
+    
+    try {
+      await session.withTransaction(async () => {
+        const newStudent = new Student({
+          ...studentInfo,
+          stats: statsResult.stats,
+        });
+        savedStudent = await newStudent.save({ session });
+        
+        await Class.findByIdAndUpdate(
+          classData._id,
+          { $addToSet: { students: savedStudent._id } },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+
+    return res.status(201).json(savedStudent);
   } catch (error) {
     console.error("Error adding student:", error.message);
     
@@ -202,14 +228,10 @@ exports.updateStudent = async (req, res) => {
     const {
       name,
       email,
-      mobileNumber,
       rollNo,
       year,
       department,
       section,
-      accommodation,
-      gender,
-      interest,
       leetcode,
       hackerrank,
       codechef,
@@ -225,46 +247,53 @@ exports.updateStudent = async (req, res) => {
       return res.status(404).json({ error: "Student not found" });
     }
 
-    // Validate year if provided
-    if (year && !YEARS.includes(year)) {
+    // Validate academic year if provided
+    if (year && !isValidAcademicYear(year)) {
       return res
         .status(400)
         .json({ 
-          error: `Invalid year. Please select from: ${YEARS.join(', ')}` 
+          error: `Invalid academic year. Please select from: ${ACADEMIC_YEARS.join(', ')}` 
         });
     }
 
-    // Validate department if provided
-    if (department && !DEPARTMENTS.includes(department)) {
-      return res.status(400).json({ 
-        error: `Invalid department. Please select from: ${DEPARTMENTS.join(', ')}` 
-      });
+    const departmentId =
+      typeof department === "string" ? department : department?._id;
+
+    if (!departmentId) {
+      return res.status(400).json({ error: "Invalid department ID" });
     }
 
-    // Validate section if provided
-    if (section && !SECTIONS.includes(section)) {
-      return res.status(400).json({ 
-        error: `Invalid section. Please select from: ${SECTIONS.join(', ')}` 
+    const departmentData = await Department.findById(departmentId);
+    if (!departmentData) {
+      return res.status(404).json({ error: "Department not found" });
+    }
+
+    const classData = await Class.findOne({
+      section,
+      year,
+      department: departmentData._id,
+    });
+
+    if (!classData) {
+      return res.status(404).json({
+        error: "Class not found for given section, year, and department",
       });
     }
 
     const updatedData = {
       name,
       email,
-      mobileNumber,
       rollNo,
       year,
-      department,
+      department: departmentData._id,
       section,
-      accommodation,
-      gender,
-      interest,
       leetcode,
       hackerrank,
       codechef,
       codeforces,
       skillrack,
       github,
+      classId: classData._id,
     };
 
     const updatedStats = await getStatsForStudent(
@@ -272,14 +301,56 @@ exports.updateStudent = async (req, res) => {
       existingStudent.stats || {}
     );
 
-    updatedStudent = await Student.findByIdAndUpdate(
-      id,
-      {
-        ...updatedData,
-        stats: updatedStats?.stats || existingStudent.stats,
-      },
-      { new: true }
-    );
+    const session = await mongoose.startSession();
+    let updatedStudent;
+
+    const runUpdates = async (opts = {}) => {
+      updatedStudent = await Student.findByIdAndUpdate(
+        id,
+        {
+          ...updatedData,
+          stats: updatedStats?.stats || existingStudent.stats,
+        },
+        { new: true, ...opts }
+      ).populate("department");
+
+      // Keep class membership in sync if class changed
+      if (existingStudent.classId?.toString() !== classData._id.toString()) {
+        if (existingStudent.classId) {
+          await Class.findByIdAndUpdate(
+            existingStudent.classId,
+            { $pull: { students: existingStudent._id } },
+            opts
+          );
+        }
+
+        await Class.findByIdAndUpdate(
+          classData._id,
+          { $addToSet: { students: existingStudent._id } },
+          opts
+        );
+      }
+    };
+
+    try {
+      await session.withTransaction(async () => runUpdates({ session }));
+    } catch (txErr) {
+      // Fallback for standalone MongoDB (no replica set)
+      if (
+        txErr?.message?.includes(
+          "Transaction numbers are only allowed on a replica set member or mongos"
+        )
+      ) {
+        console.warn(
+          "⚠️ Transactions not supported on current Mongo instance; applying non-transactional updates"
+        );
+        await runUpdates();
+      } else {
+        throw txErr;
+      }
+    } finally {
+      await session.endSession();
+    }
 
     console.log(`✅ Student updated: ${updatedStudent.name}`);
     res.status(200).json({ student: updatedStudent });
@@ -317,10 +388,18 @@ exports.deleteStudent = async (req, res) => {
       return res.status(404).json({ message: "Student not found" });
     }
 
+    const classId = student.classId;
+
+    await Class.findByIdAndUpdate(
+      classId,
+      { $pull: { students: id } },
+      { new: true }
+    );
+
     await Student.findByIdAndDelete(id);
 
     res.json({
-      message: "Student deleted successfully",
+      message: "Student deleted and removed from class successfully",
     });
   } catch (err) {
     console.error("Error deleting student:", err.message);
@@ -445,7 +524,7 @@ exports.refetchSingleStudent = async (req, res) => {
       { new: true }
     );
 
-    const newStudentData = await Student.findById(id);
+    const newStudentData = await Student.findById(id).populate("department");
 
     const endTime = Date.now();
     const durationMs = endTime - startTime;
@@ -513,42 +592,19 @@ exports.refetchClassStudents = async (req, res) => {
   const now = new Date();
 
   try {
-    const { classId, department, section, year } = req.query;
+    const { classId } = req.query;
 
-    let query = {};
-    if (classId) {
-      // Legacy support - find class and extract filters
-      const classData = await Class.findById(classId);
-      if (!classData) {
-        return res.status(404).json({ error: "Class not found" });
-      }
-      // Map Class schema department ObjectId to Department name
-      const deptData = await Department.findById(classData.department);
-      query = { 
-        department: deptData?.name, 
-        section: classData.section, 
-        year: classData.year 
-      };
-      console.log(
-        `\n🚀 Starting OPTIMIZED stats refetch for Class (${deptData?.name}-${classData.section}-${classData.year}) at ${now.toLocaleString()}`
-      );
-    } else {
-      // Direct filters
-      if (department) query.department = department;
-      if (section) query.section = section;
-      if (year) query.year = year;
-      console.log(
-        `\n🚀 Starting OPTIMIZED stats refetch for filters (${department}-${section}-${year}) at ${now.toLocaleString()}`
-      );
+    console.log(
+      `\n🚀 Starting OPTIMIZED stats refetch for Class ID: ${classId} at ${now.toLocaleString()}`
+    );
+
+    if (!classId) {
+      return res.status(400).json({ error: "Class ID is required" });
     }
 
-    if (!query.department && !query.section && !query.year) {
-      return res.status(400).json({ error: "Department, section, or year filter required" });
-    }
-
-    const students = await Student.find(query);
+    const students = await Student.find({ classId });
     if (!students || students.length === 0) {
-      console.warn("⚠️ No students found for query:", query);
+      console.warn("⚠️ No students found for class:", classId);
       return res.status(200).json({ students: [], count: 0 });
     }
 
@@ -682,15 +738,9 @@ exports.refetchClassStudents = async (req, res) => {
       }
     );
 
-    // Wait for all updates to complete
-    await Promise.all(updatePromises);
-
-    // Update class timestamp if classId was provided
-    if (classId) {
-      await Class.findByIdAndUpdate(classId, {
-        studentsUpdatedAt: now,
-      });
-    }
+    await Class.findByIdAndUpdate(classId, {
+      studentsUpdatedAt: now,
+    });
 
     const duration = Date.now() - start;
 
@@ -827,11 +877,7 @@ exports.refetchAllStudents = async (_req, res) => {
       summary.classes += classes.length;
 
       for (const classItem of classes) {
-        const students = await Student.find({ 
-          department: department.name,
-          section: classItem.section,
-          year: classItem.year
-        });
+        const students = await Student.find({ classId: classItem._id });
         summary.totalStudents += students.length;
 
         if (!students.length) continue;
@@ -1055,7 +1101,7 @@ exports.getStudent = async (req, res) => {
     }
 
     const studentId = decoded.id;
-    const studentData = await Student.findById(studentId);
+    const studentData = await Student.findById(studentId).populate("department", "name _id");
 
     if (!studentData) {
       return res.status(404).json({ message: "Student not found" });
